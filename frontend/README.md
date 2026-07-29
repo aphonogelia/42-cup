@@ -13,7 +13,7 @@ npm run dev
 
 Requires the backend running (see the `wordle-backend` README) with
 `FRONTEND_URL` there set to match wherever this dev server runs
-(`http://localhost:3000` by default).
+(`http://localhost:5173` by default).
 
 ## Structure
 
