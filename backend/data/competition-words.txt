@@ -1,0 +1,7 @@
+react
+fastify
+vercel
+docker
+github
+python
+webapp
