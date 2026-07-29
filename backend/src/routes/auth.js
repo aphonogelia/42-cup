@@ -2,6 +2,8 @@ import oauthPlugin from '@fastify/oauth2';
 import { config } from '../config.js';
 import { supabase } from '../supabase.js';
 
+console.log('Callback URL:', config.fortyTwo.callbackUrl);
+
 export default async function authRoutes(fastify) {
   await fastify.register(oauthPlugin, {
     name: 'fortyTwoOAuth2',
