@@ -13,7 +13,7 @@ export const config = {
 
   port: Number(process.env.PORT || 3001),
   isProd: process.env.NODE_ENV === 'production',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendUrl: process.env.FRONTEND_URL,
   cookieSecret: required('COOKIE_SECRET'),
   jwtSecret: required('JWT_SECRET'),
   fortyTwo: {
