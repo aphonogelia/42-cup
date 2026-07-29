@@ -1,7 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
-import { api, ApiError } from '../api.js';
-import GameGrid, { computeLetterStates } from './GameGrid.jsx';
+import { api } from '../api.js';
+import GameGrid from './GameGrid.jsx';
+import { computeLetterStates } from '../lib/keyboardState.js';
 import Keyboard from './Keyboard.jsx';
+
+function AnimatedAnswer({ answer }) {
+  return (
+    <span className="answer-reveal" aria-label={answer}>
+      {answer.split('').map((letter, index) => (
+        <span key={`${letter}-${index}`} style={{ animationDelay: `${index * 120}ms` }}>
+          {letter}
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export default function Game({ orderIndex, onWordFinished }) {
   const [wordState, setWordState] = useState(null); // { word_id, length, max_tries, guesses }
@@ -9,14 +22,12 @@ export default function Game({ orderIndex, onWordFinished }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(null); // { status, time_seconds, answer } | null
-  const [alreadyDone, setAlreadyDone] = useState(null); // status string if word was already solved/failed before this session
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
     setFinished(null);
-    setAlreadyDone(null);
     setCurrentGuess('');
 
     api
@@ -25,14 +36,7 @@ export default function Game({ orderIndex, onWordFinished }) {
         if (cancelled) return;
         setWordState(data);
       })
-      .catch((err) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 409) {
-          setAlreadyDone(err.body?.status || 'finished');
-        } else {
-          setError(err.message);
-        }
-      })
+      .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && setLoading(false));
 
     return () => {
@@ -41,7 +45,7 @@ export default function Game({ orderIndex, onWordFinished }) {
   }, [orderIndex]);
 
   const submitGuess = useCallback(async () => {
-    if (!wordState || finished) return;
+    if (!wordState || finished || wordState.status !== 'in_progress') return;
     if (currentGuess.length !== wordState.length) {
       setError(`Guess must be ${wordState.length} letters`);
       return;
@@ -66,7 +70,7 @@ export default function Game({ orderIndex, onWordFinished }) {
 
   const handleKey = useCallback(
     (key) => {
-      if (finished || !wordState) return;
+      if (finished || !wordState || wordState.status !== 'in_progress') return;
       if (key === 'enter') {
         submitGuess();
       } else if (key === 'back') {
@@ -90,27 +94,16 @@ export default function Game({ orderIndex, onWordFinished }) {
 
   if (loading) return <div className="status-line">Loading word #{orderIndex}...</div>;
 
-  if (alreadyDone) {
-    return (
-      <div className="game-panel">
-        <div className={`result-banner ${alreadyDone}`}>
-          Word #{orderIndex} already {alreadyDone}. Pick another from the tabs above.
-        </div>
-      </div>
-    );
-  }
-
   if (!wordState) {
     return <div className="status-line error">{error || 'Could not load word.'}</div>;
   }
 
   const letterStates = computeLetterStates(wordState.guesses);
+  const isPlayable = wordState.status === 'in_progress' && !finished;
 
   return (
     <div className="game-panel">
-      <div className={`status-line ${error ? 'error' : ''}`}>
-        {error || `Try ${wordState.nb_tries}/${wordState.max_tries}`}
-      </div>
+      <div className={`status-line ${error ? 'error' : ''}`}>{error || (!finished && wordState.status === 'in_progress' ? `Try ${wordState.nb_tries}/${wordState.max_tries}` : '')}</div>
 
       <GameGrid
         length={wordState.length}
@@ -123,11 +116,17 @@ export default function Game({ orderIndex, onWordFinished }) {
         <div className={`result-banner ${finished.status}`}>
           {finished.status === 'solved'
             ? `SOLVED in ${finished.nb_tries} ${finished.nb_tries === 1 ? 'try' : 'tries'} — ${Math.round(finished.time_seconds)}s`
-            : `OUT OF TRIES — the word was "${finished.answer?.toUpperCase()}"`}
+            : (
+              <>
+                OUT OF TRIES — the word was "
+                <AnimatedAnswer answer={finished.answer?.toUpperCase() || ''} />
+                "
+              </>
+            )}
         </div>
       )}
 
-      <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!!finished} />
+      <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
     </div>
   );
 }

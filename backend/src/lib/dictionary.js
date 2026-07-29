@@ -13,7 +13,7 @@ let allowed = null;
 function loadDictionary() {
   if (allowed) return allowed;
   try {
-    const raw = readFileSync(path.join(__dirname, '../../data/competition-words.txt'), 'utf-8');
+    const raw = readFileSync(path.join(__dirname, '../../data/guesses.txt'), 'utf-8');
     allowed = new Set(
       raw
         .split('\n')

@@ -49,7 +49,10 @@ export default function Leaderboard({ totalWords }) {
           {tier.rows.map((row, i) => (
             <div className="ledger-row" key={row.user_id}>
               <span className="rank">{i + 1}</span>
-              <span className="login">{row.login}</span>
+              <span className="login">
+                {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
+                {row.login}
+              </span>
               <span className="tries">{row.total_tries} tries</span>
               <span className="time">{formatTime(row.total_time)}</span>
             </div>

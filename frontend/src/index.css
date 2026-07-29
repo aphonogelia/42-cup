@@ -1,7 +1,10 @@
 /* ---- Tokens ---------------------------------------------------------- */
 :root {
   /* Ink ledger palette */
-  --bg: #12181b;
+  --bg1: #E4D9FF;
+  --bg2: #2b2b2b;
+  --bg3: #FAFAFF;
+  --bg: var(--bg1);
   --surface: #1c252a;
   --surface-raised: #232e34;
   --line: #34424a;
@@ -12,13 +15,13 @@
   --text-muted: #93998f;
   --text-faint: #5f6a64;
 
-  --amber: #e8a33d;
-  --amber-dim: #8a642a;
-  --crimson: #c1443c;
+  --amber: #eaec61;
+  --amber-dim: #393a05;
+  --crimson: #EF476F;
   --crimson-dim: #6e2b26;
 
-  --tile-correct: #4c9a6a;
-  --tile-present: #d9a441;
+  --tile-correct: #0fbd49;
+  --tile-present: #e0e264;
   --tile-absent: #3a4147;
   --tile-empty-border: #414f57;
 
@@ -48,6 +51,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.theme-dark {
+  --bg: var(--bg2);
+}
+
+body.theme-light {
+  --bg: var(--bg3);
+  --surface: #dbbccd;
+  --surface-raised: #f3ecdf;
+  --line: #d7cfbf;
+  --line-soft: #ebe4d6;
+  --paper: #1d241f;
+  --text: #25302b;
+  --text-muted: #5f6b65;
+  --text-faint: #7d8982;
+  --tile-empty-border: #d1c7b6;
+}
+
 button {
   font-family: inherit;
 }
@@ -58,6 +78,7 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -101,6 +122,14 @@ button {
   gap: 4px;
 }
 
+.masthead-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .nav-btn {
   background: transparent;
   border: 1px solid var(--line);
@@ -125,6 +154,29 @@ button {
   font-weight: 600;
 }
 
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 .user-chip {
   display: flex;
   align-items: center;
@@ -141,13 +193,15 @@ button {
 }
 
 .logout-link {
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  font-size: 11px;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 6px;
+}
+
+.logout-link:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
 }
 
 /* ---- Login -------------------------------------------------------------- */
@@ -199,18 +253,16 @@ button {
 
 /* ---- Word tabs (ticket stubs) ------------------------------------------- */
 .tab-strip {
-  display: flex;
+  display: grid;
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  width: 100%;
   margin-bottom: 22px;
 }
 
 .tab-stub {
   position: relative;
-  flex: 0 0 auto;
-  width: 56px;
-  height: 68px;
+  width: 100%;
+  min-height: 68px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -234,9 +286,11 @@ button {
   top: 50%;
   transform: translateY(-50%);
 }
+
 .tab-stub::before {
   left: -5px;
 }
+
 .tab-stub::after {
   right: -5px;
 }
@@ -265,6 +319,7 @@ button {
 .tab-stub.in_progress {
   border-color: var(--amber-dim);
 }
+
 .tab-stub.in_progress .num {
   color: var(--amber);
 }
@@ -272,6 +327,7 @@ button {
 .tab-stub.solved {
   border-color: var(--tile-correct);
 }
+
 .tab-stub.solved .stamp {
   color: var(--tile-correct);
 }
@@ -279,6 +335,7 @@ button {
 .tab-stub.failed {
   border-color: var(--crimson-dim);
 }
+
 .tab-stub.failed .stamp {
   color: var(--crimson);
 }
@@ -294,6 +351,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 22px;
+  width: 100%;
 }
 
 .status-line {
@@ -311,17 +369,19 @@ button {
 .grid {
   display: grid;
   gap: 6px;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
 }
 
 .grid-row {
   display: grid;
   gap: 6px;
-  grid-auto-flow: column;
 }
 
 .tile {
-  width: 46px;
-  height: 46px;
+  width: 100%;
+  aspect-ratio: 1;
   border: 2px solid var(--tile-empty-border);
   border-radius: var(--radius);
   display: flex;
@@ -329,7 +389,7 @@ button {
   justify-content: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 20px;
+  font-size: clamp(16px, 4.8vw, 20px);
   text-transform: uppercase;
   color: var(--text);
   background: var(--surface);
@@ -344,11 +404,13 @@ button {
   border-color: var(--tile-correct);
   color: #0d1a12;
 }
+
 .tile.present {
   background: var(--tile-present);
   border-color: var(--tile-present);
   color: #211705;
 }
+
 .tile.absent {
   background: var(--tile-absent);
   border-color: var(--tile-absent);
@@ -363,15 +425,29 @@ button {
   border: 1px solid;
   letter-spacing: 0.03em;
 }
+
 .result-banner.solved {
   color: var(--tile-correct);
   border-color: var(--tile-correct);
   background: rgba(76, 154, 106, 0.08);
 }
+
 .result-banner.failed {
   color: var(--crimson);
   border-color: var(--crimson);
   background: rgba(193, 68, 60, 0.08);
+}
+
+.answer-reveal {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.answer-reveal span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: reveal-letter 260ms ease-out forwards;
 }
 
 /* ---- Keyboard -------------------------------------------------------- */
@@ -421,15 +497,27 @@ button {
   border-color: var(--tile-correct);
   color: #0d1a12;
 }
+
 .key.present {
   background: var(--tile-present);
   border-color: var(--tile-present);
   color: #211705;
 }
+
 .key.absent {
   background: var(--tile-absent);
   border-color: var(--tile-absent);
   color: var(--text-faint);
+}
+
+.leaderboard-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  margin-right: 8px;
+  vertical-align: -3px;
 }
 
 /* ---- Leaderboard (ledger table) --------------------------------------- */
@@ -483,4 +571,65 @@ button {
   font-size: 13px;
   text-align: center;
   padding: 40px 0;
+}
+
+@keyframes reveal-letter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 14px 12px 48px;
+  }
+
+  .masthead {
+    align-items: stretch;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .masthead-controls {
+    justify-content: space-between;
+  }
+
+  .user-chip {
+    margin-left: auto;
+  }
+
+  .tab-strip {
+    gap: 5px;
+  }
+
+  .tab-stub {
+    min-height: 60px;
+  }
+
+  .tab-stub .stamp {
+    display: none;
+  }
+
+  .grid {
+    max-width: 100%;
+  }
+
+  .keyboard {
+    max-width: 100%;
+  }
+
+  .key {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .key.wide {
+    max-width: none;
+  }
 }

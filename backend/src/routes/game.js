@@ -1,7 +1,9 @@
 import { supabase } from '../supabase.js';
 import { computeFeedback, isWin } from '../lib/wordle.js';
 import { isAllowedGuess } from '../lib/dictionary.js';
+import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
+import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
 
 async function getOrCreateWordResult(userId, wordId) {
   const { data: existing } = await supabase
@@ -25,14 +27,22 @@ async function getOrCreateWordResult(userId, wordId) {
 export default async function gameRoutes(fastify) {
   fastify.addHook('preHandler', fastify.requireAuth);
 
+  async function getActiveDraw() {
+    const drawDate = getBerlinDateKey();
+    const words = await ensureDailyDraw({ drawDate });
+    return { drawDate, words };
+  }
+
   // Returns the ordered word list (metadata only, never the answer) plus
   // this user's progress on each, so the frontend can render a map/list.
   fastify.get('/api/game/progress', async (request, reply) => {
-    const { data: words, error: wordsErr } = await supabase
-      .from('words')
-      .select('id, order_index, length')
-      .order('order_index');
-    if (wordsErr) return reply.code(500).send({ error: 'Failed to load words' });
+    let words;
+    try {
+      ({ words } = await getActiveDraw());
+    } catch (error) {
+      fastify.log.error(error);
+      return reply.code(500).send({ error: 'Failed to load words' });
+    }
 
     const { data: results, error: resErr } = await supabase
       .from('word_results')
@@ -57,18 +67,43 @@ export default async function gameRoutes(fastify) {
     const { order_index } = request.body ?? {};
     if (!order_index) return reply.code(400).send({ error: 'order_index required' });
 
+    const drawDate = getBerlinDateKey();
     const { data: word, error: wordErr } = await supabase
       .from('words')
-      .select('id, order_index, length')
+      .select('id, order_index, length, draw_date')
+      .eq('draw_date', drawDate)
       .eq('order_index', order_index)
       .single();
-    if (wordErr || !word) return reply.code(404).send({ error: 'Word not found' });
+
+    if (wordErr || !word) {
+      try {
+        const words = await ensureDailyDraw({ drawDate });
+        const currentWord = words.find((item) => item.order_index === order_index);
+        if (!currentWord) return reply.code(404).send({ error: 'Word not found' });
+
+        const result = await getOrCreateWordResult(request.user.id, currentWord.id);
+
+        const { data: guesses } = await supabase
+          .from('guesses')
+          .select('guess, feedback, created_at')
+          .eq('word_result_id', result.id)
+          .order('created_at');
+
+        return {
+          word_id: currentWord.id,
+          length: currentWord.length,
+          nb_tries: result.nb_tries,
+          max_tries: config.game.maxTries,
+          status: result.status,
+          guesses: guesses ?? [],
+        };
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.code(500).send({ error: 'Failed to load daily draw' });
+      }
+    }
 
     const result = await getOrCreateWordResult(request.user.id, word.id);
-
-    if (result.status !== 'in_progress') {
-      return reply.code(409).send({ error: `Word already ${result.status}`, status: result.status });
-    }
 
     // Prior guesses, so a page refresh mid-word doesn't lose progress.
     const { data: guesses } = await supabase
@@ -82,6 +117,7 @@ export default async function gameRoutes(fastify) {
       length: word.length,
       nb_tries: result.nb_tries,
       max_tries: config.game.maxTries,
+      status: result.status,
       guesses: guesses ?? [],
     };
   });
@@ -93,8 +129,9 @@ export default async function gameRoutes(fastify) {
 
     const { data: word, error: wordErr } = await supabase
       .from('words')
-      .select('id, answer, length')
+      .select('id, answer, length, draw_date')
       .eq('id', word_id)
+      .eq('draw_date', getBerlinDateKey())
       .single();
     if (wordErr || !word) return reply.code(404).send({ error: 'Word not found' });
 
@@ -107,8 +144,31 @@ export default async function gameRoutes(fastify) {
 
     const result = await getOrCreateWordResult(request.user.id, word.id);
     if (result.status !== 'in_progress') {
-      return reply.code(409).send({ error: `Word already ${result.status}`, status: result.status });
+      return reply.code(409).send({
+        error: `Word already ${result.status}`,
+        status: result.status
+      });
     }
+
+    if (config.game.hardMode) {
+      const { data: previousGuesses } = await supabase
+        .from('guesses')
+        .select('guess, feedback')
+        .eq('word_result_id', result.id)
+        .order('created_at');
+
+      const check = validateHardMode(
+        guess.toLowerCase(),
+        previousGuesses ?? []
+      );
+
+      if (!check.valid) {
+        return reply.code(400).send({
+          error: check.error,
+        });
+      }
+    }
+
 
     // Basic anti-bruteforce throttle: minimum spacing between guesses.
     const { data: lastGuess } = await supabase

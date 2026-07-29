@@ -5,7 +5,7 @@ const STAMP_LABEL = {
 
 export default function WordTabs({ words, selectedOrderIndex, onSelect }) {
   return (
-    <div className="tab-strip">
+    <div className="tab-strip" style={{ gridTemplateColumns: `repeat(${words.length}, minmax(0, 1fr))` }}>
       {words.map((w) => (
         <button
           key={w.word_id}
