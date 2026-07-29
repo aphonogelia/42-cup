@@ -13,7 +13,7 @@ cp .env.example .env   # fill in the values, see below
 
 ### 1. 42 OAuth app
 Register at https://profile.intra.42.fr/oauth/applications
-- Redirect URI: `http://localhost:3001/api/auth/42/callback` (match `FORTYTWO_CALLBACK_URL`)
+- Redirect URI: `http://localhost:3000/api/auth/42/callback` (match `FORTYTWO_CALLBACK_URL`)
 - Copy the UID/Secret into `FORTYTWO_CLIENT_ID` / `FORTYTWO_CLIENT_SECRET`
 
 ### 2. Supabase
@@ -23,25 +23,30 @@ Register at https://profile.intra.42.fr/oauth/applications
   backend should hold it.
 
 ### 3. Seed the words
-Edit `data/competition-words.txt` — one word per line, in the order you want
-them presented (line 1 = word 1, etc). Blank lines and `#` comments are
-ignored. Then run:
+`data/competition-words.txt` is your full word **pool** (one word per line;
+blank lines and `#` comments ignored) — not the 7 answers directly. Put as
+many words in there as you like.
 
 ```bash
 npm run seed:words
 ```
 
-This upserts each line into the `words` table by `order_index`, so it's safe
-to re-run after editing a word (it updates that row rather than duplicating
-it). Note: if you *remove* a line to shrink the list, the script won't delete
-the now-orphaned row in Supabase — do that manually if it happens.
+This randomly draws 7 words from the pool (via Node's `crypto.randomInt`,
+not `Math.random`) and writes them into the `words` table as the actual
+competition answers. It's **not idempotent on purpose**: once players have
+recorded progress (any row exists in `word_results`), re-running refuses to
+touch the answers unless you pass `--force` — changing them mid-competition
+would corrupt everyone's state.
 
-To use a different file: `node scripts/seed-words.js path/to/other-list.txt`
+```bash
+node scripts/seed-words.js --force        # re-roll a fresh 7, overwriting
+node scripts/seed-words.js --count 5      # competition of 5 words instead of 7
+node scripts/seed-words.js data/other.txt # sample from a different pool file
+```
 
-### 4. (Optional) guess dictionary
-Drop a JSON array of valid lowercase words into `data/allowed-guesses.json`
-to restrict guesses to real words, matching your competition's word lengths.
-Leave it as `[]` to accept any guess of the correct length (permissive mode).
+The same `competition-words.txt` pool also doubles as the guess-validation
+dictionary (see `src/lib/dictionary.js`) — one file, one source of truth,
+guesses of the right length are accepted if they're in your pool.
 
 ## Run
 
