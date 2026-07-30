@@ -306,7 +306,7 @@ button {
 
 .login-title-blob {
   position: absolute;
-  top: -500px;
+  top: -300px;
   left: 50%;
   width: clamp(380px, 122vw, 700px);
   aspect-ratio: 1.45;
