@@ -140,22 +140,42 @@ export default function App() {
         </div>
       </header>
 
-      {view === 'play' ? (
-        <>
-          {words.length > 0 && (
-            <WordTabs
-              words={words}
-              selectedOrderIndex={selectedOrderIndex}
-              onSelect={setSelectedOrderIndex}
-            />
-          )}
-          {selectedOrderIndex && (
-            <Game orderIndex={selectedOrderIndex} onWordFinished={refreshProgress} />
-          )}
-        </>
-      ) : (
-        <Leaderboard totalWords={words.length} />
-      )}
+      <main className="app-content">
+        {view === "play" ? (
+          <>
+            {words.length > 0 && (
+              <WordTabs
+                words={words}
+                selectedOrderIndex={selectedOrderIndex}
+                onSelect={setSelectedOrderIndex}
+              />
+            )}
+
+            {selectedOrderIndex && (
+              <Game
+                orderIndex={selectedOrderIndex}
+                onWordFinished={refreshProgress}
+              />
+            )}
+          </>
+        ) : (
+          <Leaderboard totalWords={words.length} />
+        )}
+      </main>
+
+      <footer className="app-footer">
+        <a href="#">Privacy</a>
+
+        <a href="#">About</a>
+
+        <a
+          href="https://github.com"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+        </a>
+      </footer>
     </div>
   );
 }
