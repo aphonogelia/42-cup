@@ -92,7 +92,7 @@ button {
   max-width: 720px;
   margin: 0 auto;
   padding: 20px 16px 28px;
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -290,8 +290,8 @@ button {
   text-align: center;
   flex: 1;
   width: 100%;
-  min-height: 100%;
-  padding: 18vh 20px 56px;
+  min-height: calc(100vh - 48px);
+  padding: 24vh 20px 10vh;
   gap: 20px;
 }
 
@@ -300,15 +300,15 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10vh;
+  margin-top: 14vh;
   isolation: isolate;
 }
 
 .login-title-blob {
   position: absolute;
-  top: -118px;
+  top: -170px;
   left: 50%;
-  width: clamp(340px, 110vw, 560px);
+  width: clamp(380px, 122vw, 700px);
   aspect-ratio: 1.45;
   background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
 
@@ -344,7 +344,7 @@ button {
   align-items: center;
   gap: 18px;
   margin-top: auto;
-  padding-bottom: 8vh;
+  padding-bottom: 2vh;
 }
 
 .login-btn {
