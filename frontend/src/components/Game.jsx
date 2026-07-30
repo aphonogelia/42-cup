@@ -5,6 +5,27 @@ import { computeLetterStates } from '../lib/keyboardState.js';
 import Keyboard from './Keyboard.jsx';
 import Toast from './Toast.jsx';
 
+const LOADING_ROWS = 6;
+const LOADING_LENGTH = 5;
+
+function LoadingBoard() {
+  return (
+    <div className="grid loading-grid" aria-hidden="true">
+      {Array.from({ length: LOADING_ROWS }).map((_, rowIndex) => (
+        <div
+          className="grid-row"
+          key={rowIndex}
+          style={{ gridTemplateColumns: `repeat(${LOADING_LENGTH}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: LOADING_LENGTH }).map((__, columnIndex) => (
+            <div className="tile tile-skeleton" key={columnIndex} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AnimatedAnswer({ answer }) {
   return (
     <span className="answer-reveal" aria-label={answer}>
@@ -109,7 +130,18 @@ export default function Game({ orderIndex, onWordFinished }) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey]);
 
-  if (loading) return <div className="status-line">Loading word #{orderIndex}...</div>;
+  if (loading) {
+    return (
+      <div className="game-panel game-loading" aria-busy="true">
+        <div className="status-line">Loading word #{orderIndex}...</div>
+
+        <div className="board-wrap">
+          <LoadingBoard />
+          <Keyboard letterStates={{}} onKey={() => {}} disabled />
+        </div>
+      </div>
+    );
+  }
 
   if (!wordState) {
     return <div className="status-line error">{toastMessage || 'Could not load word.'}</div>;
