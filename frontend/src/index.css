@@ -286,10 +286,11 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   text-align: center;
-  padding: 80px 20px;
-  gap: 28px;
+  min-height: 100%;
+  padding: 72px 20px 56px;
+  gap: 20px;
 }
 
 .login-title-wrap {
@@ -297,15 +298,15 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
+  margin-top: 10px;
   isolation: isolate;
 }
 
 .login-title-blob {
   position: absolute;
-  top: -24px;
+  top: -2px;
   left: 50%;
-  width: clamp(220px, 50vw, 360px);
+  width: clamp(300px, 70vw, 500px);
   aspect-ratio: 1.45;
   background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
   filter: blur(7px);
@@ -333,8 +334,16 @@ button {
   margin: 0;
 }
 
+.login-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: auto;
+  padding-bottom: 4vh;
+}
+
 .login-btn {
-  margin-top: 8px;
   background: var(--amber);
   color: #1a1305;
   border: none;
