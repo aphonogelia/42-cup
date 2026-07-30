@@ -457,6 +457,8 @@ button {
   gap: 6px;
   width: 100%;
   max-width: 480px;
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
 .kb-row {
@@ -668,6 +670,8 @@ button {
 
   .keyboard {
     max-width: 100%;
+    margin-top: 16px;
+    margin-bottom: 10px;
   }
 
   .key {
