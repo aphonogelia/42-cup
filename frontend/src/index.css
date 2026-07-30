@@ -291,7 +291,7 @@ button {
   flex: 1;
   width: 100%;
   min-height: 100%;
-  padding: 14vh 20px 56px;
+  padding: 18vh 20px 56px;
   gap: 20px;
 }
 
@@ -300,15 +300,15 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 6vh;
+  margin-top: 10vh;
   isolation: isolate;
 }
 
 .login-title-blob {
   position: absolute;
-  top: -68px;
+  top: -118px;
   left: 50%;
-  width: clamp(300px, 100vw, 500px);
+  width: clamp(340px, 110vw, 560px);
   aspect-ratio: 1.45;
   background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
 
