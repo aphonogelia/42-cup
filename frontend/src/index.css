@@ -306,9 +306,9 @@ button {
 
 .login-title-blob {
   position: absolute;
-  top: -300px;
-  left: 50%;
-  width: clamp(380px, 122vw, 700px);
+  top: -130px;
+  left: 60%;
+  width: clamp(300px, 122vw, 380px);
   aspect-ratio: 1.45;
   background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
 
@@ -344,7 +344,7 @@ button {
   align-items: center;
   gap: 18px;
   margin-top: auto;
-  padding-bottom: 2vh;
+  padding-bottom: 10vh;
 }
 
 .login-btn {
