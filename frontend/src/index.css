@@ -178,75 +178,74 @@ button {
 .theme-toggle:hover {
   border-color: var(--amber-dim);
   color: var(--paper);
+}
 
-  /* ---- Info overlays ----------------------------------------------------- */
-  .info-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(4, 7, 8, 0.72);
-    backdrop-filter: blur(4px);
-    display: grid;
-    place-items: center;
-    padding: 20px;
-    z-index: 20;
-  }
+.info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 8, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 20;
+}
 
-  .info-card {
-    width: min(100%, 560px);
-    max-height: min(100%, 78vh);
-    overflow: auto;
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-  }
+.info-card {
+  width: min(100%, 560px);
+  max-height: min(100%, 78vh);
+  overflow: auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
 
-  .info-card-head {
-    display: flex;
-    align-items: start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 8px;
-  }
+.info-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
 
-  .info-eyebrow {
-    margin: 0;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
+.info-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
-  .info-card h2 {
-    margin: 0 0 14px;
-    font-family: var(--font-display);
-    font-size: 24px;
-    color: var(--paper);
-  }
+.info-card h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--paper);
+}
 
-  .info-copy {
-    display: grid;
-    gap: 12px;
-  }
+.info-copy {
+  display: grid;
+  gap: 12px;
+}
 
-  .info-copy p {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--text);
-  }
+.info-copy p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+}
 
-  .info-close {
-    color: var(--text-muted);
-    font-size: 22px;
-    line-height: 1;
-    padding: 0 2px;
-  }
+.info-close {
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 2px;
+}
 
-  .info-close:hover {
-    color: var(--paper);
-  }
+.info-close:hover {
+  color: var(--paper);
 }
 
 .icon-btn svg {
@@ -291,6 +290,26 @@ button {
   text-align: center;
   padding: 80px 20px;
   gap: 18px;
+}
+
+.login-title-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.login-title-blob {
+  position: absolute;
+  width: clamp(180px, 42vw, 300px);
+  aspect-ratio: 1.35;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
+  filter: blur(7px);
+  transform: translate(-14px, 2px) rotate(-8deg);
+  border-radius: 52% 48% 45% 55% / 44% 50% 50% 56%;
+  z-index: -1;
+  opacity: 0.9;
 }
 
 .login-screen h1 {
