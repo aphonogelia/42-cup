@@ -8,7 +8,7 @@ import gameRoutes from './routes/game.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import { ensureDailyDraw, getBerlinDateKey, getNextBerlinMidnightDelayMs } from './lib/dailyDraw.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: true, trustProxy: true });
 
 await fastify.register(cors, {
   origin: config.frontendUrl,

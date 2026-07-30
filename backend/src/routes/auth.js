@@ -23,6 +23,10 @@ export default async function authRoutes(fastify) {
     // GET /api/auth/42 kicks off the redirect to 42's login page
     startRedirectPath: '/api/auth/42',
     callbackUri: config.fortyTwo.callbackUrl,
+    cookie: {
+      sameSite: 'none',
+      secure: true,
+    },
   });
 
   // 42 redirects back here after login
