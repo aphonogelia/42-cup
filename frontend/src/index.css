@@ -306,9 +306,11 @@ button {
   position: absolute;
   top: -2px;
   left: 50%;
-  width: clamp(300px, 70vw, 500px);
+  width: clamp(300px, 100vw, 500px);
   aspect-ratio: 1.45;
-  background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
+  /* background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%); */
+
+  background: radial-gradient(circle at 35% 35%, rgba(135, 138, 187, 0.98), rgba(64, 88, 139, 0.9) 55%, rgba(25, 29, 247, 0.18) 72%, transparent 74%);
   filter: blur(7px);
   transform: translateX(-50%) rotate(-8deg);
   border-radius: 52% 48% 45% 55% / 44% 50% 50% 56%;
