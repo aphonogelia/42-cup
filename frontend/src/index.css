@@ -289,7 +289,7 @@ button {
   justify-content: center;
   text-align: center;
   padding: 80px 20px;
-  gap: 18px;
+  gap: 28px;
 }
 
 .login-title-wrap {
@@ -297,19 +297,23 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 4px;
   isolation: isolate;
 }
 
 .login-title-blob {
   position: absolute;
-  width: clamp(180px, 42vw, 300px);
-  aspect-ratio: 1.35;
+  top: -24px;
+  left: 50%;
+  width: clamp(220px, 50vw, 360px);
+  aspect-ratio: 1.45;
   background: radial-gradient(circle at 35% 35%, rgba(255, 201, 92, 0.98), rgba(255, 138, 29, 0.9) 55%, rgba(255, 138, 29, 0.18) 72%, transparent 74%);
   filter: blur(7px);
-  transform: translate(-14px, 2px) rotate(-8deg);
+  transform: translateX(-50%) rotate(-8deg);
   border-radius: 52% 48% 45% 55% / 44% 50% 50% 56%;
   z-index: -1;
   opacity: 0.9;
+  pointer-events: none;
 }
 
 .login-screen h1 {
