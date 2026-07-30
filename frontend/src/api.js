@@ -46,6 +46,8 @@ export const api = {
   guess: (word_id, guess) =>
     request('/api/game/guess', { method: 'POST', body: JSON.stringify({ word_id, guess }) }),
   leaderboard: () => request('/api/leaderboard'),
+  leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
+  leaderboardDates: () => request('/api/leaderboard/dates'),
   loginUrl: () => `${API_URL}/api/auth/42`,
 };
 

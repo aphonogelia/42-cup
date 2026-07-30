@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../api.js';
-import GameGrid from './GameGrid.jsx';
+import GameGrid, { getRevealDurationMs } from './GameGrid.jsx';
 import { computeLetterStates } from '../lib/keyboardState.js';
 import Keyboard from './Keyboard.jsx';
+import Toast from './Toast.jsx';
 
 function AnimatedAnswer({ answer }) {
   return (
@@ -17,18 +18,22 @@ function AnimatedAnswer({ answer }) {
 }
 
 export default function Game({ orderIndex, onWordFinished }) {
-  const [wordState, setWordState] = useState(null); // { word_id, length, max_tries, guesses }
+  const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
-  const [error, setError] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [finished, setFinished] = useState(null); // { status, time_seconds, answer } | null
+  const [finished, setFinished] = useState(null);
+  const [revealRowIndex, setRevealRowIndex] = useState(null);
+  const revealTimeout = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError('');
+    setToastMessage('');
     setFinished(null);
     setCurrentGuess('');
+    setRevealRowIndex(null);
+    if (revealTimeout.current) clearTimeout(revealTimeout.current);
 
     api
       .start(orderIndex)
@@ -36,7 +41,7 @@ export default function Game({ orderIndex, onWordFinished }) {
         if (cancelled) return;
         setWordState(data);
       })
-      .catch((err) => !cancelled && setError(err.message))
+      .catch((err) => !cancelled && setToastMessage(err.message))
       .finally(() => !cancelled && setLoading(false));
 
     return () => {
@@ -44,33 +49,45 @@ export default function Game({ orderIndex, onWordFinished }) {
     };
   }, [orderIndex]);
 
+  useEffect(() => () => {
+    if (revealTimeout.current) clearTimeout(revealTimeout.current);
+  }, []);
+
   const submitGuess = useCallback(async () => {
-    if (!wordState || finished || wordState.status !== 'in_progress') return;
+    if (!wordState || finished || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
     if (currentGuess.length !== wordState.length) {
-      setError(`Guess must be ${wordState.length} letters`);
+      setToastMessage(`Guess must be ${wordState.length} letters`);
       return;
     }
-    setError('');
     try {
       const result = await api.guess(wordState.word_id, currentGuess);
+      const rowIndex = wordState.guesses.length;
+      const guessedWord = currentGuess;
+
       setWordState((prev) => ({
         ...prev,
         nb_tries: result.nb_tries,
-        guesses: [...prev.guesses, { guess: currentGuess, feedback: result.feedback }],
+        guesses: [...prev.guesses, { guess: guessedWord, feedback: result.feedback }],
       }));
       setCurrentGuess('');
-      if (result.status !== 'in_progress') {
-        setFinished(result);
-        onWordFinished?.();
-      }
+      setRevealRowIndex(rowIndex);
+
+      const duration = getRevealDurationMs(wordState.length);
+      revealTimeout.current = setTimeout(() => {
+        setRevealRowIndex(null);
+        if (result.status !== 'in_progress') {
+          setFinished(result);
+          onWordFinished?.();
+        }
+      }, duration);
     } catch (err) {
-      setError(err.message);
+      setToastMessage(err.message);
     }
-  }, [wordState, currentGuess, finished, onWordFinished]);
+  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished]);
 
   const handleKey = useCallback(
     (key) => {
-      if (finished || !wordState || wordState.status !== 'in_progress') return;
+      if (finished || !wordState || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
       if (key === 'enter') {
         submitGuess();
       } else if (key === 'back') {
@@ -79,7 +96,7 @@ export default function Game({ orderIndex, onWordFinished }) {
         setCurrentGuess((g) => g + key);
       }
     },
-    [finished, wordState, currentGuess, submitGuess]
+    [finished, wordState, currentGuess, submitGuess, revealRowIndex]
   );
 
   useEffect(() => {
@@ -95,21 +112,24 @@ export default function Game({ orderIndex, onWordFinished }) {
   if (loading) return <div className="status-line">Loading word #{orderIndex}...</div>;
 
   if (!wordState) {
-    return <div className="status-line error">{error || 'Could not load word.'}</div>;
+    return <div className="status-line error">{toastMessage || 'Could not load word.'}</div>;
   }
 
   const letterStates = computeLetterStates(wordState.guesses);
-  const isPlayable = wordState.status === 'in_progress' && !finished;
+  const isPlayable = wordState.status === 'in_progress' && !finished && revealRowIndex === null;
 
   return (
     <div className="game-panel">
-      <div className={`status-line ${error ? 'error' : ''}`}>{error || (!finished && wordState.status === 'in_progress' ? `Try ${wordState.nb_tries}/${wordState.max_tries}` : '')}</div>
+      <div className="status-line">
+        {!finished && wordState.status === 'in_progress' ? `Try ${wordState.nb_tries}/${wordState.max_tries}` : ''}
+      </div>
 
       <GameGrid
         length={wordState.length}
         maxTries={wordState.max_tries}
         guesses={wordState.guesses}
         currentGuess={currentGuess}
+        revealRowIndex={revealRowIndex}
       />
 
       {finished && (
@@ -127,6 +147,7 @@ export default function Game({ orderIndex, onWordFinished }) {
       )}
 
       <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
+      <Toast message={toastMessage} onDone={() => setToastMessage('')} />
     </div>
   );
 }

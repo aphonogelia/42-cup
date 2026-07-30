@@ -585,6 +585,89 @@ button {
   }
 }
 
+/* ---- Tile flip reveal --------------------------------------------------- */
+.tile.tile-reveal {
+  animation-name: tile-flip;
+  animation-duration: 550ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes tile-flip {
+  0%   { transform: rotateX(0deg);  background: var(--surface); border-color: var(--text-faint); color: var(--text); }
+  49%  { transform: rotateX(90deg); background: var(--surface); border-color: var(--text-faint); color: var(--text); }
+  51%  { transform: rotateX(90deg); background: var(--reveal-bg); border-color: var(--reveal-bg); color: var(--reveal-color); }
+  100% { transform: rotateX(0deg);  background: var(--reveal-bg); border-color: var(--reveal-bg); color: var(--reveal-color); }
+}
+
+/* ---- Toast --------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--crimson);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  pointer-events: none;
+  animation: toast-in-out 1.8s ease forwards;
+}
+
+@keyframes toast-in-out {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  10%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+}
+
+/* ---- Reactive tile sizing (bounded by viewport height too) -------------- */
+.grid {
+  max-width: min(420px, 62vh);
+}
+
+/* ---- Ledger date picker --------------------------------------------------- */
+.ledger-date-picker {
+  margin-bottom: 16px;
+}
+.ledger-date-picker select {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+}
+
+/* ---- Desktop: use the extra room, compact the tab strip ------------------ */
+@media (min-width: 900px) {
+  .app-shell { max-width: 880px; padding: 24px 24px 40px; }
+  .grid { max-width: min(420px, 58vh); }
+  .tile { font-size: clamp(18px, 2.2vw, 26px); }
+  .keyboard { max-width: 480px; }
+
+  .tab-strip {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .tab-stub {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    padding: 6px 4px;
+  }
+  .tab-stub .stamp { display: none; } /* status is conveyed by border color already */
+}
+
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 14px 12px 48px;
