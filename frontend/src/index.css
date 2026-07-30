@@ -91,7 +91,7 @@ button {
 .app-shell {
   max-width: 720px;
   margin: 0 auto;
-  padding: 20px 16px 64px;
+  padding: 20px 16px 28px;
   min-height: 100%;
   display: flex;
   flex-direction: column;
@@ -369,7 +369,7 @@ button {
   display: grid;
   gap: 8px;
   width: 100%;
-  max-width: 560px;
+  max-width: 480px;
   margin-inline: auto;
 }
 
@@ -581,7 +581,7 @@ button {
 }
 
 .app-footer {
-  margin-top: 28px;
+  margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--line-soft);
   display: flex;
@@ -622,7 +622,7 @@ button {
 
 @media (max-width: 640px) {
   .app-shell {
-    padding: 14px 12px 48px;
+    padding: 14px 12px 20px;
   }
 
   .masthead {
@@ -646,6 +646,14 @@ button {
   .tab-stub {
     min-height: 40px;
     padding: 9px 10px;
+  }
+
+  .tab-stub .stamp {
+    display: none;
+  }
+
+  .tab-stub {
+    justify-content: center;
   }
 
   .grid {
