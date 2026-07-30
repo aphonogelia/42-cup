@@ -1,418 +1,718 @@
-/* ==========================================================================
-   1. Theme Variables & Base Resets
-   ========================================================================== */
+/* ---- Tokens ---------------------------------------------------------- */
 :root {
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --max-width: 500px;
+  /* Ink ledger palette */
+  --bg1: #E4D9FF;
+  --bg2: #2b2b2b;
+  --bg3: #FAFAFF;
+  --bg: var(--bg1);
+  --surface: #1c252a;
+  --surface-raised: #232e34;
+  --line: #34424a;
+  --line-soft: #29343a;
+
+  --paper: #f2e9d8;
+  --text: #ede6d6;
+  --text-muted: #93998f;
+  --text-faint: #5f6a64;
+
+  --amber: #eaec61;
+  --amber-dim: #393a05;
+  --crimson: #EF476F;
+  --crimson-dim: #6e2b26;
+
+  --tile-correct: #0fbd49;
+  --tile-present: #e0e264;
+  --tile-absent: #3a4147;
+  --tile-empty-border: #414f57;
+
+  --font-display: 'JetBrains Mono', monospace;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --radius: 3px;
 }
 
-body.theme-dark {
-  --bg-color: #121213;
-  --card-bg: #1a1a1b;
-  --text-color: #ffffff;
-  --text-muted: #818384;
-  --border-color: #3a3a3c;
-  --tile-bg: #121213;
-  --tile-border: #3a3a3c;
-  --tile-filled-border: #565758;
-  --key-bg: #818384;
-  --key-color: #ffffff;
-  --correct: #538d4e;
-  --present: #b59f3b;
-  --absent: #3a3a3c;
-}
-
-body.theme-light {
-  --bg-color: #f6f7f9;
-  --card-bg: #ffffff;
-  --text-color: #1a1a1b;
-  --text-muted: #6e6e73;
-  --border-color: #d3d6da;
-  --tile-bg: #ffffff;
-  --tile-border: #d3d6da;
-  --tile-filled-border: #878a8c;
-  --key-bg: #d3d6da;
-  --key-color: #1a1a1b;
-  --correct: #6aaa64;
-  --present: #c9b458;
-  --absent: #787c7e;
-}
-
-*, *::before, *::after {
+* {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
-html, body {
-  width: 100%;
+html,
+body,
+#root {
   height: 100%;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 200px);
+  color: var(--text);
+  font-family: var(--font-mono);
   -webkit-font-smoothing: antialiased;
 }
 
-/* ==========================================================================
-   2. App Layout Container
-   ========================================================================== */
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 0 12px;
-  min-height: 100dvh;
+body.theme-dark {
+  --bg: var(--bg2);
 }
 
-/* Desktop layout constraint: Fit screen without scrollbar if height allows */
-@media (min-width: 600px) and (min-height: 650px) {
-  .app-shell {
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden;
+body.theme-light {
+  --bg: var(--bg3);
+  --surface: #dbbccd;
+  --surface-raised: #f3ecdf;
+  --line: #d7cfbf;
+  --line-soft: #ebe4d6;
+  --paper: #1d241f;
+  --text: #25302b;
+  --text-muted: #5f6b65;
+  --text-faint: #7d8982;
+  --tile-empty-border: #d1c7b6;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
-.status-line {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  color: var(--text-muted);
+/* ---- Layout shell ------------------------------------------------------ */
+.app-shell {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 64px;
+  min-height: 100%;
 }
 
-/* ==========================================================================
-   3. Header / Masthead
-   ========================================================================== */
 .masthead {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 20px;
 }
 
 .masthead-title {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.02em;
+  font-size: 18px;
+  color: var(--paper);
+  margin: 0;
 }
 
 .masthead-title span {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--amber);
+}
+
+.masthead-nav {
+  display: flex;
+  gap: 4px;
 }
 
 .masthead-controls {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.masthead-nav {
-  display: flex;
-  gap: 4px;
-  background: var(--card-bg);
-  padding: 3px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .nav-btn {
   background: transparent;
-  border: none;
+  border: 1px solid var(--line);
   color: var(--text-muted);
-  padding: 4px 10px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border-radius: 4px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  border-radius: var(--radius);
   cursor: pointer;
+}
+
+.nav-btn:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
 }
 
 .nav-btn.active {
-  background: var(--key-bg);
-  color: var(--key-color);
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1a1305;
+  font-weight: 600;
 }
 
-.icon-btn {
+.theme-toggle {
   background: transparent;
-  border: none;
-  color: var(--text-color);
-  display: flex;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  border-radius: 50%;
-  cursor: pointer;
-  width: 34px;
-  height: 34px;
+}
+
+.theme-toggle:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
 }
 
 .icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .user-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  background: var(--card-bg);
-  padding: 4px 8px;
-  border-radius: 20px;
-  border: 1px solid var(--border-color);
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-/* ==========================================================================
-   4. Main Content Container
-   ========================================================================== */
-.app-content {
-  flex: 1;
+.user-chip img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+.logout-link {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 6px;
+}
+
+.logout-link:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+/* ---- Login -------------------------------------------------------------- */
+.login-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  gap: 10px;
-  min-height: 0; /* Crucial for desktop flex shrinking */
-  width: 100%;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  gap: 18px;
 }
 
-/* ==========================================================================
-   5. Word Tabs
-   ========================================================================== */
+.login-screen h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--paper);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.login-screen p {
+  color: var(--text-muted);
+  font-size: 13px;
+  max-width: 340px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.login-btn {
+  margin-top: 8px;
+  background: var(--amber);
+  color: #1a1305;
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 12px 22px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.login-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* ---- Word tabs (ticket stubs) ------------------------------------------- */
 .tab-strip {
   display: grid;
   gap: 6px;
   width: 100%;
-  flex-shrink: 0;
+  margin-bottom: 22px;
 }
 
 .tab-stub {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  padding: 8px 2px;
-  border-radius: 6px;
+  position: relative;
+  width: 100%;
+  min-height: 68px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  transition: all 0.2s ease;
+  gap: 4px;
+  color: var(--text-muted);
 }
 
-.tab-stub.selected {
-  border-color: var(--text-color);
-  box-shadow: 0 0 0 1px var(--text-color);
+.tab-stub::before,
+.tab-stub::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tab-stub::before {
+  left: -5px;
+}
+
+.tab-stub::after {
+  right: -5px;
+}
+
+.tab-stub .num {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.tab-stub .stamp {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  transform: rotate(-8deg);
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+.tab-stub.not_started {
+  opacity: 0.55;
+}
+
+.tab-stub.in_progress {
+  border-color: var(--amber-dim);
+}
+
+.tab-stub.in_progress .num {
+  color: var(--amber);
 }
 
 .tab-stub.solved {
-  background: var(--correct);
-  color: #fff;
-  border-color: var(--correct);
+  border-color: var(--tile-correct);
+}
+
+.tab-stub.solved .stamp {
+  color: var(--tile-correct);
 }
 
 .tab-stub.failed {
-  background: var(--absent);
-  color: #fff;
-  border-color: var(--absent);
+  border-color: var(--crimson-dim);
 }
 
-/* ==========================================================================
-   6. Game Board (Grid)
-   ========================================================================== */
-.grid {
+.tab-stub.failed .stamp {
+  color: var(--crimson);
+}
+
+.tab-stub.selected {
+  outline: 2px solid var(--paper);
+  outline-offset: 1px;
+}
+
+/* ---- Game grid ------------------------------------------------------ */
+.game-panel {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  gap: 22px;
   width: 100%;
-  max-width: 350px; /* Constrains board size on desktop */
-  margin: auto 0;
-  justify-content: center;
-  flex-shrink: 1;
+}
+
+.status-line {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-height: 16px;
+}
+
+.status-line.error {
+  color: var(--crimson);
+}
+
+.grid {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
 }
 
 .grid-row {
   display: grid;
-  gap: 5px;
-  width: 100%;
+  gap: 6px;
 }
 
 .tile {
-  aspect-ratio: 1;
   width: 100%;
-  max-height: 62px; /* Dynamic constraint for tall/short viewports */
-  border: 2px solid var(--tile-border);
+  aspect-ratio: 1;
+  border: 2px solid var(--tile-empty-border);
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.2rem, 3.5vh, 2rem);
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(16px, 4.8vw, 20px);
   text-transform: uppercase;
-  user-select: none;
-  background-color: var(--tile-bg);
-  border-radius: 4px;
+  color: var(--text);
+  background: var(--surface);
 }
 
 .tile.filled {
-  border-color: var(--tile-filled-border);
-  animation: pop 0.1s ease-in-out;
+  border-color: var(--text-faint);
 }
 
 .tile.correct {
-  background-color: var(--correct);
-  border-color: var(--correct);
-  color: #fff;
+  background: var(--tile-correct);
+  border-color: var(--tile-correct);
+  color: #0d1a12;
 }
 
 .tile.present {
-  background-color: var(--present);
-  border-color: var(--present);
-  color: #fff;
+  background: var(--tile-present);
+  border-color: var(--tile-present);
+  color: #211705;
 }
 
 .tile.absent {
-  background-color: var(--absent);
-  border-color: var(--absent);
-  color: #fff;
+  background: var(--tile-absent);
+  border-color: var(--tile-absent);
+  color: var(--text-faint);
 }
 
-.tile-reveal {
-  animation: flip 0.5s ease forwards;
+.result-banner {
+  font-family: var(--font-display);
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px solid;
+  letter-spacing: 0.03em;
 }
 
-@keyframes pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1); }
+.result-banner.solved {
+  color: var(--tile-correct);
+  border-color: var(--tile-correct);
+  background: rgba(76, 154, 106, 0.08);
 }
 
-@keyframes flip {
-  0% {
-    transform: rotateX(0deg);
-    background-color: var(--tile-bg);
-  }
-  49% {
-    background-color: var(--tile-bg);
-  }
-  50% {
-    transform: rotateX(90deg);
-    background-color: var(--reveal-bg, var(--tile-bg));
-    color: var(--reveal-color, var(--text-color));
-    border-color: var(--reveal-bg, var(--tile-border));
-  }
-  100% {
-    transform: rotateX(0deg);
-    background-color: var(--reveal-bg, var(--tile-bg));
-    color: var(--reveal-color, var(--text-color));
-    border-color: var(--reveal-bg, var(--tile-border));
-  }
+.result-banner.failed {
+  color: var(--crimson);
+  border-color: var(--crimson);
+  background: rgba(193, 68, 60, 0.08);
 }
 
-/* ==========================================================================
-   7. On-Screen Keyboard
-   ========================================================================== */
+.answer-reveal {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.answer-reveal span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: reveal-letter 260ms ease-out forwards;
+}
+
+/* ---- Keyboard -------------------------------------------------------- */
 .keyboard {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  flex-shrink: 0;
-  padding-bottom: 4px;
+  max-width: 480px;
 }
 
 .kb-row {
   display: flex;
-  width: 100%;
-  gap: 4px;
-  touch-action: manipulation;
+  gap: 5px;
+  justify-content: center;
 }
 
 .key {
-  font-weight: bold;
-  border: 0;
-  padding: 0;
-  height: clamp(42px, 6vh, 58px);
-  border-radius: 4px;
-  cursor: pointer;
-  user-select: none;
-  background-color: var(--key-bg);
-  color: var(--key-color);
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  max-width: 34px;
+  height: 44px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
   text-transform: uppercase;
-  font-size: clamp(0.75rem, 2vh, 1rem);
-  transition: opacity 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.key:hover {
+  border-color: var(--text-muted);
 }
 
 .key.wide {
-  flex: 1.5;
-  font-size: 0.75rem;
+  max-width: 56px;
+  font-size: 10px;
 }
 
 .key.correct {
-  background-color: var(--correct);
-  color: #fff;
+  background: var(--tile-correct);
+  border-color: var(--tile-correct);
+  color: #0d1a12;
 }
 
 .key.present {
-  background-color: var(--present);
-  color: #fff;
+  background: var(--tile-present);
+  border-color: var(--tile-present);
+  color: #211705;
 }
 
 .key.absent {
-  background-color: var(--absent);
-  color: #fff;
-  opacity: 0.5;
+  background: var(--tile-absent);
+  border-color: var(--tile-absent);
+  color: var(--text-faint);
 }
 
-.key:active {
-  transform: scale(0.96);
+.leaderboard-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  margin-right: 8px;
+  vertical-align: -3px;
 }
 
-/* ==========================================================================
-   8. Answer Reveal Animation & Footer
-   ========================================================================== */
-.answer-reveal {
-  display: inline-flex;
-  gap: 4px;
-  font-weight: bold;
+/* ---- Leaderboard (ledger table) --------------------------------------- */
+.ledger-tier {
+  margin-bottom: 26px;
 }
 
-.answer-reveal span {
-  display: inline-block;
-  animation: bounce 0.6s ease infinite alternate;
+.ledger-tier-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-@keyframes bounce {
-  from { transform: translateY(0); }
-  to { transform: translateY(-4px); }
+.ledger-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 4px;
+  border-bottom: 1px dashed var(--line-soft);
+  font-size: 13px;
 }
 
-.app-footer {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--border-color);
-  font-size: 0.75rem;
-  flex-shrink: 0;
+.ledger-row .rank {
+  color: var(--text-faint);
+  font-family: var(--font-display);
 }
 
-.app-footer a {
+.ledger-row .login {
+  color: var(--text);
+}
+
+.ledger-row .time {
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-row .tries {
   color: var(--text-muted);
-  text-decoration: none;
+  font-size: 11px;
 }
 
-.app-footer a:hover {
-  text-decoration: underline;
+.empty-state {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 40px 0;
+}
+
+@keyframes reveal-letter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Tile flip reveal --------------------------------------------------- */
+.tile.tile-reveal {
+  animation-name: tile-flip;
+  animation-duration: 550ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes tile-flip {
+  0%   { transform: rotateX(0deg);  background: var(--surface); border-color: var(--text-faint); color: var(--text); }
+  49%  { transform: rotateX(90deg); background: var(--surface); border-color: var(--text-faint); color: var(--text); }
+  51%  { transform: rotateX(90deg); background: var(--reveal-bg); border-color: var(--reveal-bg); color: var(--reveal-color); }
+  100% { transform: rotateX(0deg);  background: var(--reveal-bg); border-color: var(--reveal-bg); color: var(--reveal-color); }
+}
+
+/* ---- Toast --------------------------------------------------------------- */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--crimson);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  pointer-events: none;
+  animation: toast-in-out 1.8s ease forwards;
+}
+
+@keyframes toast-in-out {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  10%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+}
+
+/* ---- Reactive tile sizing (bounded by viewport height too) -------------- */
+.grid {
+  max-width: min(420px, 62vh);
+}
+
+/* ---- Ledger date picker --------------------------------------------------- */
+.ledger-date-picker {
+  margin-bottom: 16px;
+}
+.ledger-date-picker select {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+}
+
+/* ---- Desktop: use the extra room, compact the tab strip ------------------ */
+@media (min-width: 900px) {
+  .app-shell { max-width: 880px; padding: 24px 24px 40px; }
+  .grid { max-width: min(420px, 58vh); }
+  .tile { font-size: clamp(18px, 2.2vw, 26px); }
+  .keyboard { max-width: 480px; }
+
+  .tab-strip {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .tab-stub {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    padding: 6px 4px;
+  }
+  .tab-stub .stamp { display: none; } /* status is conveyed by border color already */
+}
+
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 14px 12px 48px;
+  }
+
+  .masthead {
+    align-items: stretch;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .masthead-controls {
+    justify-content: space-between;
+  }
+
+  .user-chip {
+    margin-left: auto;
+  }
+
+  .tab-strip {
+    gap: 5px;
+  }
+
+  .tab-stub {
+    min-height: 60px;
+  }
+
+  .tab-stub .stamp {
+    display: none;
+  }
+
+  .grid {
+    max-width: 100%;
+  }
+
+  .keyboard {
+    max-width: 100%;
+  }
+
+  .key {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .key.wide {
+    max-width: none;
+  }
 }
