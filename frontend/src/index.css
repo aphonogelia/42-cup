@@ -101,7 +101,7 @@ button {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
 .masthead {
@@ -265,7 +265,7 @@ button {
   display: grid;
   gap: 10px;
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
 .tab-stub {
@@ -342,7 +342,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0;
   width: 100%;
 }
 
