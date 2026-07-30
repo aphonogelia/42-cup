@@ -3,7 +3,7 @@
   /* Ink ledger palette */
   --bg1: #E4D9FF;
   --bg2: #2b2b2b;
-  --bg3: #868686;
+  --bg3: #fffec0;
   --bg: var(--bg1);
   --surface: #1c252a;
   --surface-raised: #232e34;
@@ -57,7 +57,7 @@ body.theme-dark {
 
 body.theme-light {
   --bg: var(--bg3);
-  --surface: #fdfbeb;
+  --surface: #dbdbd8;
   --surface-raised: #f3ecdf;
   --line: #d7cfbf;
   --line-soft: #ebe4d6;
