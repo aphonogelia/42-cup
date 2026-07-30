@@ -5,6 +5,60 @@ import WordTabs from './components/WordTabs.jsx';
 import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 
+const INFO_PAGES = {
+  privacy: {
+    title: 'Privacy',
+    eyebrow: 'Data and access',
+    body: [
+      'This app uses 42 OAuth for sign-in. We only receive the profile details needed to identify your account in the game: your intra ID, login, display name, and avatar URL if available.',
+      'A session cookie is stored in your browser so you can stay signed in while you play. The cookie is httpOnly and is used only to authenticate requests to this app.',
+      'Game progress, guesses, and leaderboard data are stored in Supabase so the competition can track results across users and days. We do not sell your data or use third-party advertising trackers.',
+      'If you want your profile or game data removed, contact the organizer of the event or the maintainer of the deployment.'
+    ],
+  },
+  about: {
+    title: 'About',
+    eyebrow: 'The 42 Cup',
+    body: [
+      'Wordle // 42 Cup is a small daily word game built for the 42 community. Each round is tracked, scored, and recorded so players can compare results on the ledger.',
+      'The design leans into a paper-ticket style to make the game feel like a competition sheet rather than a generic clone. The goal is quick, competitive play with a little ceremony around each guess.',
+      'Sign in with your 42 account, pick up the next word, and try to keep your streak alive. The leaderboard shows how the day is unfolding across players.'
+    ],
+  },
+};
+
+function InfoModal({ page, onClose }) {
+  const content = INFO_PAGES[page];
+
+  if (!content) return null;
+
+  return (
+    <div className="info-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="info-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="info-title"
+        aria-describedby="info-body"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="info-card-head">
+          <p className="info-eyebrow">{content.eyebrow}</p>
+          <button className="icon-btn info-close" onClick={onClose} aria-label="Close dialog" title="Close">
+            ×
+          </button>
+        </div>
+        <h2 id="info-title">{content.title}</h2>
+        <div id="info-body" className="info-copy">
+          {content.body.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function SunIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -37,6 +91,7 @@ export default function App() {
   const [view, setView] = useState('play'); // 'play' | 'leaderboard'
   const [words, setWords] = useState([]);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
+  const [infoPage, setInfoPage] = useState(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
     return window.localStorage.getItem('wordle-theme') || 'dark';
@@ -71,6 +126,19 @@ export default function App() {
   useEffect(() => {
     window.localStorage.setItem('wordle-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!infoPage) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setInfoPage(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [infoPage]);
 
   useEffect(() => {
     document.body.classList.remove('theme-dark', 'theme-light');
@@ -164,9 +232,9 @@ export default function App() {
       </main>
 
       <footer className="app-footer">
-        <a href="#">Privacy</a>
+        <button type="button" onClick={() => setInfoPage('privacy')}>Privacy</button>
 
-        <a href="#">About</a>
+        <button type="button" onClick={() => setInfoPage('about')}>About</button>
 
         <a
           href="https://github.com"
@@ -176,6 +244,8 @@ export default function App() {
           GitHub
         </a>
       </footer>
+
+      <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
     </div>
   );
 }
