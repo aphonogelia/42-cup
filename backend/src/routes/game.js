@@ -190,11 +190,20 @@ export default async function gameRoutes(fastify) {
     const nbTries = result.nb_tries + 1;
     const outOfTries = !win && nbTries >= config.game.maxTries;
 
-    await supabase.from('guesses').insert({
-      word_result_id: result.id,
-      guess: guess.toLowerCase(),
-      feedback,
-    });
+    const [{ error: insertErr }, { data: updated, error: updateErr }] = await Promise.all([
+      supabase.from('guesses').insert({
+        word_result_id: result.id,
+        guess: guess.toLowerCase(),
+        feedback,
+      }),
+      supabase
+        .from('word_results')
+        .update(update)
+        .eq('id', result.id)
+        .select()
+        .single(),
+    ]);
+    if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
     const update = { nb_tries: nbTries };
     if (win) {
@@ -205,13 +214,7 @@ export default async function gameRoutes(fastify) {
       update.solved_at = new Date().toISOString(); // stamp end time even on failure, for consistency
     }
 
-    const { data: updated, error: updateErr } = await supabase
-      .from('word_results')
-      .update(update)
-      .eq('id', result.id)
-      .select()
-      .single();
-    if (updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
+
 
     return {
       feedback,
