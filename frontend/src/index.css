@@ -101,7 +101,7 @@ button {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 .masthead {
@@ -265,7 +265,7 @@ button {
   display: grid;
   gap: 10px;
   width: 100%;
-  margin-bottom: 22px;
+  margin-bottom: 8px;
 }
 
 .tab-stub {
@@ -342,14 +342,14 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   width: 100%;
 }
 
 .board-wrap {
   width: 100%;
   display: grid;
-  gap: 12px;
+  gap: 4px;
   justify-items: center;
 }
 
@@ -369,7 +369,7 @@ button {
   display: grid;
   gap: 8px;
   width: 100%;
-  max-width: 480px;
+  max-width: 380px;
   margin-inline: auto;
 }
 
@@ -640,7 +640,8 @@ button {
   }
 
   .tab-strip {
-    gap: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
   }
 
   .tab-stub {
