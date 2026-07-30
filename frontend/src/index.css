@@ -89,10 +89,19 @@ button {
 
 /* ---- Layout shell ------------------------------------------------------ */
 .app-shell {
-  max-width: 640px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 20px 16px 64px;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .masthead {
@@ -254,70 +263,50 @@ button {
 /* ---- Word tabs (ticket stubs) ------------------------------------------- */
 .tab-strip {
   display: grid;
-  gap: 6px;
+  gap: 10px;
   width: 100%;
   margin-bottom: 22px;
 }
 
 .tab-stub {
-  position: relative;
   width: 100%;
-  min-height: 68px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  min-height: 44px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 12px;
   color: var(--text-muted);
-}
-
-.tab-stub::before,
-.tab-stub::after {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--bg);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.tab-stub::before {
-  left: -5px;
-}
-
-.tab-stub::after {
-  right: -5px;
 }
 
 .tab-stub .num {
   font-family: var(--font-display);
-  font-size: 10px;
-  color: var(--text-faint);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
 .tab-stub .stamp {
   font-family: var(--font-display);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  transform: rotate(-8deg);
-  border: 1.5px solid currentColor;
-  border-radius: 2px;
-  padding: 1px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .tab-stub.not_started {
-  opacity: 0.55;
+  opacity: 0.75;
 }
 
 .tab-stub.in_progress {
-  border-color: var(--amber-dim);
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--line-soft));
+  background: rgba(234, 236, 97, 0.05);
 }
 
 .tab-stub.in_progress .num {
@@ -326,6 +315,7 @@ button {
 
 .tab-stub.solved {
   border-color: var(--tile-correct);
+  background: rgba(15, 189, 73, 0.05);
 }
 
 .tab-stub.solved .stamp {
@@ -334,6 +324,7 @@ button {
 
 .tab-stub.failed {
   border-color: var(--crimson-dim);
+  background: rgba(239, 71, 111, 0.05);
 }
 
 .tab-stub.failed .stamp {
@@ -341,8 +332,9 @@ button {
 }
 
 .tab-stub.selected {
-  outline: 2px solid var(--paper);
-  outline-offset: 1px;
+  border-color: var(--paper);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
 /* ---- Game grid ------------------------------------------------------ */
@@ -350,8 +342,15 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  gap: 16px;
   width: 100%;
+}
+
+.board-wrap {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
 }
 
 .status-line {
@@ -368,28 +367,28 @@ button {
 
 .grid {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  max-width: 420px;
+  max-width: 560px;
   margin-inline: auto;
 }
 
 .grid-row {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .tile {
   width: 100%;
   aspect-ratio: 1;
-  border: 2px solid var(--tile-empty-border);
-  border-radius: var(--radius);
+  border: 1.5px solid var(--tile-empty-border);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(16px, 4.8vw, 20px);
+  font-size: clamp(18px, 5vw, 24px);
   text-transform: uppercase;
   color: var(--text);
   background: var(--surface);
@@ -566,6 +565,42 @@ button {
   font-size: 11px;
 }
 
+.ledger-date-picker {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.ledger-date-picker select {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.app-footer {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.app-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  color: var(--paper);
+}
+
 .empty-state {
   color: var(--text-muted);
   font-size: 13px;
@@ -605,19 +640,20 @@ button {
   }
 
   .tab-strip {
-    gap: 5px;
+    gap: 8px;
   }
 
   .tab-stub {
-    min-height: 60px;
-  }
-
-  .tab-stub .stamp {
-    display: none;
+    min-height: 40px;
+    padding: 9px 10px;
   }
 
   .grid {
     max-width: 100%;
+  }
+
+  .tile {
+    font-size: clamp(16px, 7vw, 22px);
   }
 
   .keyboard {
@@ -631,5 +667,9 @@ button {
 
   .key.wide {
     max-width: none;
+  }
+
+  .app-footer {
+    justify-content: space-between;
   }
 }
