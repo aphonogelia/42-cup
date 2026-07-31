@@ -1,6 +1,6 @@
 /**
- * Computes Wordle-style feedback for a guess against the answer.
- * Handles duplicate letters correctly (classic Wordle two-pass algorithm):
+ * Computes wordel-style feedback for a guess against the answer.
+ * Handles duplicate letters correctly (classic wordel two-pass algorithm):
  *  1. Mark exact position matches as "correct" first, consuming those letters.
  *  2. For remaining letters, mark "present" only if the letter still has
  *     unconsumed copies in the answer, then consume one copy.

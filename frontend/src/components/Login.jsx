@@ -6,7 +6,7 @@ export default function Login() {
       <div className="login-title-wrap">
         <span className="login-title-blob" aria-hidden="true" />
         <h1>
-          WORDLE <span style={{ color: 'var(--amber)' }}>// 42 CUP</span>
+          wordel <span style={{ color: 'var(--amber)' }}>// 42 CUP</span>
         </h1>
       </div>
       <div className="login-cta-wrap">

@@ -1,5 +1,5 @@
 import { supabase } from '../supabase.js';
-import { computeFeedback, isWin } from '../lib/wordle.js';
+import { computeFeedback, isWin } from '../lib/wordel.js';
 import { isAllowedGuess } from '../lib/dictionary.js';
 import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';

@@ -1,4 +1,4 @@
-# Wordle competition backend (Fastify)
+# wordel competition backend (Fastify)
 
 Server-authoritative: the answer word never reaches the client, only
 per-letter feedback (`correct` / `present` / `absent`). Timing and try counts

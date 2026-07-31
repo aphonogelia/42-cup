@@ -1,12 +1,12 @@
-# Wordle // 42 Cup
+# wordel // 42 Cup
 
-![Wordle // 42 Cup screenshot placeholder](./docs/screenshot-placeholder.png)
+![wordel // 42 Cup screenshot placeholder](./docs/screenshot-placeholder.png)
 
-Live app: https://wordle-sepia-nu.vercel.app
+Live app: https://wordel-sepia-nu.vercel.app
 
-Wordle // 42 Cup is a Wordle-style game built for 42 students during the club immersion day. It lets players sign in with their 42 account, play through the daily word set, and compare results on the leaderboard.
+wordel // 42 Cup is a wordel-style game built for 42 students during the club immersion day. It lets players sign in with their 42 account, play through the daily word set, and compare results on the leaderboard.
 
-The game is seeded with 5 randomly selected words from the repository word pool in [backend/data/competition-words.txt](backend/data/competition-words.txt). That pool currently contains about 1,849 words. Guess validation uses the Wordle allowed-guess list in [backend/data/guesses.txt](backend/data/guesses.txt), which contains about 14,853 entries.
+The game is seeded with 5 randomly selected words from the repository word pool in [backend/data/competition-words.txt](backend/data/competition-words.txt). That pool currently contains about 1,849 words. Guess validation uses the wordel allowed-guess list in [backend/data/guesses.txt](backend/data/guesses.txt), which contains about 14,853 entries.
 
 ## Stack
 
@@ -19,7 +19,7 @@ The game is seeded with 5 randomly selected words from the repository word pool 
 
 - Sign in with your 42 account
 - Play the current daily draw of 5 words
-- Submit only valid Wordle guesses
+- Submit only valid wordel guesses
 - Track progress and leaderboard results per day
 - Keep past draws stored in the database
 
@@ -51,7 +51,7 @@ See [backend/README.md](backend/README.md) and [frontend/README.md](frontend/REA
 - The backend is hosted on Render.
 - The frontend is hosted on Vercel.
 - The database is hosted on Supabase.
-- The app is designed for the 42 club immersion day, but it can be reused for other small Wordle competitions.
+- The app is designed for the 42 club immersion day, but it can be reused for other small wordel competitions.
 
 ## License
 

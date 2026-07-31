@@ -24,7 +24,7 @@ const INFO_PAGES = {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      'Wordle // 42 Cup is a small daily word game built for the 42 community. Each round is tracked, scored, and recorded so players can compare results on the ledger.',
+      'wordel // 42 Cup is a small daily word game built for the 42 community. Each round is tracked, scored, and recorded so players can compare results on the ledger.',
       'The goal is quick, competitive play.',
       'Sign in with your 42 account, pick up the next word, and try to keep your streak alive. The leaderboard shows how the day is unfolding across players.'
     ],
@@ -111,7 +111,7 @@ export default function App() {
   const [infoPage, setInfoPage] = useState(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
-    return window.localStorage.getItem('wordle-theme') || 'dark';
+    return window.localStorage.getItem('wordel-theme') || 'dark';
   });
 
   const refreshProgress = useCallback((opts = {}) => {
@@ -150,7 +150,7 @@ export default function App() {
   }, [user, refreshProgress]);
 
   useEffect(() => {
-    window.localStorage.setItem('wordle-theme', theme);
+    window.localStorage.setItem('wordel-theme', theme);
   }, [theme]);
 
   useEffect(() => {
@@ -200,7 +200,7 @@ export default function App() {
     <div className="app-shell">
       <header className="masthead">
         <h1 className="masthead-title">
-          WORDLE <span>// 42 CUP</span>
+          wordel <span>// 42 CUP</span>
         </h1>
         <div className="masthead-controls">
           <nav className="masthead-nav">
@@ -265,7 +265,7 @@ export default function App() {
         <button type="button" onClick={() => setInfoPage('about')}>About</button>
 
         <a
-          href="https://github.com/aphonogelia/wordle"
+          href="https://github.com/aphonogelia/wordel"
           target="_blank"
           rel="noreferrer"
         >

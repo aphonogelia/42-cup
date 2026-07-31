@@ -1,4 +1,4 @@
-# Wordle competition frontend (React + Vite)
+# wordel competition frontend (React + Vite)
 
 Talks to the Fastify backend via cookie-based sessions (`credentials: 'include'`
 on every request — see `src/api.js`).
@@ -11,7 +11,7 @@ cp .env.example .env   # point VITE_API_URL at your backend
 npm run dev
 ```
 
-Requires the backend running (see the `wordle-backend` README) with
+Requires the backend running (see the `wordel-backend` README) with
 `FRONTEND_URL` there set to match wherever this dev server runs
 (`http://localhost:5173` by default).
 
