@@ -265,7 +265,7 @@ export default function App() {
         <button type="button" onClick={() => setInfoPage('about')}>About</button>
 
         <a
-          href="https://github.com/aphonogelia/wordel"
+          href="https://github.com/aphonogelia/42-cup"
           target="_blank"
           rel="noreferrer"
         >

@@ -397,7 +397,7 @@ body.theme-light .alert-toast-card {
 
 .login-screen::before {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-image:
     linear-gradient(rgba(255, 145, 43, 0.32) 1px, transparent 1px),
