@@ -46,7 +46,7 @@ export default async function gameRoutes(fastify) {
 
     const { data: results, error: resErr } = await supabase
       .from('word_results')
-      .select('word_id, status, nb_tries, time_seconds')
+      .select('word_id, status, nb_tries, time_seconds, started_at')
       .eq('user_id', request.user.id);
     if (resErr) return reply.code(500).send({ error: 'Failed to load progress' });
 
@@ -58,6 +58,7 @@ export default async function gameRoutes(fastify) {
       status: byWordId[w.id]?.status ?? 'not_started',
       nb_tries: byWordId[w.id]?.nb_tries ?? 0,
       time_seconds: byWordId[w.id]?.time_seconds ?? null,
+      started_at: byWordId[w.id]?.started_at ?? null,
     }));
   });
 
@@ -95,6 +96,7 @@ export default async function gameRoutes(fastify) {
           nb_tries: result.nb_tries,
           max_tries: config.game.maxTries,
           status: result.status,
+          started_at: result.started_at,
           guesses: guesses ?? [],
         };
       } catch (error) {
@@ -118,6 +120,7 @@ export default async function gameRoutes(fastify) {
       nb_tries: result.nb_tries,
       max_tries: config.game.maxTries,
       status: result.status,
+      started_at: result.started_at,
       guesses: guesses ?? [],
     };
   });

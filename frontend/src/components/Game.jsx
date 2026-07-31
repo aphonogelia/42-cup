@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import GameGrid, { getRevealDurationMs } from './GameGrid.jsx';
 import { computeLetterStates } from '../lib/keyboardState.js';
 import Keyboard from './Keyboard.jsx';
-import Toast from './Toast.jsx';
+import AlertModal from './AlertModal.jsx';
 
 const LOADING_ROWS = 6;
 const LOADING_LENGTH = 5;
@@ -38,22 +38,32 @@ function AnimatedAnswer({ answer }) {
   );
 }
 
+function formatDuration(totalSeconds) {
+  if (totalSeconds == null || Number.isNaN(totalSeconds)) return '00:00';
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainder.toString().padStart(2, '0')}`;
+}
+
 export default function Game({ orderIndex, onWordFinished }) {
   const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(null);
   const [revealRowIndex, setRevealRowIndex] = useState(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const revealTimeout = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setToastMessage('');
+    setErrorMessage('');
     setFinished(null);
     setCurrentGuess('');
     setRevealRowIndex(null);
+    setElapsedSeconds(0);
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
 
     api
@@ -62,7 +72,7 @@ export default function Game({ orderIndex, onWordFinished }) {
         if (cancelled) return;
         setWordState(data);
       })
-      .catch((err) => !cancelled && setToastMessage(err.message))
+      .catch((err) => !cancelled && setErrorMessage(err.message))
       .finally(() => !cancelled && setLoading(false));
 
     return () => {
@@ -74,10 +84,26 @@ export default function Game({ orderIndex, onWordFinished }) {
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
   }, []);
 
+  useEffect(() => {
+    if (!wordState?.started_at) return undefined;
+
+    const startedAtMs = new Date(wordState.started_at).getTime();
+
+    if (wordState.status !== 'in_progress') {
+      setElapsedSeconds(Math.round(wordState.time_seconds ?? (Date.now() - startedAtMs) / 1000));
+      return undefined;
+    }
+
+    const updateElapsed = () => setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
+    updateElapsed();
+    const interval = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(interval);
+  }, [wordState]);
+
   const submitGuess = useCallback(async () => {
     if (!wordState || finished || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
     if (currentGuess.length !== wordState.length) {
-      setToastMessage(`Guess must be ${wordState.length} letters`);
+      setErrorMessage(`Guess must be ${wordState.length} letters`);
       return;
     }
     try {
@@ -88,6 +114,8 @@ export default function Game({ orderIndex, onWordFinished }) {
       setWordState((prev) => ({
         ...prev,
         nb_tries: result.nb_tries,
+        status: result.status ?? prev.status,
+        time_seconds: result.time_seconds ?? prev.time_seconds,
         guesses: [...prev.guesses, { guess: guessedWord, feedback: result.feedback }],
       }));
       setCurrentGuess('');
@@ -102,7 +130,7 @@ export default function Game({ orderIndex, onWordFinished }) {
         }
       }, duration);
     } catch (err) {
-      setToastMessage(err.message);
+      setErrorMessage(err.message);
     }
   }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished]);
 
@@ -137,14 +165,18 @@ export default function Game({ orderIndex, onWordFinished }) {
 
         <div className="board-wrap">
           <LoadingBoard />
-          <Keyboard letterStates={{}} onKey={() => {}} disabled />
+          <Keyboard letterStates={{}} onKey={() => { }} disabled />
         </div>
       </div>
     );
   }
 
   if (!wordState) {
-    return <div className="status-line error">{toastMessage || 'Could not load word.'}</div>;
+    return (
+      <div className="game-panel">
+        <AlertModal message={errorMessage || 'Could not load word.'} onClose={() => setErrorMessage('')} />
+      </div>
+    );
   }
 
   const letterStates = computeLetterStates(wordState.guesses);
@@ -153,7 +185,7 @@ export default function Game({ orderIndex, onWordFinished }) {
   return (
     <div className="game-panel">
       <div className="status-line">
-        {!finished && wordState.status === 'in_progress' ? `Try ${wordState.nb_tries}/${wordState.max_tries}` : ''}
+        Time {formatDuration(elapsedSeconds)}
       </div>
 
       <div className="board-wrap">
@@ -164,7 +196,7 @@ export default function Game({ orderIndex, onWordFinished }) {
           currentGuess={currentGuess}
           revealRowIndex={revealRowIndex}
         />
-        <Toast message={toastMessage} onDone={() => setToastMessage('')} />
+        <AlertModal message={errorMessage} onClose={() => setErrorMessage('')} />
       </div>
 
       {finished && (

@@ -17,7 +17,7 @@ export default function WordTabs({ words, selectedOrderIndex, onSelect }) {
           {w.status === 'solved' || w.status === 'failed' ? (
             <span className="stamp">{STAMP_LABEL[w.status]}</span>
           ) : (
-            <span className="num">{w.length}L</span>
+            null
           )}
         </button>
       ))}

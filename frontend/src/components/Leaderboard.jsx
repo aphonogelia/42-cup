@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import AlertModal from './AlertModal.jsx';
 
 function formatTime(seconds) {
   if (seconds == null) return '—';
@@ -42,8 +43,6 @@ export default function Leaderboard({ totalWords }) {
     return () => { cancelled = true; };
   }, [selectedDate]);
 
-  if (error) return <div className="status-line error">{error}</div>;
-
   const tiers = [];
   if (rows) {
     let current = null;
@@ -58,6 +57,7 @@ export default function Leaderboard({ totalWords }) {
 
   return (
     <div>
+      <AlertModal message={error} onClose={() => setError('')} />
       {dates.length > 0 && (
         <div className="ledger-date-picker">
           <select value={selectedDate ?? ''} onChange={(e) => setSelectedDate(e.target.value)}>
