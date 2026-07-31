@@ -892,6 +892,15 @@ body.theme-light .alert-toast-card {
     padding: 14px 12px 20px;
   }
 
+  .login-screen {
+    padding: 8vh 20px 10vh;
+  }
+
+  .login-title-wrap {
+    margin-top: 2vh;
+  }
+
+
   .masthead {
     align-items: stretch;
     gap: 12px;
