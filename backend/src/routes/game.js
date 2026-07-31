@@ -175,7 +175,7 @@ export default async function gameRoutes(fastify) {
       return reply.code(400).send({ error: 'Not a recognized word' });
     }
 
-    const result = await getOrCreateWordResult(request.user.id, word.id);
+    const result = await getOrCreateWordResult(fastify, request.user.id, word.id);
     if (result.status !== 'in_progress') {
       return reply.code(409).send({
         error: `Word already ${result.status}`,
@@ -185,7 +185,7 @@ export default async function gameRoutes(fastify) {
 
     if (config.game.hardMode) {
 
-      const started = performance.now();
+      const hardModeStarted = performance.now();
 
       const { data: previousGuesses } = await supabase
         .from('guesses')
@@ -194,7 +194,7 @@ export default async function gameRoutes(fastify) {
         .order('created_at');
 
       fastify.log.info(
-        { ms: Math.round(performance.now() - started) },
+        { ms: Math.round(performance.now() - hardModeStarted) },
         'previous guesses lookup'
       );
 
@@ -212,7 +212,7 @@ export default async function gameRoutes(fastify) {
 
 
     // Basic anti-bruteforce throttle: minimum spacing between guesses.
-    const started = performance.now();
+    const lastGuessStarted = performance.now();
 
     const { data: lastGuess } = await supabase
       .from('guesses')
@@ -223,7 +223,7 @@ export default async function gameRoutes(fastify) {
       .maybeSingle();
 
     fastify.log.info(
-      { ms: Math.round(performance.now() - started) },
+      { ms: Math.round(performance.now() - lastGuessStarted) },
       'last guess lookup'
     );
 
@@ -248,7 +248,7 @@ export default async function gameRoutes(fastify) {
       update.solved_at = new Date().toISOString(); // stamp end time even on failure, for consistency
     }
 
-    const started = performance.now();
+    const saveStarted = performance.now();
     const [{ error: insertErr }, { data: updated, error: updateErr }] = await Promise.all([
       supabase.from('guesses').insert({
         word_result_id: result.id,
@@ -264,7 +264,7 @@ export default async function gameRoutes(fastify) {
     ]);
 
     fastify.log.info(
-      { ms: Math.round(performance.now() - started) },
+      { ms: Math.round(performance.now() - saveStarted) },
       'save guess'
     );
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
