@@ -62,7 +62,7 @@ export default async function gameRoutes(fastify) {
     }));
   });
 
-  // Starts (or resumes) a specific word by its order_index (1..7).
+  // Starts (or resumes) a specific word by its order_index (1..5).
   // Server stamps started_at the first time this is called for a word.
   fastify.post('/api/game/start', async (request, reply) => {
     const { order_index } = request.body ?? {};

@@ -38,14 +38,6 @@ function AnimatedAnswer({ answer }) {
   );
 }
 
-function formatDuration(totalSeconds) {
-  if (totalSeconds == null || Number.isNaN(totalSeconds)) return '00:00';
-  const seconds = Math.max(0, Math.floor(totalSeconds));
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${remainder.toString().padStart(2, '0')}`;
-}
-
 export default function Game({ orderIndex, onWordFinished }) {
   const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
@@ -53,7 +45,6 @@ export default function Game({ orderIndex, onWordFinished }) {
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(null);
   const [revealRowIndex, setRevealRowIndex] = useState(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const revealTimeout = useRef(null);
 
   useEffect(() => {
@@ -63,7 +54,6 @@ export default function Game({ orderIndex, onWordFinished }) {
     setFinished(null);
     setCurrentGuess('');
     setRevealRowIndex(null);
-    setElapsedSeconds(0);
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
 
     api
@@ -83,22 +73,6 @@ export default function Game({ orderIndex, onWordFinished }) {
   useEffect(() => () => {
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
   }, []);
-
-  useEffect(() => {
-    if (!wordState?.started_at) return undefined;
-
-    const startedAtMs = new Date(wordState.started_at).getTime();
-
-    if (wordState.status !== 'in_progress') {
-      setElapsedSeconds(Math.round(wordState.time_seconds ?? (Date.now() - startedAtMs) / 1000));
-      return undefined;
-    }
-
-    const updateElapsed = () => setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
-    updateElapsed();
-    const interval = window.setInterval(updateElapsed, 1000);
-    return () => window.clearInterval(interval);
-  }, [wordState]);
 
   const submitGuess = useCallback(async () => {
     if (!wordState || finished || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
@@ -185,7 +159,7 @@ export default function Game({ orderIndex, onWordFinished }) {
   return (
     <div className="game-panel">
       <div className="status-line">
-        Time {formatDuration(elapsedSeconds)}
+        {!finished && wordState.status === 'in_progress' ? `Try ${wordState.nb_tries}/${wordState.max_tries}` : ''}
       </div>
 
       <div className="board-wrap">
@@ -201,7 +175,14 @@ export default function Game({ orderIndex, onWordFinished }) {
 
       {finished && (
         <div className={`result-banner ${finished.status}`}>
-          {/* unchanged */}
+          {finished.status === 'solved' ? (
+            <span>Solved in {wordState.nb_tries}/{wordState.max_tries}</span>
+          ) : (
+            <>
+              <span>Out of tries</span>
+              {finished.answer ? <AnimatedAnswer answer={finished.answer.toUpperCase()} /> : null}
+            </>
+          )}
         </div>
       )}
 

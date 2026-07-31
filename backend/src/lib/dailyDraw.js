@@ -4,7 +4,7 @@ import path from 'node:path';
 import { supabase } from '../supabase.js';
 
 export const BERLIN_TIME_ZONE = 'Europe/Berlin';
-export const DEFAULT_DRAW_COUNT = 7;
+export const DEFAULT_DRAW_COUNT = 5;
 export const DEFAULT_POOL_PATH = path.resolve('data/competition-words.txt');
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', {
@@ -116,8 +116,8 @@ export async function ensureDailyDraw({
     force = false,
 } = {}) {
     const existing = await getDailyWords(drawDate);
-    if (existing.length === count) {
-        return existing;
+    if (existing.length >= count && !force) {
+        return existing.slice(0, count);
     }
     if (existing.length > 0 && !force) {
         throw new Error(

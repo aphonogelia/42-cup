@@ -191,6 +191,61 @@ button {
   z-index: 20;
 }
 
+.alert-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 25;
+  max-width: min(92vw, 320px);
+  background: rgba(35, 46, 52, 0.95);
+  border: 1px solid rgba(234, 236, 97, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  padding: 10px 12px;
+  color: var(--text);
+  animation: toast-in 120ms ease-out;
+}
+
+body.theme-light .alert-toast {
+  background: rgba(255, 255, 228, 0.97);
+}
+
+.alert-toast-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.alert-toast-title {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.alert-toast-body {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.alert-toast-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.alert-toast-close:hover {
+  color: var(--paper);
+}
+
 .info-card {
   width: min(100%, 560px);
   max-height: min(100%, 78vh);
@@ -522,6 +577,12 @@ button {
   color: var(--text-faint);
 }
 
+.tile.tile-reveal {
+  animation: tile-reveal 550ms ease-in-out forwards;
+  transform-origin: center;
+  will-change: transform, background-color, color;
+}
+
 .tile-skeleton {
   border-color: var(--line-soft);
   background:
@@ -734,6 +795,44 @@ button {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tile-reveal {
+  0% {
+    transform: scaleY(1);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  45% {
+    transform: scaleY(0.12);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  55% {
+    transform: scaleY(0.12);
+    background: var(--reveal-bg);
+    color: var(--reveal-color);
+  }
+
+  100% {
+    transform: scaleY(1);
+    background: var(--reveal-bg);
+    color: var(--reveal-color);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

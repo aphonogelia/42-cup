@@ -1,27 +1,23 @@
-export default function AlertModal({ title = 'Error', message, onClose }) {
+import { useEffect } from 'react';
+
+export default function AlertModal({ title = 'Error', message, onClose, duration = 1400 }) {
+    useEffect(() => {
+        if (!message) return undefined;
+        const timeout = window.setTimeout(() => onClose?.(), duration);
+        return () => window.clearTimeout(timeout);
+    }, [message, duration, onClose]);
+
     if (!message) return null;
 
     return (
-        <div className="info-overlay" role="presentation" onClick={onClose}>
-            <section
-                className="info-card"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="alert-title"
-                aria-describedby="alert-body"
-                onClick={(event) => event.stopPropagation()}
-            >
-                <div className="info-card-head">
-                    <p className="info-eyebrow">Alert</p>
-                    <button className="icon-btn info-close" onClick={onClose} aria-label="Close dialog" title="Close">
-                        ×
-                    </button>
-                </div>
-                <h2 id="alert-title">{title}</h2>
-                <div id="alert-body" className="info-copy">
-                    <p>{message}</p>
-                </div>
-            </section>
+        <div className="alert-toast" role="alert" aria-live="assertive">
+            <div className="alert-toast-head">
+                <span className="alert-toast-title">{title}</span>
+                <button className="alert-toast-close" onClick={onClose} aria-label="Close notification" title="Close">
+                    ×
+                </button>
+            </div>
+            <div className="alert-toast-body">{message}</div>
         </div>
     );
 }
