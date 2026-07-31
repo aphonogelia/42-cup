@@ -170,7 +170,7 @@ export default async function gameRoutes(fastify) {
     if (!word) {
       return reply.code(404).send({ error: 'Word not found' });
     }
-    
+
     if (guess.length !== word.length) {
       return reply.code(400).send({ error: `Guess must be ${word.length} letters` });
     }
@@ -213,29 +213,6 @@ export default async function gameRoutes(fastify) {
       }
     }
 
-
-    // Basic anti-bruteforce throttle: minimum spacing between guesses.
-    const lastGuessStarted = performance.now();
-
-    const { data: lastGuess } = await supabase
-      .from('guesses')
-      .select('created_at')
-      .eq('word_result_id', result.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    fastify.log.info(
-      { ms: Math.round(performance.now() - lastGuessStarted) },
-      'last guess lookup'
-    );
-
-    if (lastGuess) {
-      const elapsed = Date.now() - new Date(lastGuess.created_at).getTime();
-      if (elapsed < config.game.minMsBetweenGuesses) {
-        return reply.code(429).send({ error: 'Guessing too fast' });
-      }
-    }
 
     const feedback = computeFeedback(guess, word.answer);
     const win = isWin(feedback);
