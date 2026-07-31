@@ -127,8 +127,11 @@ export default async function gameRoutes(fastify) {
 
   // Submits a guess for the word currently in progress.
   fastify.post('/api/game/guess', async (request, reply) => {
+    const requestStarted = performance.now();
     const { word_id, guess } = request.body ?? {};
     if (!word_id || !guess) return reply.code(400).send({ error: 'word_id and guess required' });
+
+    const started = performance.now();
 
     const { data: word, error: wordErr } = await supabase
       .from('words')
@@ -136,6 +139,12 @@ export default async function gameRoutes(fastify) {
       .eq('id', word_id)
       .eq('draw_date', getBerlinDateKey())
       .single();
+
+    fastify.log.info(
+      { ms: Math.round(performance.now() - started) },
+      'word lookup'
+    );
+
     if (wordErr || !word) return reply.code(404).send({ error: 'Word not found' });
 
     if (guess.length !== word.length) {
@@ -218,13 +227,16 @@ export default async function gameRoutes(fastify) {
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
 
+    fastify.log.info(
+      { ms: Math.round(performance.now() - requestStarted) },
+      'guess request'
+    );
 
     return {
       feedback,
       nb_tries: updated.nb_tries,
       status: updated.status,
       time_seconds: updated.time_seconds,
-      // Only reveal the answer once the word is finished
       answer: updated.status !== 'in_progress' ? word.answer : undefined,
     };
   });
