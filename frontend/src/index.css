@@ -192,10 +192,16 @@ button {
 }
 
 .alert-toast {
-  position: fixed;
-  top: 16px;
-  right: 16px;
+  position: absolute;
+  inset: 0;
   z-index: 25;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.alert-toast-card {
+  pointer-events: auto;
   max-width: min(92vw, 320px);
   background: rgba(35, 46, 52, 0.95);
   border: 1px solid rgba(234, 236, 97, 0.28);
@@ -206,7 +212,7 @@ button {
   animation: toast-in 120ms ease-out;
 }
 
-body.theme-light .alert-toast {
+body.theme-light .alert-toast-card {
   background: rgba(255, 255, 228, 0.97);
 }
 
@@ -511,6 +517,7 @@ body.theme-light .alert-toast {
   display: grid;
   gap: 0;
   justify-items: center;
+  position: relative;
 }
 
 .status-line {

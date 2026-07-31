@@ -179,7 +179,7 @@ export default function Game({ orderIndex, onWordFinished }) {
             <span>Solved in {wordState.nb_tries}/{wordState.max_tries}</span>
           ) : (
             <>
-              <span>Out of tries</span>
+              <span>Out of tries - word was: </span>
               {finished.answer ? <AnimatedAnswer answer={finished.answer.toUpperCase()} /> : null}
             </>
           )}

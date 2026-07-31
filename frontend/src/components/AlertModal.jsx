@@ -11,13 +11,12 @@ export default function AlertModal({ title = 'Error', message, onClose, duration
 
     return (
         <div className="alert-toast" role="alert" aria-live="assertive">
-            <div className="alert-toast-head">
-                <span className="alert-toast-title">{title}</span>
-                <button className="alert-toast-close" onClick={onClose} aria-label="Close notification" title="Close">
-                    ×
-                </button>
+            <div className="alert-toast-card">
+                <div className="alert-toast-head">
+                    <span className="alert-toast-title">{title}</span>
+                </div>
+                <div className="alert-toast-body">{message}</div>
             </div>
-            <div className="alert-toast-body">{message}</div>
         </div>
     );
 }
