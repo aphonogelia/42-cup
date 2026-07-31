@@ -185,7 +185,11 @@ export default function App() {
   };
 
   if (!authChecked) {
-    return <div className="app-shell status-line">Loading...</div>;
+    return (
+      <div className="app-shell loading-shell">
+        <div className="loader" aria-label="Loading" role="status" />
+      </div>
+    );
   }
 
   if (!user) {

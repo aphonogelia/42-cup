@@ -87,6 +87,69 @@ button {
   }
 }
 
+.loading-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader {
+  width: 40px;
+  aspect-ratio: 1;
+  display: flex;
+  transform-origin: 50% 125%;
+  animation: l15-0 1.5s infinite linear;
+}
+
+.loader::before,
+.loader::after {
+  content: "";
+  flex: 1;
+  background: currentColor;
+  animation: inherit;
+  transform-origin: bottom left;
+  animation-name: l15-1;
+}
+
+.loader::before {
+  transform-origin: bottom right;
+  --s: -1;
+}
+
+@keyframes l15-0 {
+
+  0%,
+  10% {
+    transform: translateY(0) scaleY(1);
+  }
+
+  49.99% {
+    transform: translateY(-75%) scaleY(1);
+  }
+
+  50% {
+    transform: translateY(-75%) scaleY(-1);
+  }
+
+  90%,
+  100% {
+    transform: translateY(-150%) scaleY(-1);
+  }
+}
+
+@keyframes l15-1 {
+
+  10%,
+  90% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(calc(var(--s, 1) * 90deg));
+  }
+}
+
 /* ---- Layout shell ------------------------------------------------------ */
 .app-shell {
   max-width: 720px;
