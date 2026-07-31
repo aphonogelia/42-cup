@@ -46,6 +46,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
   const [finished, setFinished] = useState(null);
   const [revealRowIndex, setRevealRowIndex] = useState(null);
   const revealTimeout = useRef(null);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,10 +77,12 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
 
   const submitGuess = useCallback(async () => {
     if (!wordState || finished || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
+    if (submittingRef.current) return;
     if (currentGuess.length !== wordState.length) {
       setErrorMessage(`Guess must be ${wordState.length} letters`);
       return;
     }
+    submittingRef.current = true;
     try {
       const result = await api.guess(wordState.word_id, currentGuess);
       const rowIndex = wordState.guesses.length;
@@ -105,6 +108,8 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
       }, duration);
     } catch (err) {
       setErrorMessage(err.message);
+    } finally {
+      submittingRef.current = false;
     }
   }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished]);
 
