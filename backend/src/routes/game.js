@@ -5,7 +5,15 @@ import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
 import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
 
-async function getOrCreateWordResult(userId, wordId) {
+
+function elapsed(started) {
+  return Math.round(performance.now() - started);
+}
+
+
+async function getOrCreateWordResult(fastify, userId, wordId) {
+  const started = performance.now();
+
   const { data: existing } = await supabase
     .from('word_results')
     .select('*')
@@ -13,13 +21,26 @@ async function getOrCreateWordResult(userId, wordId) {
     .eq('word_id', wordId)
     .maybeSingle();
 
+  fastify.log.info(
+    { ms: Math.round(performance.now() - started) },
+    'word result lookup'
+  );
+
   if (existing) return existing;
+
+  const insertStarted = performance.now();
 
   const { data: created, error } = await supabase
     .from('word_results')
     .insert({ user_id: userId, word_id: wordId, status: 'in_progress' })
     .select()
     .single();
+
+  fastify.log.info(
+    { ms: Math.round(performance.now() - insertStarted) },
+    'word result insert'
+  );
+
   if (error) throw error;
   return created;
 }
@@ -82,7 +103,7 @@ export default async function gameRoutes(fastify) {
         const currentWord = words.find((item) => item.order_index === order_index);
         if (!currentWord) return reply.code(404).send({ error: 'Word not found' });
 
-        const result = await getOrCreateWordResult(request.user.id, currentWord.id);
+        const result = await getOrCreateWordResult(fastify, request.user.id, currentWord.id);
 
         const { data: guesses } = await supabase
           .from('guesses')
@@ -105,7 +126,7 @@ export default async function gameRoutes(fastify) {
       }
     }
 
-    const result = await getOrCreateWordResult(request.user.id, word.id);
+    const result = await getOrCreateWordResult(fastify, request.user.id, word.id);
 
     // Prior guesses, so a page refresh mid-word doesn't lose progress.
     const { data: guesses } = await supabase
@@ -163,11 +184,19 @@ export default async function gameRoutes(fastify) {
     }
 
     if (config.game.hardMode) {
+
+      const started = performance.now();
+
       const { data: previousGuesses } = await supabase
         .from('guesses')
         .select('guess, feedback')
         .eq('word_result_id', result.id)
         .order('created_at');
+
+      fastify.log.info(
+        { ms: Math.round(performance.now() - started) },
+        'previous guesses lookup'
+      );
 
       const check = validateHardMode(
         guess.toLowerCase(),
@@ -183,6 +212,8 @@ export default async function gameRoutes(fastify) {
 
 
     // Basic anti-bruteforce throttle: minimum spacing between guesses.
+    const started = performance.now();
+
     const { data: lastGuess } = await supabase
       .from('guesses')
       .select('created_at')
@@ -190,6 +221,12 @@ export default async function gameRoutes(fastify) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    fastify.log.info(
+      { ms: Math.round(performance.now() - started) },
+      'last guess lookup'
+    );
+
     if (lastGuess) {
       const elapsed = Date.now() - new Date(lastGuess.created_at).getTime();
       if (elapsed < config.game.minMsBetweenGuesses) {
@@ -211,6 +248,7 @@ export default async function gameRoutes(fastify) {
       update.solved_at = new Date().toISOString(); // stamp end time even on failure, for consistency
     }
 
+    const started = performance.now();
     const [{ error: insertErr }, { data: updated, error: updateErr }] = await Promise.all([
       supabase.from('guesses').insert({
         word_result_id: result.id,
@@ -224,6 +262,11 @@ export default async function gameRoutes(fastify) {
         .select()
         .single(),
     ]);
+
+    fastify.log.info(
+      { ms: Math.round(performance.now() - started) },
+      'save guess'
+    );
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
 
