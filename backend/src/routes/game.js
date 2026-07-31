@@ -10,6 +10,8 @@ function elapsed(started) {
   return Math.round(performance.now() - started);
 }
 
+let dailyWordsCache = null;
+let dailyWordsCacheDate = null;
 
 async function getOrCreateWordResult(fastify, userId, wordId) {
   const started = performance.now();
@@ -50,7 +52,16 @@ export default async function gameRoutes(fastify) {
 
   async function getActiveDraw() {
     const drawDate = getBerlinDateKey();
+
+    if (dailyWordsCacheDate === drawDate && dailyWordsCache) {
+      return { drawDate, words: dailyWordsCache };
+    }
+
     const words = await ensureDailyDraw({ drawDate });
+
+    dailyWordsCache = words;
+    dailyWordsCacheDate = drawDate;
+
     return { drawDate, words };
   }
 
@@ -152,22 +163,14 @@ export default async function gameRoutes(fastify) {
     const { word_id, guess } = request.body ?? {};
     if (!word_id || !guess) return reply.code(400).send({ error: 'word_id and guess required' });
 
-    const started = performance.now();
+    const { words } = await getActiveDraw();
 
-    const { data: word, error: wordErr } = await supabase
-      .from('words')
-      .select('id, answer, length, draw_date')
-      .eq('id', word_id)
-      .eq('draw_date', getBerlinDateKey())
-      .single();
+    const word = words.find((item) => item.id === word_id);
 
-    fastify.log.info(
-      { ms: Math.round(performance.now() - started) },
-      'word lookup'
-    );
-
-    if (wordErr || !word) return reply.code(404).send({ error: 'Word not found' });
-
+    if (!word) {
+      return reply.code(404).send({ error: 'Word not found' });
+    }
+    
     if (guess.length !== word.length) {
       return reply.code(400).send({ error: `Guess must be ${word.length} letters` });
     }
