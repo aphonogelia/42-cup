@@ -443,11 +443,12 @@ body.theme-light .alert-toast-card {
   border-radius: 10px;
   cursor: pointer;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  gap: 4px;
   color: var(--text-muted);
+  text-align: center;
 }
 
 .tab-stub .num {
@@ -455,6 +456,7 @@ body.theme-light .alert-toast-card {
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--text-muted);
+  line-height: 1;
 }
 
 .tab-stub .stamp {
@@ -464,6 +466,7 @@ body.theme-light .alert-toast-card {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-faint);
+  line-height: 1.1;
 }
 
 .tab-stub.not_started {
@@ -602,22 +605,26 @@ body.theme-light .alert-toast-card {
 .result-banner {
   font-family: var(--font-display);
   font-size: 13px;
-  padding: 10px 16px;
+  margin-top: 12px;
+  padding: 12px 16px;
   border-radius: var(--radius);
-  border: 1px solid;
+  border: 1px solid var(--line-soft);
   letter-spacing: 0.03em;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
 }
 
 .result-banner.solved {
-  color: var(--tile-correct);
-  border-color: var(--tile-correct);
-  background: rgba(76, 154, 106, 0.08);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .result-banner.failed {
-  color: var(--crimson);
-  border-color: var(--crimson);
-  background: rgba(193, 68, 60, 0.08);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .answer-reveal {
