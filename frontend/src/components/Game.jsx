@@ -158,9 +158,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
 
   return (
     <div className="game-panel">
-      <div className="status-line">
-        {!finished && wordState.status === 'in_progress' ? `Try ${wordState.nb_tries}/${wordState.max_tries}` : ''}
-      </div>
+
 
       <div className="board-wrap">
         <GameGrid
@@ -173,15 +171,11 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
         <AlertModal message={errorMessage} onClose={() => setErrorMessage('')} />
       </div>
 
-      {finished && (
+      {finished && finished.status !== 'solved' && (
         <div className={`result-banner ${finished.status}`}>
-          {finished.status === 'solved' ? (
-            <span>Solved in {wordState.nb_tries}/{wordState.max_tries}</span>
-          ) : (
-            <>
-              <span>Word was:</span>
-              {finished.answer ? <AnimatedAnswer answer={finished.answer.toUpperCase()} /> : null}
-            </>
+          <span>Word was:</span>
+          {finished.answer && (
+            <AnimatedAnswer answer={finished.answer.toUpperCase()} />
           )}
         </div>
       )}
