@@ -5,6 +5,9 @@ import WordTabs from './components/WordTabs.jsx';
 import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
+import Toast from './components/Toast.jsx';
+
+
 
 const INFO_PAGES = {
   privacy: {
@@ -86,11 +89,24 @@ function LogoutIcon() {
   );
 }
 
+
+function getNextOpenWord(words, currentOrderIndex) {
+  const open = words.filter((w) => w.status === 'not_started' || w.status === 'in_progress');
+  if (open.length === 0) return null;
+  const after = open
+    .filter((w) => w.order_index > currentOrderIndex)
+    .sort((a, b) => a.order_index - b.order_index)[0];
+  if (after) return after.order_index;
+  return open.sort((a, b) => a.order_index - b.order_index)[0].order_index;
+}
+
+
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState(null);
   const [view, setView] = useState('play'); // 'play' | 'leaderboard'
   const [words, setWords] = useState([]);
+  const [showCompletionToast, setShowCompletionToast] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
   const [theme, setTheme] = useState(() => {
@@ -98,7 +114,8 @@ export default function App() {
     return window.localStorage.getItem('wordle-theme') || 'dark';
   });
 
-  const refreshProgress = useCallback(() => {
+  const refreshProgress = useCallback((opts = {}) => {
+    const { checkCompletion = false } = opts;
     api
       .progress()
       .then((data) => {
@@ -108,10 +125,13 @@ export default function App() {
           const firstOpen = data.find((w) => w.status === 'not_started' || w.status === 'in_progress');
           return (firstOpen ?? data[0])?.order_index ?? null;
         });
+        if (checkCompletion) {
+          const allDone = data.every((w) => w.status === 'solved' || w.status === 'failed');
+          if (allDone) setShowCompletionToast(true);
+        }
       })
       .catch(() => { });
   }, []);
-
   // Handle the OAuth callback first, before anything else runs
   if (window.location.pathname === '/auth/callback') {
     return <AuthCallback />;
@@ -228,7 +248,9 @@ export default function App() {
             {selectedOrderIndex && (
               <Game
                 orderIndex={selectedOrderIndex}
-                onWordFinished={refreshProgress}
+                onWordFinished={() => refreshProgress({ checkCompletion: true })}
+                nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
+                onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
               />
             )}
           </>
@@ -250,7 +272,13 @@ export default function App() {
           GitHub
         </a>
       </footer>
-
+      <Toast
+        message={showCompletionToast ? 'Well done! All words solved.' : ''}
+        onDone={() => {
+          setShowCompletionToast(false);
+          setView('leaderboard');
+        }}
+      />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
     </div>
   );

@@ -38,7 +38,7 @@ function AnimatedAnswer({ answer }) {
   );
 }
 
-export default function Game({ orderIndex, onWordFinished }) {
+export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNext }) {
   const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -184,6 +184,12 @@ export default function Game({ orderIndex, onWordFinished }) {
             </>
           )}
         </div>
+      )}
+
+      {finished && nextOrderIndex != null && (
+        <button type="button" className="next-word-btn" onClick={onNext}>
+          Next word →
+        </button>
       )}
 
       <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
