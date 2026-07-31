@@ -49,7 +49,7 @@ export function validateHardMode(guess, previousGuesses) {
     if (found < count) {
       return {
         valid: false,
-        error: `Hard mode: guess must contain ${letter.toUpperCase()} (${count} times)`,
+        error: `Hard mode: guess must contain ${letter.toUpperCase()}`,
       };
     }
   }

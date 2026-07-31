@@ -777,12 +777,19 @@ body.theme-light .alert-toast-card {
   font-size: 12px;
 }
 
-.app-footer a {
+.app-footer a,
+.app-footer button {
   color: inherit;
   text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
-.app-footer a:hover {
+.app-footer a:hover,
+.app-footer button:hover {
   color: var(--paper);
 }
 
