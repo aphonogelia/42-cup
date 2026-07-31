@@ -1,6 +1,4 @@
 const API_URL = import.meta.env.VITE_API_URL;
-console.log("API_URL =", API_URL);
-console.log(`${API_URL}/api/game/progress`);
 
 class ApiError extends Error {
   constructor(message, status, body) {
@@ -10,12 +8,16 @@ class ApiError extends Error {
   }
 }
 
+const TOKEN_KEY = 'auth_token';
+
 async function request(path, options = {}) {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: 'include', // sends/receives the session cookie
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -39,16 +41,18 @@ async function request(path, options = {}) {
 
 export const api = {
   me: () => request('/api/auth/me'),
-  logout: () => request('/api/auth/logout', { method: 'POST' }),
+  logout: () => {
+    sessionStorage.removeItem(TOKEN_KEY);
+    return request('/api/auth/logout', { method: 'POST' });
+  },
   progress: () => request('/api/game/progress'),
   start: (order_index) =>
     request('/api/game/start', { method: 'POST', body: JSON.stringify({ order_index }) }),
   guess: (word_id, guess) =>
     request('/api/game/guess', { method: 'POST', body: JSON.stringify({ word_id, guess }) }),
-  leaderboard: () => request('/api/leaderboard'),
   leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
   leaderboardDates: () => request('/api/leaderboard/dates'),
   loginUrl: () => `${API_URL}/api/auth/42`,
 };
 
-export { ApiError, API_URL };
+export { ApiError, API_URL, TOKEN_KEY };

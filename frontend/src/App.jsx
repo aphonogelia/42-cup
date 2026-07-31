@@ -4,6 +4,7 @@ import Login from './components/Login.jsx';
 import WordTabs from './components/WordTabs.jsx';
 import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
+import AuthCallback from './components/AuthCallback.jsx';
 
 const INFO_PAGES = {
   privacy: {
@@ -13,7 +14,7 @@ const INFO_PAGES = {
       'This app uses 42 OAuth for sign-in. We only receive the profile details needed to identify your account in the game: your intra ID, login, display name, and avatar URL if available.',
       'A session cookie is stored in your browser so you can stay signed in while you play. The cookie is httpOnly and is used only to authenticate requests to this app.',
       'Game progress, guesses, and leaderboard data are stored in Supabase so the competition can track results across users and days. We do not sell your data or use third-party advertising trackers.',
-      'If you want your profile or game data removed, contact the organizer of the event or the maintainer of the deployment.'
+      'If you want your profile or game data removed, contact htharrau.'
     ],
   },
   about: {
@@ -21,7 +22,7 @@ const INFO_PAGES = {
     eyebrow: 'The 42 Cup',
     body: [
       'Wordle // 42 Cup is a small daily word game built for the 42 community. Each round is tracked, scored, and recorded so players can compare results on the ledger.',
-      'The design leans into a paper-ticket style to make the game feel like a competition sheet rather than a generic clone. The goal is quick, competitive play with a little ceremony around each guess.',
+      'The goal is quick, competitive play.',
       'Sign in with your 42 account, pick up the next word, and try to keep your streak alive. The leaderboard shows how the day is unfolding across players.'
     ],
   },
@@ -110,6 +111,11 @@ export default function App() {
       })
       .catch(() => { });
   }, []);
+
+  // Handle the OAuth callback first, before anything else runs
+  if (window.location.pathname === '/auth/callback') {
+    return <AuthCallback />;
+  }
 
   useEffect(() => {
     api

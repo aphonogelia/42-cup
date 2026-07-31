@@ -2,8 +2,6 @@ import oauthPlugin from '@fastify/oauth2';
 import { config } from '../config.js';
 import { supabase } from '../supabase.js';
 
-console.log('Callback URL:', config.fortyTwo.callbackUrl);
-
 export default async function authRoutes(fastify) {
   await fastify.register(oauthPlugin, {
     name: 'fortyTwoOAuth2',
@@ -20,16 +18,13 @@ export default async function authRoutes(fastify) {
         tokenPath: '/oauth/token',
       },
     },
-    // GET /api/auth/42 kicks off the redirect to 42's login page
     startRedirectPath: '/api/auth/42',
     callbackUri: config.fortyTwo.callbackUrl,
-    cookie: {
-      sameSite: 'none',
-      secure: true,
-    },
+    // no `cookie` option needed anymore — that was only for the oauth2 state cookie
+    // during the flow itself; @fastify/oauth2 can keep using its default (short-lived,
+    // same-site-safe) state handling without you touching it
   });
 
-  // 42 redirects back here after login
   fastify.get('/api/auth/42/callback', async (request, reply) => {
     let tokenResponse;
     try {
@@ -41,7 +36,6 @@ export default async function authRoutes(fastify) {
 
     const accessToken = tokenResponse.token.access_token;
 
-    // Fetch the logged-in user's 42 profile
     const meRes = await fetch('https://api.intra.42.fr/v2/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -51,7 +45,6 @@ export default async function authRoutes(fastify) {
     }
     const profile = await meRes.json();
 
-    // Upsert the user in Supabase, keyed on their stable 42 intra id
     const { data: user, error } = await supabase
       .from('users')
       .upsert(
@@ -71,12 +64,14 @@ export default async function authRoutes(fastify) {
       return reply.redirect(`${config.frontendUrl}/login?error=db_error`);
     }
 
-    fastify.issueSession(reply, user);
-    return reply.redirect(`${config.frontendUrl}/`);
+    const token = fastify.issueSession(user);
+    // fragment, not query param — never hits server logs
+    return reply.redirect(`${config.frontendUrl}/auth/callback#token=${token}`);
   });
 
-  fastify.post('/api/auth/logout', async (request, reply) => {
-    fastify.clearSession(reply);
+  // Now a no-op — logout happens client-side by clearing sessionStorage.
+  // Keep it if you want a hook for future server-side token revocation/audit logging.
+  fastify.post('/api/auth/logout', async () => {
     return { ok: true };
   });
 
