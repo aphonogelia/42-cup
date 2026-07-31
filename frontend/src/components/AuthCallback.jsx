@@ -1,6 +1,6 @@
 // pages/AuthCallback.jsx (adjust path to your router setup)
 import { useEffect } from 'react';
-import { TOKEN_KEY } from '../api';
+import { TOKEN_KEY } from '../api.js';
 
 export default function AuthCallback() {
 
