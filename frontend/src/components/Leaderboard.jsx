@@ -2,27 +2,6 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import AlertModal from './AlertModal.jsx';
 
-const LOADING_ROWS = 4;
-const LOADING_COLUMNS = 4;
-
-function LoadingLedger() {
-  return (
-    <div className="grid loading-grid" aria-hidden="true">
-      {Array.from({ length: LOADING_ROWS }).map((_, rowIndex) => (
-        <div
-          className="grid-row"
-          key={rowIndex}
-          style={{ gridTemplateColumns: `repeat(${LOADING_COLUMNS}, minmax(0, 1fr))` }}
-        >
-          {Array.from({ length: LOADING_COLUMNS }).map((__, columnIndex) => (
-            <div className="tile tile-skeleton" key={columnIndex} />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function formatTime(seconds) {
   if (seconds == null) return '—';
   const m = Math.floor(seconds / 60);
@@ -90,7 +69,9 @@ export default function Leaderboard({ totalWords }) {
       )}
 
       {!rows ? (
-        <LoadingLedger />
+        <div className="loading-shell" aria-busy="true">
+          <div className="loader" aria-label="Loading" role="status" />
+        </div>
       ) : rows.length === 0 ? (
         <div className="empty-state">No entries yet. Be the first.</div>
       ) : (
