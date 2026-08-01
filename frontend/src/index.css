@@ -1041,7 +1041,7 @@ body.theme-light .alert-toast-card {
     font-size: clamp(16px, 7vw, 22px);
   }
 
-  .keyboard {
+  /* .keyboard {
     max-width: 100%;
     margin-top: 16px;
     margin-bottom: 10px;
@@ -1054,9 +1054,9 @@ body.theme-light .alert-toast-card {
 
   .key.wide {
     max-width: none;
-  }
+  } */
 
-  .app-footer {
+  /* .app-footer {
     justify-content: space-between;
-  }
+  } */
 }
