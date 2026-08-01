@@ -140,11 +140,9 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
   if (loading) {
     return (
       <div className="game-panel game-loading" aria-busy="true">
-        <div className="status-line">Loading word #{orderIndex}...</div>
-
         <div className="board-wrap">
           <LoadingBoard />
-          <Keyboard letterStates={{}} onKey={() => { }} disabled />
+          <Keyboard letterStates={{}} onKey={() => {}} disabled />
         </div>
       </div>
     );
