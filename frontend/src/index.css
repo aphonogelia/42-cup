@@ -66,6 +66,7 @@ body.theme-light {
   --text-muted: #5f6b65;
   --text-faint: #7d8982;
   --tile-empty-border: #d1c7b6;
+    --amber: #caad19;
 }
 
 button {
@@ -997,7 +998,7 @@ body.theme-light .alert-toast-card {
   }
 
   .login-title-wrap {
-    margin-top: 2vh;
+    margin-top: 4vh;
   }
 
 
