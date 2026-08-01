@@ -11,7 +11,7 @@ export default function Login() {
       </div>
       <div className="login-cta-wrap">
         <p>
-          Seven words. Every guess, every second, on the record. Sign in with your intra
+          Five words. Every guess, every second, on the record. Sign in with your intra
           account to enter the ledger.
         </p>
         <a className="login-btn" href={api.loginUrl()}>
