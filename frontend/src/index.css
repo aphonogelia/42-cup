@@ -997,21 +997,9 @@ body.theme-light .alert-toast-card {
 }
 
 @media (max-width: 640px) {
-  .app-shell {
+  /* .app-shell {
     padding: 14px 12px 20px;
-  }
-
-  .login-screen {
-    padding: 10vh 20px 10vh; /* a bit more room overall */
-  }
-
-  .login-title-wrap {
-    margin-top: 1vh; /* back off from whatever you cranked it to */
-  }
-
-  .login-title-blob {
-    top: -90px; /* less negative than -130px so it doesn't reach past the container edge */
-  }
+  } */
 
 
   .masthead {
