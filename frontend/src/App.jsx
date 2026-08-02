@@ -10,26 +10,31 @@ import AlertModal from './components/AlertModal.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
-
+javascript
 const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
     eyebrow: 'Data and access',
     body: [
-      'This app uses 42 OAuth for sign-in. We only receive the profile details needed to identify your account in the game: your intra ID, login, display name, and avatar URL if available.',
-      'A signed token is stored in your browser so you can stay signed in while you play. It is used only to authenticate requests to this app.',
-      'Game progress, guesses, and leaderboard data are stored in Supabase so the competition can track results across users and days. We do not sell your data or use third-party advertising trackers.',
-      'If you want your profile or game data removed, contact htharrau.'
+      'Sign-in is handled through 42 OAuth. We only receive what\'s needed to identify your account: your intra ID, login, display name, and avatar if you have one.',
+      'A signed token is stored in your browser to keep you signed in. It\'s used solely to authenticate your requests to this app.',
+      'Your guesses, progress, and leaderboard results are stored in Supabase so the competition can track scores across players and days. We don\'t sell data or use third-party trackers.',
+      'Want your data removed? Contact htharrau.'
     ],
   },
   about: {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      'wordel // 42 Cup was created for the Wordle Club of 42 Berlin, to motivate people to join the Slack channel.',
-      'Words reset at midnight. The clock for each word starts on your first guess, and all your word times are added together for your total.',
-      'Words are randomly selected from the 1,848 past Wordle answers.',
-      'Sign in with your 42 account, pick up the next word, and try to keep your streak alive. The leaderboard shows how the day is unfolding across players.'
+      <>
+        wordel // 42 Cup was built for the Wordle Club of 42 Berlin, as a way to get more people into the Slack channel:{' '}
+        <a href="https://42born2code.slack.com/archives/C057BMKPG9J" target="_blank" rel="noreferrer">
+          https://42born2code.slack.com/archives/C057BMKPG9J
+        </a>
+      </>,
+      'Each day brings a fresh set of words, randomly drawn from the 1,848 past Wordle answers. Everything resets at midnight.',
+      'The clock starts on your first guess for each word, and your times add up across all of them — so speed matters as much as accuracy.',
+      'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
     ],
   },
 };
@@ -57,8 +62,8 @@ function InfoModal({ page, onClose }) {
         </div>
         <h2 id="info-title">{content.title}</h2>
         <div id="info-body" className="info-copy">
-          {content.body.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
+          {content.body.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
           ))}
         </div>
       </section>
