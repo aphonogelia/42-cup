@@ -45,6 +45,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(null);
   const [revealRowIndex, setRevealRowIndex] = useState(null);
+  const [pendingGuess, setPendingGuess] = useState(null);
   const revealTimeout = useRef(null);
   const submittingRef = useRef(false);
 
@@ -55,6 +56,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
     setFinished(null);
     setCurrentGuess('');
     setRevealRowIndex(null);
+    setPendingGuess(null);
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
 
     api
@@ -88,24 +90,39 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
       const rowIndex = wordState.guesses.length;
       const guessedWord = currentGuess;
 
-      setWordState((prev) => ({
-        ...prev,
-        nb_tries: result.nb_tries,
-        status: result.status ?? prev.status,
-        time_seconds: result.time_seconds ?? prev.time_seconds,
-        guesses: [...prev.guesses, { guess: guessedWord, feedback: result.feedback }],
-      }));
+      setPendingGuess({
+        guess: guessedWord,
+        feedback: result.feedback,
+      });
       setCurrentGuess('');
       setRevealRowIndex(rowIndex);
 
       const duration = getRevealDurationMs(wordState.length);
+
       revealTimeout.current = setTimeout(() => {
+        setWordState((prev) => ({
+          ...prev,
+          nb_tries: result.nb_tries,
+          status: result.status ?? prev.status,
+          time_seconds: result.time_seconds ?? prev.time_seconds,
+          guesses: [
+            ...prev.guesses,
+            {
+              guess: guessedWord,
+              feedback: result.feedback,
+            },
+          ],
+        }));
+
+        setPendingGuess(null);
         setRevealRowIndex(null);
+
         if (result.status !== 'in_progress') {
           setFinished(result);
           onWordFinished?.();
         }
       }, duration);
+
     } catch (err) {
       setErrorMessage(err.message);
     } finally {
@@ -167,7 +184,11 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
         <GameGrid
           length={wordState.length}
           maxTries={wordState.max_tries}
-          guesses={wordState.guesses}
+          guesses={
+            pendingGuess
+              ? [...wordState.guesses, pendingGuess]
+              : wordState.guesses
+          }
           currentGuess={currentGuess}
           revealRowIndex={revealRowIndex}
         />

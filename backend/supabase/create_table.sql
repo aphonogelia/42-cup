@@ -1,4 +1,7 @@
--- 42 users
+-- =====================================================================
+-- Users
+-- =====================================================================
+
 create table users (
   id uuid primary key default gen_random_uuid(),
   intra_id integer unique not null,
@@ -8,50 +11,55 @@ create table users (
   created_at timestamptz default now()
 );
 
--- the competition's fixed word set (e.g. 7 words)
+-- =====================================================================
+-- Daily words
+-- =====================================================================
+
 create table words (
   id serial primary key,
-  order_index integer unique not null, -- 1..7
-  answer text not null, -- kept server-side only, never sent to client
-  length integer not null
+  order_index integer not null,
+  answer text not null,
+  length integer not null,
+  draw_date date not null
 );
 
-alter table words
-  add column if not exists draw_date date;
-
--- Backfill existing rows so the current competition still works after the migration.
-update words
-set draw_date = coalesce(draw_date, (timezone('Europe/Berlin', now()))::date)
-where draw_date is null;
-
--- The old schema used a global unique order_index. Daily draws need one order per day.
-alter table words
-  drop constraint if exists words_order_index_key;
-
-alter table words
-  alter column draw_date set not null;
-
-create unique index if not exists words_draw_date_order_index_key
+create unique index words_draw_date_order_index_key
   on words (draw_date, order_index);
 
--- one row per user per word: the authoritative result
+-- =====================================================================
+-- User progress
+-- =====================================================================
+
 create table word_results (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references users(id) not null,
-  word_id integer references words(id) not null,
-  status text check (status in ('in_progress','solved','failed')) default 'in_progress',
-  nb_tries integer default 0,
-  started_at timestamptz default now(),
+  user_id uuid not null references users(id),
+  word_id integer not null references words(id),
+
+  status text not null
+    default 'in_progress'
+    check (status in ('in_progress', 'solved', 'failed')),
+
+  nb_tries integer not null default 0,
+
+  started_at timestamptz not null default now(),
   solved_at timestamptz,
-  time_seconds numeric generated always as (extract(epoch from (solved_at - started_at))) stored,
-  unique(user_id, word_id)
+
+  time_seconds numeric
+    generated always as (
+      extract(epoch from (solved_at - started_at))
+    ) stored,
+
+  unique (user_id, word_id)
 );
 
--- every individual guess, for replay/audit/anti-cheat
+-- =====================================================================
+-- Guess history
+-- =====================================================================
+
 create table guesses (
   id uuid primary key default gen_random_uuid(),
-  word_result_id uuid references word_results(id) not null,
+  word_result_id uuid not null references word_results(id),
   guess text not null,
-  feedback jsonb not null, -- e.g. ["correct","present","absent",...]
+  feedback jsonb not null,
   created_at timestamptz default now()
 );
