@@ -19,6 +19,7 @@ function formatDateLabel(dateStr) {
 
 export default function Leaderboard({ totalWords }) {
   const [dates, setDates] = useState([]);
+  const [datesLoaded, setDatesLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
@@ -46,7 +47,9 @@ export default function Leaderboard({ totalWords }) {
 
   useEffect(() => {
     let cancelled = false;
-    api.leaderboardDates().then((d) => !cancelled && setDates(d)).catch(() => { });
+    api.leaderboardDates()
+      .then((d) => { if (!cancelled) { setDates(d); setDatesLoaded(true); } })
+      .catch(() => { if (!cancelled) setDatesLoaded(true); });
     return () => { cancelled = true; };
   }, []);
 
@@ -55,11 +58,8 @@ export default function Leaderboard({ totalWords }) {
   }, [selectedDate, fetchLeaderboard]);
 
   useEffect(() => {
-    let cancelled = false;
-
     const refresh = () => {
       if (document.visibilityState !== 'visible') return;
-
       fetchLeaderboard(selectedDate);
     };
 
@@ -68,12 +68,11 @@ export default function Leaderboard({ totalWords }) {
     const intervalId = window.setInterval(refresh, 30000);
 
     return () => {
-      cancelled = true;
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
       window.clearInterval(intervalId);
     };
-  }, [selectedDate]);
+  }, [selectedDate, fetchLeaderboard]);
 
   const tiers = [];
   if (rows) {
@@ -87,44 +86,51 @@ export default function Leaderboard({ totalWords }) {
     }
   }
 
+  const loading = !rows || !datesLoaded;
+
   return (
     <div>
       <AlertModal message={error} onClose={() => setError('')} />
-      {dates.length > 0 && (
-        <div className="ledger-date-picker">
-          <select value={selectedDate ?? ''} onChange={(e) => setSelectedDate(e.target.value)}>
-            {dates.map((d) => (
-              <option key={d} value={d}>{formatDateLabel(d)}</option>
-            ))}
-          </select>
-        </div>
-      )}
 
-      {!rows ? (
-        <div className="loading-shell" aria-busy="true">
+      {loading ? (
+        <div className="ledger-loading" aria-busy="true">
           <div className="loader" aria-label="Loading" role="status" />
         </div>
-      ) : rows.length === 0 ? (
-        <div className="empty-state">No entries yet. Be the first.</div>
       ) : (
-        tiers.map((tier) => (
-          <div className="ledger-tier" key={tier.words_found}>
-            <div className="ledger-tier-label">
-              {tier.words_found}/{totalWords ?? tier.words_found} solved
+        <>
+          {dates.length > 0 && (
+            <div className="ledger-date-picker">
+              <select value={selectedDate ?? ''} onChange={(e) => setSelectedDate(e.target.value)}>
+                {dates.map((d) => (
+                  <option key={d} value={d}>{formatDateLabel(d)}</option>
+                ))}
+              </select>
             </div>
-            {tier.rows.map((row, i) => (
-              <div className="ledger-row" key={row.user_id}>
-                <span className="rank">{i + 1}</span>
-                <span className="login">
-                  {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                  {row.login}
-                </span>
-                <span className="tries">{row.total_tries} tries</span>
-                <span className="time">{formatTime(row.total_time)}</span>
+          )}
+
+          {rows.length === 0 ? (
+            <div className="empty-state">No entries yet. Be the first.</div>
+          ) : (
+            tiers.map((tier) => (
+              <div className="ledger-tier" key={tier.words_found}>
+                <div className="ledger-tier-label">
+                  {tier.words_found}/{totalWords ?? tier.words_found} solved
+                </div>
+                {tier.rows.map((row, i) => (
+                  <div className="ledger-row" key={row.user_id}>
+                    <span className="rank">{i + 1}</span>
+                    <span className="login">
+                      {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
+                      {row.login}
+                    </span>
+                    <span className="tries">{row.total_tries} tries</span>
+                    <span className="time">{formatTime(row.total_time)}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ))
+            ))
+          )}
+        </>
       )}
     </div>
   );

@@ -118,6 +118,14 @@ button {
   --s: -1;
 }
 
+.ledger-loading {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--paper);
+}
+
 @keyframes l15-0 {
 
   0%,
@@ -994,11 +1002,15 @@ body.theme-light .alert-toast-card {
   }
 
   .login-screen {
-    padding: 8vh 20px 10vh;
+    padding: 10vh 20px 10vh; /* a bit more room overall */
   }
 
   .login-title-wrap {
-    margin-top: 4vh;
+    margin-top: 1vh; /* back off from whatever you cranked it to */
+  }
+
+  .login-title-blob {
+    top: -90px; /* less negative than -130px so it doesn't reach past the container edge */
   }
 
 
@@ -1042,22 +1054,4 @@ body.theme-light .alert-toast-card {
     font-size: clamp(16px, 7vw, 22px);
   }
 
-  /* .keyboard {
-    max-width: 100%;
-    margin-top: 16px;
-    margin-bottom: 10px;
-  }
-
-  .key {
-    min-width: 0;
-    max-width: none;
-  }
-
-  .key.wide {
-    max-width: none;
-  } */
-
-  /* .app-footer {
-    justify-content: space-between;
-  } */
 }
