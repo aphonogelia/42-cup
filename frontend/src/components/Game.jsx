@@ -142,7 +142,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
       <div className="game-panel game-loading" aria-busy="true">
         <div className="board-wrap">
           <LoadingBoard />
-          <Keyboard letterStates={{}} onKey={() => {}} disabled />
+          <Keyboard letterStates={{}} onKey={() => { }} disabled />
         </div>
       </div>
     );

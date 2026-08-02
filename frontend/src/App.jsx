@@ -17,7 +17,7 @@ const INFO_PAGES = {
     eyebrow: 'Data and access',
     body: [
       'This app uses 42 OAuth for sign-in. We only receive the profile details needed to identify your account in the game: your intra ID, login, display name, and avatar URL if available.',
-      'A session cookie is stored in your browser so you can stay signed in while you play. The cookie is httpOnly and is used only to authenticate requests to this app.',
+      'A signed token is stored in your browser so you can stay signed in while you play. It is used only to authenticate requests to this app.',
       'Game progress, guesses, and leaderboard data are stored in Supabase so the competition can track results across users and days. We do not sell your data or use third-party advertising trackers.',
       'If you want your profile or game data removed, contact htharrau.'
     ],
@@ -26,8 +26,9 @@ const INFO_PAGES = {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      'wordel // 42 Cup is a small daily word game built for the 42 community. Each round is tracked, scored, and recorded so players can compare results on the ledger.',
-      'The goal is quick, competitive play.',
+      'wordel // 42 Cup was created for the Wordle Club of 42 Berlin, to motivate people to join the Slack channel.',
+      'Words reset at midnight. The clock for each word starts on your first guess, and all your word times are added together for your total.',
+      'Words are randomly selected from the 1,848 past Wordle answers.',
       'Sign in with your 42 account, pick up the next word, and try to keep your streak alive. The leaderboard shows how the day is unfolding across players.'
     ],
   },
@@ -336,14 +337,14 @@ export default function App() {
         </a>
       </footer>
       <AlertModal
-  title="Solved"
-  message={showCompletionToast ? 'Well done! All words solved.' : ''}
-  duration={2200}
-  onClose={() => {
-    setShowCompletionToast(false);
-    setView('leaderboard');
-  }}
-/>
+        title="Solved"
+        message={showCompletionToast ? 'Well done! All words solved.' : ''}
+        duration={2200}
+        onClose={() => {
+          setShowCompletionToast(false);
+          setView('leaderboard');
+        }}
+      />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
     </div>
   );

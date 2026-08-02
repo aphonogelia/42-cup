@@ -1,5 +1,5 @@
 {
-  "name": "wordel || 42 cup",
+  "name": "wordel // 42 cup",
   "short_name": "wordel",
   "icons": [
     {
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#efe9ff",
-  "background_color": "#efe9ff",
+  "theme_color": "#c2cc00",
+  "background_color": "#c2cc00",
   "display": "standalone"
 }

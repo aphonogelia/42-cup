@@ -33,10 +33,10 @@ export default function GameGrid({ length, maxTries, guesses, currentGuess, reve
           const colors = fb ? FEEDBACK_COLORS[fb] : null;
           const style = isRevealing && colors
             ? {
-                '--reveal-bg': colors.bg,
-                '--reveal-color': colors.color,
-                animationDelay: `${i * REVEAL_STAGGER_MS}ms`,
-              }
+              '--reveal-bg': colors.bg,
+              '--reveal-color': colors.color,
+              animationDelay: `${i * REVEAL_STAGGER_MS}ms`,
+            }
             : undefined;
 
           return (

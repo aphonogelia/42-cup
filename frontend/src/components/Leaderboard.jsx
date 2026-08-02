@@ -23,6 +23,7 @@ export default function Leaderboard({ totalWords }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
+  const skipNextFetch = useRef(false);
 
   const fetchLeaderboard = useCallback((date, { resetRows = false } = {}) => {
     let cancelled = false;
@@ -36,7 +37,10 @@ export default function Leaderboard({ totalWords }) {
       .then((data) => {
         if (cancelled) return;
         setRows(data.rows);
-        if (!date) setSelectedDate(data.date);
+        if (!date) {
+          skipNextFetch.current = true;
+          setSelectedDate(data.date);
+        }
       })
       .catch((err) => !cancelled && setError(err.message));
 
@@ -54,6 +58,10 @@ export default function Leaderboard({ totalWords }) {
   }, []);
 
   useEffect(() => {
+    if (skipNextFetch.current) {
+      skipNextFetch.current = false;
+      return;
+    }
     return fetchLeaderboard(selectedDate, { resetRows: true });
   }, [selectedDate, fetchLeaderboard]);
 
