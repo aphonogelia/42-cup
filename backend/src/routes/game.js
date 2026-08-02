@@ -19,9 +19,10 @@ async function getOrCreateWordResult(fastify, userId, wordId) {
 
   const { data: existing } = await supabase
     .from('word_results')
-    .select('*')
+    .select('*, guesses(guess, feedback, created_at)')
     .eq('user_id', userId)
     .eq('word_id', wordId)
+    .order('created_at', { referencedTable: 'guesses' })
     .maybeSingle();
 
   fastify.log.info(
@@ -45,7 +46,7 @@ async function getOrCreateWordResult(fastify, userId, wordId) {
   );
 
   if (error) throw error;
-  return created;
+  return { ...created, guesses: [] };
 }
 
 export default async function gameRoutes(fastify) {
@@ -188,19 +189,6 @@ export default async function gameRoutes(fastify) {
     }
 
     if (config.game.hardMode) {
-
-      const hardModeStarted = performance.now();
-
-      const { data: previousGuesses } = await supabase
-        .from('guesses')
-        .select('guess, feedback')
-        .eq('word_result_id', result.id)
-        .order('created_at');
-
-      fastify.log.info(
-        { ms: Math.round(performance.now() - hardModeStarted) },
-        'previous guesses lookup'
-      );
 
       const check = validateHardMode(
         guess.toLowerCase(),
