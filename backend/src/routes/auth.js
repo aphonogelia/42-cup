@@ -69,7 +69,7 @@ export default async function authRoutes(fastify) {
     return reply.redirect(`${config.frontendUrl}/auth/callback#token=${token}`);
   });
 
-  // Now a no-op — logout happens client-side by clearing sessionStorage.
+  // Now a no-op — logout happens client-side by clearing localStorage.
   // Keep it if you want a hook for future server-side token revocation/audit logging.
   fastify.post('/api/auth/logout', async () => {
     return { ok: true };

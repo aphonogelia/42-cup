@@ -9,7 +9,7 @@ export default function AuthCallback() {
         const token = params.get('token');
 
         if (token) {
-            sessionStorage.setItem(TOKEN_KEY, token);
+            localStorage.setItem(TOKEN_KEY, token);
         }
         window.location.replace('/');
     }, []);

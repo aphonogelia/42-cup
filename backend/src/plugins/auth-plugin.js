@@ -13,7 +13,7 @@ export default fp(async function authPlugin(fastify) {
   fastify.decorate('issueSession', function (user) {
     return fastify.jwt.sign(
       { sub: user.id, login: user.login },
-      { expiresIn: '12h' }
+      { expiresIn: '30d' }
     );
   });
 

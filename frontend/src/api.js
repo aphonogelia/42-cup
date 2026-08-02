@@ -11,7 +11,7 @@ class ApiError extends Error {
 const TOKEN_KEY = 'auth_token';
 
 async function request(path, options = {}) {
-  const token = sessionStorage.getItem(TOKEN_KEY);
+  const token = localStorage.getItem(TOKEN_KEY);
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -42,7 +42,7 @@ async function request(path, options = {}) {
 export const api = {
   me: () => request('/api/auth/me'),
   logout: () => {
-    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
     return request('/api/auth/logout', { method: 'POST' });
   },
   progress: () => request('/api/game/progress'),
