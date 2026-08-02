@@ -997,11 +997,6 @@ body.theme-light .alert-toast-card {
 }
 
 @media (max-width: 640px) {
-  .app-shell {
-    padding: 14px 12px calc(20px + env(safe-area-inset-bottom));
-  }
-
-
   .masthead {
     align-items: stretch;
     gap: 12px;
@@ -1040,25 +1035,6 @@ body.theme-light .alert-toast-card {
 
   .tile {
     font-size: clamp(16px, 7vw, 22px);
-  }
-
-  .app-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    margin-top: 20px;
-    padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 92%, transparent));
-    backdrop-filter: blur(6px);
-  }
-
-  .app-footer a,
-  .app-footer button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 8px 12px;
   }
 
 }
