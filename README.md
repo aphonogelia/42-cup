@@ -1,6 +1,8 @@
 # wordel // 42 Cup
 
-![wordel // 42 Cup screenshot placeholder](./docs/screenshot-placeholder.png)
+![wordel // 42 Cup login](./docs/login.png)
+![wordel // 42 Cup leaderboard](./docs/ledger.png)
+![wordel // 42 Cup game](./docs/game.png)
 
 Live app: https://wordel-sepia-nu.vercel.app
 
