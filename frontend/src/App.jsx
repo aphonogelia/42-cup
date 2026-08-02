@@ -213,7 +213,8 @@ export default function App() {
     if (
       !showCompletionToast &&
       words.length > 0 &&
-      words.every((word) => word.status === 'solved')
+      words.every((word) => word.status === 'solved' || word.status === 'failed')
+
     ) {
       setView('leaderboard');
     }
