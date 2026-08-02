@@ -14,5 +14,5 @@ export default function AuthCallback() {
         window.location.replace('/');
     }, []);
 
-    return <div className="app-shell status-line">Signing you in...</div>;
+    return <div className="app-shell status-line"></div>;
 }
