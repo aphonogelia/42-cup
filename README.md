@@ -30,6 +30,14 @@ The game is seeded with 5 randomly selected words from the repository word pool 
 - The frontend only receives the word metadata and feedback for submitted guesses.
 - Leaderboard results are computed from the stored game results in Supabase.
 
+## Caching and latency strategy
+
+- The backend keeps the active Berlin-day draw in an in-process cache, so repeated `/api/game/progress` and `/api/game/start` requests for the same day do not keep reloading the draw from Supabase.
+- The public leaderboard now uses a short-lived in-memory cache keyed by draw date, and successful guess submissions invalidate the current day so fresh scores show up quickly.
+- The frontend caches each user’s progress in `localStorage`, scoped by login and Berlin date, so the game can render immediately on repeat visits while the latest state is refreshed from the API.
+- Both caches are day-scoped, which keeps old draws isolated and avoids serving stale state across midnight resets.
+- The overall latency strategy is to keep the hot path small: only metadata and per-letter feedback move across the network, while the heavier draw and progress reads stay local to the app tier when possible.
+
 ## Repository layout
 
 ```text

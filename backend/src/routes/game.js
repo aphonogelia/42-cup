@@ -4,6 +4,7 @@ import { isAllowedGuess } from '../lib/dictionary.js';
 import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
 import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
+import { invalidateLeaderboard } from '../lib/leaderboardCache.js';
 
 
 function elapsed(started) {
@@ -248,6 +249,8 @@ export default async function gameRoutes(fastify) {
       'save guess'
     );
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
+
+    invalidateLeaderboard(getBerlinDateKey());
 
 
     fastify.log.info(
