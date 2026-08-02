@@ -65,10 +65,6 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
         if (cancelled) return;
 
         setWordState(data);
-
-        if (data.status !== 'in_progress') {
-          setFinished(data);
-        }
       })
       .catch((err) => !cancelled && setErrorMessage(err.message))
       .finally(() => !cancelled && setLoading(false));
