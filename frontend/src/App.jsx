@@ -265,7 +265,7 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="app-shell">
+      <div className="app-shell login-shell">
         <Login />
       </div>
     );
