@@ -407,6 +407,23 @@ body.theme-light .alert-toast-card {
   color: var(--text);
 }
 
+.info-copy a {
+  color: #78c7ff;
+  text-underline-offset: 2px;
+}
+
+.info-copy a:hover {
+  color: #9cd7ff;
+}
+
+body.theme-light .info-copy a {
+  color: #004d99;
+}
+
+body.theme-light .info-copy a:hover {
+  color: #003f7a;
+}
+
 .info-close {
   color: var(--text-muted);
   font-size: 22px;
