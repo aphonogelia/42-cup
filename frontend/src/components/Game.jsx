@@ -204,11 +204,13 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
         </div>
       )}
 
-      {finished && nextOrderIndex != null && (
-        <button type="button" className="next-word-btn" onClick={onNext}>
-          Next word →
-        </button>
-      )}
+      {finished &&
+        finished.status === 'solved' &&
+        nextOrderIndex != null && (
+          <button type="button" className="next-word-btn" onClick={onNext}>
+            Next word →
+          </button>
+        )}
 
       <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
     </div>
