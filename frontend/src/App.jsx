@@ -270,6 +270,10 @@ export default function App() {
     );
   }
 
+
+  const solvedCount = words.filter((w) => w.status === 'solved').length;
+  const totalWords = words.length;
+
   return (
     <div className="app-shell">
       <header className="masthead">
@@ -347,8 +351,12 @@ export default function App() {
         </a>
       </footer>
       <AlertModal
-        title="Solved"
-        message={showCompletionToast ? 'Well done! All words solved.' : ''}
+        title="Finished!"
+        message={
+          showCompletionToast
+            ? `You solved ${solvedCount}/${totalWords} words.`
+            : ''
+        }
         duration={2200}
         onClose={() => {
           setShowCompletionToast(false);
