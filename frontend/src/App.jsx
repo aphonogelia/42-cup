@@ -5,7 +5,7 @@ import WordTabs from './components/WordTabs.jsx';
 import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
-import AlertModal from './AlertModal.jsx'
+import AlertModal from './components/AlertModal.jsx';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
