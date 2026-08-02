@@ -110,52 +110,29 @@ export default async function gameRoutes(fastify) {
       .eq('order_index', order_index)
       .single();
 
+    let currentWord = word;
+
     if (wordErr || !word) {
       try {
         const words = await ensureDailyDraw({ drawDate });
-        const currentWord = words.find((item) => item.order_index === order_index);
+        currentWord = words.find((item) => item.order_index === order_index);
         if (!currentWord) return reply.code(404).send({ error: 'Word not found' });
-
-        const result = await getOrCreateWordResult(fastify, request.user.id, currentWord.id);
-
-        const { data: guesses } = await supabase
-          .from('guesses')
-          .select('guess, feedback, created_at')
-          .eq('word_result_id', result.id)
-          .order('created_at');
-
-        return {
-          word_id: currentWord.id,
-          length: currentWord.length,
-          nb_tries: result.nb_tries,
-          max_tries: config.game.maxTries,
-          status: result.status,
-          started_at: result.started_at,
-          guesses: guesses ?? [],
-        };
       } catch (error) {
         fastify.log.error(error);
         return reply.code(500).send({ error: 'Failed to load daily draw' });
       }
     }
 
-    const result = await getOrCreateWordResult(fastify, request.user.id, word.id);
-
-    // Prior guesses, so a page refresh mid-word doesn't lose progress.
-    const { data: guesses } = await supabase
-      .from('guesses')
-      .select('guess, feedback, created_at')
-      .eq('word_result_id', result.id)
-      .order('created_at');
+    const result = await getOrCreateWordResult(fastify, request.user.id, currentWord.id);
 
     return {
-      word_id: word.id,
-      length: word.length,
+      word_id: currentWord.id,
+      length: currentWord.length,
       nb_tries: result.nb_tries,
       max_tries: config.game.maxTries,
       status: result.status,
       started_at: result.started_at,
-      guesses: guesses ?? [],
+      guesses: result.guesses ?? [],
     };
   });
 
@@ -192,13 +169,11 @@ export default async function gameRoutes(fastify) {
 
       const check = validateHardMode(
         guess.toLowerCase(),
-        previousGuesses ?? []
+        result.guesses ?? []
       );
 
       if (!check.valid) {
-        return reply.code(400).send({
-          error: check.error,
-        });
+        return reply.code(400).send({ error: check.error });
       }
     }
 
