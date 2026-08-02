@@ -10,7 +10,7 @@ import AlertModal from './components/AlertModal.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
-javascript
+
 const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
