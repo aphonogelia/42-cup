@@ -208,11 +208,16 @@ export default function App() {
     refreshProgress();
   }, [user, refreshProgress]);
 
+
   useEffect(() => {
-    if (words.length > 0 && words.every((word) => word.status === 'solved')) {
+    if (
+      !showCompletionToast &&
+      words.length > 0 &&
+      words.every((word) => word.status === 'solved')
+    ) {
       setView('leaderboard');
     }
-  }, [words]);
+  }, [words, showCompletionToast]);
 
   useEffect(() => {
     window.localStorage.setItem('wordel-theme', theme);
