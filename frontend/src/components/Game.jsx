@@ -206,7 +206,8 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
 
       {finished &&
         finished.status === 'solved' &&
-        nextOrderIndex != null && (
+        nextOrderIndex != null &&
+        nextOrderIndex !== orderIndex && (
           <button type="button" className="next-word-btn" onClick={onNext}>
             Next word →
           </button>
