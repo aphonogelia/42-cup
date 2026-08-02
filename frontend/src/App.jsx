@@ -5,8 +5,10 @@ import WordTabs from './components/WordTabs.jsx';
 import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
-import Toast from './components/Toast.jsx';
+import AlertModal from './AlertModal.jsx'
 
+const PROGRESS_CACHE_PREFIX = 'wordel-progress';
+const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
 
 const INFO_PAGES = {
@@ -100,6 +102,42 @@ function getNextOpenWord(words, currentOrderIndex) {
   return open.sort((a, b) => a.order_index - b.order_index)[0].order_index;
 }
 
+function getBerlinDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: BERLIN_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function getProgressCacheKey(login, dateKey = getBerlinDateKey()) {
+  return `${PROGRESS_CACHE_PREFIX}-${login}-${dateKey}`;
+}
+
+function readCachedProgress(login, dateKey = getBerlinDateKey()) {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const cached = window.localStorage.getItem(getProgressCacheKey(login, dateKey));
+    if (!cached) return null;
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedProgress(login, words, dateKey = getBerlinDateKey()) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(getProgressCacheKey(login, dateKey), JSON.stringify(words));
+  } catch {
+    // Ignore storage quota and privacy-mode failures.
+  }
+}
+
 
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -120,6 +158,9 @@ export default function App() {
       .progress()
       .then((data) => {
         setWords(data);
+        if (user?.login) {
+          writeCachedProgress(user.login, data);
+        }
         setSelectedOrderIndex((prev) => {
           if (prev) return prev;
           const firstOpen = data.find((w) => w.status === 'not_started' || w.status === 'in_progress');
@@ -131,7 +172,7 @@ export default function App() {
         }
       })
       .catch(() => { });
-  }, []);
+  }, [user?.login]);
   // Handle the OAuth callback first, before anything else runs
   if (window.location.pathname === '/auth/callback') {
     return <AuthCallback />;
@@ -146,8 +187,26 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (user) refreshProgress();
+    if (!user?.login) return;
+
+    const cachedProgress = readCachedProgress(user.login);
+    if (cachedProgress) {
+      setWords(cachedProgress);
+      setSelectedOrderIndex((prev) => {
+        if (prev) return prev;
+        const firstOpen = cachedProgress.find((w) => w.status === 'not_started' || w.status === 'in_progress');
+        return (firstOpen ?? cachedProgress[0])?.order_index ?? null;
+      });
+    }
+
+    refreshProgress();
   }, [user, refreshProgress]);
+
+  useEffect(() => {
+    if (words.length > 0 && words.every((word) => word.status === 'solved')) {
+      setView('leaderboard');
+    }
+  }, [words]);
 
   useEffect(() => {
     window.localStorage.setItem('wordel-theme', theme);
@@ -276,13 +335,15 @@ export default function App() {
           GitHub
         </a>
       </footer>
-      <Toast
-        message={showCompletionToast ? 'Well done! All words solved.' : ''}
-        onDone={() => {
-          setShowCompletionToast(false);
-          setView('leaderboard');
-        }}
-      />
+      <AlertModal
+  title="Solved"
+  message={showCompletionToast ? 'Well done! All words solved.' : ''}
+  duration={2200}
+  onClose={() => {
+    setShowCompletionToast(false);
+    setView('leaderboard');
+  }}
+/>
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
     </div>
   );

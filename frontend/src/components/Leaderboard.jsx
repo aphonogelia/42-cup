@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import AlertModal from './AlertModal.jsx';
 
@@ -23,6 +23,27 @@ export default function Leaderboard({ totalWords }) {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
 
+  const fetchLeaderboard = useCallback((date, { resetRows = false } = {}) => {
+    let cancelled = false;
+
+    if (resetRows) {
+      setRows(null);
+    }
+
+    api
+      .leaderboard(date)
+      .then((data) => {
+        if (cancelled) return;
+        setRows(data.rows);
+        if (!date) setSelectedDate(data.date);
+      })
+      .catch((err) => !cancelled && setError(err.message));
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     api.leaderboardDates().then((d) => !cancelled && setDates(d)).catch(() => { });
@@ -30,17 +51,28 @@ export default function Leaderboard({ totalWords }) {
   }, []);
 
   useEffect(() => {
+    return fetchLeaderboard(selectedDate, { resetRows: true });
+  }, [selectedDate, fetchLeaderboard]);
+
+  useEffect(() => {
     let cancelled = false;
-    setRows(null);
-    api
-      .leaderboard(selectedDate)
-      .then((data) => {
-        if (cancelled) return;
-        setRows(data.rows);
-        if (!selectedDate) setSelectedDate(data.date);
-      })
-      .catch((err) => !cancelled && setError(err.message));
-    return () => { cancelled = true; };
+
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+
+      fetchLeaderboard(selectedDate);
+    };
+
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const intervalId = window.setInterval(refresh, 30000);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+      window.clearInterval(intervalId);
+    };
   }, [selectedDate]);
 
   const tiers = [];
