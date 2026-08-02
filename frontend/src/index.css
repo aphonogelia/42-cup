@@ -289,10 +289,10 @@ button {
 
 .next-word-btn {
   margin-top: 12px;
-  background: rgba(35, 46, 52, 0.95);
+  background: var(--surface-raised);
   border: 1px solid rgba(234, 236, 97, 0.28);
   color: #1a1305;
-  font-family: var(--font-display);
+  font-family: var(--text);
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.04em;
