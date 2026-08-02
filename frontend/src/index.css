@@ -287,29 +287,11 @@ button {
   animation: toast-in 120ms ease-out;
 }
 
-.toast {
-  position: fixed;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  background: var(--tile-correct);
-  color: #0d1a12;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.03em;
-  padding: 12px 20px;
-  border-radius: 10px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-  animation: toast-in 160ms ease-out;
-}
-
 .next-word-btn {
   margin-top: 12px;
-  background: var(--amber);
+  background: rgba(35, 46, 52, 0.95);
+  border: 1px solid rgba(234, 236, 97, 0.28);
   color: #1a1305;
-  border: none;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 12px;
