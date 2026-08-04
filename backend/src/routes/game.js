@@ -11,6 +11,12 @@ function elapsed(started) {
   return Math.round(performance.now() - started);
 }
 
+function visibleStartedAt(result) {
+  // Treat started_at as unset until the user has made a first guess.
+  if (!result || !result.nb_tries) return null;
+  return result.started_at;
+}
+
 let dailyWordsCache = null;
 let dailyWordsCacheDate = null;
 
@@ -92,12 +98,12 @@ export default async function gameRoutes(fastify) {
       status: byWordId[w.id]?.status ?? 'not_started',
       nb_tries: byWordId[w.id]?.nb_tries ?? 0,
       time_seconds: byWordId[w.id]?.time_seconds ?? null,
-      started_at: byWordId[w.id]?.started_at ?? null,
+      started_at: visibleStartedAt(byWordId[w.id]),
     }));
   });
 
   // Starts (or resumes) a specific word by its order_index (1..5).
-  // Server stamps started_at the first time this is called for a word.
+  // Timer starts on first guess; started_at stays hidden before that.
   fastify.post('/api/game/start', async (request, reply) => {
     const { order_index } = request.body ?? {};
     if (!order_index) return reply.code(400).send({ error: 'order_index required' });
@@ -131,7 +137,7 @@ export default async function gameRoutes(fastify) {
       nb_tries: result.nb_tries,
       max_tries: config.game.maxTries,
       status: result.status,
-      started_at: result.started_at,
+      started_at: visibleStartedAt(result),
       guesses: result.guesses ?? [],
     };
   });
@@ -184,6 +190,10 @@ export default async function gameRoutes(fastify) {
     const outOfTries = !win && nbTries >= config.game.maxTries;
 
     const update = { nb_tries: nbTries };
+    if (result.nb_tries === 0) {
+      // Stamp official start time exactly on the first submitted guess.
+      update.started_at = new Date().toISOString();
+    }
     if (win) {
       update.status = 'solved';
       update.solved_at = new Date().toISOString();

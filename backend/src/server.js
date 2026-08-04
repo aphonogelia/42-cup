@@ -12,7 +12,7 @@ const fastify = Fastify({ logger: true, trustProxy: true });
 
 await fastify.register(cors, {
   origin: config.frontendUrl,
-  credentials: true, // required so the session cookie is sent/accepted cross-origin
+  credentials: true,
 });
 
 await fastify.register(rateLimit, {
