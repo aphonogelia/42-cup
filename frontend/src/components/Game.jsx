@@ -7,6 +7,47 @@ import AlertModal from './AlertModal.jsx';
 
 const LOADING_ROWS = 6;
 const LOADING_LENGTH = 5;
+const BERLIN_TIME_ZONE = 'Europe/Berlin';
+const WORD_STATE_CACHE_PREFIX = 'wordel-word-state';
+
+function getBerlinDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: BERLIN_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function getWordStateCacheKey(userLogin, orderIndex, dateKey = getBerlinDateKey()) {
+  return `${WORD_STATE_CACHE_PREFIX}-${userLogin}-${dateKey}-${orderIndex}`;
+}
+
+function readCachedWordState(userLogin, orderIndex) {
+  if (!userLogin || typeof window === 'undefined') return null;
+
+  try {
+    const cached = window.localStorage.getItem(getWordStateCacheKey(userLogin, orderIndex));
+    if (!cached) return null;
+    const parsed = JSON.parse(cached);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedWordState(userLogin, orderIndex, wordState) {
+  if (!userLogin || !wordState || typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(
+      getWordStateCacheKey(userLogin, orderIndex),
+      JSON.stringify(wordState)
+    );
+  } catch {
+    // Ignore storage failures (private mode / quota exceeded).
+  }
+}
 
 function LoadingBoard() {
   return (
@@ -38,7 +79,7 @@ function AnimatedAnswer({ answer }) {
   );
 }
 
-export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNext }) {
+export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderIndex, onNext }) {
   const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -51,7 +92,13 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    const cachedState = readCachedWordState(userLogin, orderIndex);
+    if (cachedState) {
+      setWordState(cachedState);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setErrorMessage('');
     setFinished(null);
     setCurrentGuess('');
@@ -65,6 +112,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
         if (cancelled) return;
 
         setWordState(data);
+        writeCachedWordState(userLogin, orderIndex, data);
       })
       .catch((err) => !cancelled && setErrorMessage(err.message))
       .finally(() => !cancelled && setLoading(false));
@@ -101,19 +149,24 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
       const duration = getRevealDurationMs(wordState.length);
 
       revealTimeout.current = setTimeout(() => {
-        setWordState((prev) => ({
-          ...prev,
-          nb_tries: result.nb_tries,
-          status: result.status ?? prev.status,
-          time_seconds: result.time_seconds ?? prev.time_seconds,
-          guesses: [
-            ...prev.guesses,
-            {
-              guess: guessedWord,
-              feedback: result.feedback,
-            },
-          ],
-        }));
+        setWordState((prev) => {
+          const nextState = {
+            ...prev,
+            nb_tries: result.nb_tries,
+            status: result.status ?? prev.status,
+            time_seconds: result.time_seconds ?? prev.time_seconds,
+            started_at: prev.started_at ?? new Date().toISOString(),
+            guesses: [
+              ...prev.guesses,
+              {
+                guess: guessedWord,
+                feedback: result.feedback,
+              },
+            ],
+          };
+          writeCachedWordState(userLogin, orderIndex, nextState);
+          return nextState;
+        });
 
         setPendingGuess(null);
         setRevealRowIndex(null);
@@ -129,7 +182,7 @@ export default function Game({ orderIndex, onWordFinished, nextOrderIndex, onNex
     } finally {
       submittingRef.current = false;
     }
-  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished]);
+  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished, userLogin, orderIndex]);
 
   const handleKey = useCallback(
     (key) => {

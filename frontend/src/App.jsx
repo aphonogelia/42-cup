@@ -326,6 +326,7 @@ export default function App() {
 
             {selectedOrderIndex && (
               <Game
+                userLogin={user.login}
                 orderIndex={selectedOrderIndex}
                 onWordFinished={() => refreshProgress({ checkCompletion: true })}
                 nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
