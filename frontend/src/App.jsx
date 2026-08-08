@@ -32,10 +32,10 @@ const INFO_PAGES = {
           Slack channel
         </a>.
       </>,
-      'Each day brings a fresh set of words, randomly drawn from the ~2,300 past Wordle answers. Everything resets at midnight.',
-      'The clock starts on your first guess for each word, and your times add up across all of them — so speed matters as much as accuracy.',
-      'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
-    ],
+       'Each day brings a fresh set of words, randomly drawn from the ~2,300 past Wordle answers. Everything resets at midnight.',
+  'For each word, the clock starts with your first guess and stops when you solve it or make your sixth wrong guess. Your times are then added together across all words — so speed matters as much as accuracy.',
+  'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
+],
   },
 };
 
