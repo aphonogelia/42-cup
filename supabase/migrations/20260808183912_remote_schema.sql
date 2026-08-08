@@ -4,7 +4,6 @@
 
 SET check_function_bodies = false;
 
-DROP EXTENSION pg_net;
 
 CREATE EXTENSION pg_cron WITH SCHEMA pg_catalog;
 

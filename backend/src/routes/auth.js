@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { supabase } from '../supabase.js';
 
 export default async function authRoutes(fastify) {
+  console.log('OAuth callback:', config.fortyTwo.callbackUrl);
   await fastify.register(oauthPlugin, {
     name: 'fortyTwoOAuth2',
     scope: ['public'],
