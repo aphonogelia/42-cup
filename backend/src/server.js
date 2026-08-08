@@ -15,6 +15,13 @@ await fastify.register(cors, {
   credentials: true,
 });
 
+
+console.log('SUPABASE URL:', config.supabase.url);
+console.log(
+  'SUPABASE PROJECT:',
+  config.supabase.url.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]
+);
+
 await fastify.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',

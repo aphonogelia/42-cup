@@ -30,4 +30,5 @@ export const config = {
     hardMode: true,
     minMsBetweenGuesses: 800, // basic anti-bruteforce throttle
   },
+
 };
