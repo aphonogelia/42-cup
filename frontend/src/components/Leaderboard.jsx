@@ -17,6 +17,21 @@ function formatDateLabel(dateStr) {
   });
 }
 
+const STATUS_SYMBOL = {
+  solved: 'o',
+  failed: 'x',
+  in_progress: '-',
+  not_started: '-',
+};
+
+function formatStatusStrip(statuses, totalWords) {
+  const normalized = Array.isArray(statuses) ? statuses : [];
+  return Array.from({ length: totalWords ?? normalized.length }, (_, index) => {
+    const status = normalized[index];
+    return STATUS_SYMBOL[status] ?? '-';
+  }).join(' ');
+}
+
 export default function Leaderboard({ totalWords }) {
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
@@ -129,7 +144,10 @@ export default function Leaderboard({ totalWords }) {
                     <span className="rank">{i + 1}</span>
                     <span className="login">
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      {row.login}
+                      <span className="login-name">{row.login}</span>
+                      <span className="leaderboard-statuses" aria-label={`Word status: ${formatStatusStrip(row.word_statuses, totalWords)}`}>
+                        | {formatStatusStrip(row.word_statuses, totalWords)}
+                      </span>
                     </span>
                     <span className="tries">{row.total_tries} tries</span>
                     <span className="time">{formatTime(row.total_time)}</span>

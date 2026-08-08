@@ -880,7 +880,7 @@ body.theme-light .info-copy a:hover {
 
 .ledger-row {
   display: grid;
-  grid-template-columns: 32px 1fr auto auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
   gap: 10px;
   align-items: baseline;
   padding: 7px 4px;
@@ -895,6 +895,23 @@ body.theme-light .info-copy a:hover {
 
 .ledger-row .login {
   color: var(--text);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ledger-row .login-name {
+  min-width: 0;
+}
+
+.leaderboard-statuses {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 
 .ledger-row .time {
