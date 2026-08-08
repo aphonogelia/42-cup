@@ -8,7 +8,7 @@
 
 Live app: https://wordel-sepia-nu.vercel.app
 
-wordel // 42 Cup is a wordel-style game built for 42 students during the club immersion day. It lets players sign in with their 42 account, play through the daily word set, and compare results on the leaderboard.
+wordel // 42 Cup is a wordle-style game built for 42 students. It lets players sign in with their 42 account, play through the daily word set, and compare results on the leaderboard.
 
 The game is seeded with 5 randomly selected words from the repository word pool in [backend/data/competition-words.txt][pool]. That pool currently contains more than 2,400 words. Guess validation uses the Wordle allowed-guess list in [backend/data/guesses.txt][guesses], which contains almost 15,000 entries.
 
