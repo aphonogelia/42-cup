@@ -20,10 +20,10 @@ function visibleStartedAt(result) {
 let dailyWordsCache = null;
 let dailyWordsCacheDate = null;
 
-async function getOrCreateWordResult(fastify, userId, wordId) {
+async function getWordResult(fastify, userId, wordId) {
   const started = performance.now();
 
-  const { data: existing } = await supabase
+  const { data: existing, error } = await supabase
     .from('word_results')
     .select('*, guesses(guess, feedback, created_at)')
     .eq('user_id', userId)
@@ -36,8 +36,11 @@ async function getOrCreateWordResult(fastify, userId, wordId) {
     'word result lookup'
   );
 
-  if (existing) return existing;
+  if (error) throw error;
+  return existing ?? null;
+}
 
+async function createWordResult(fastify, userId, wordId) {
   const insertStarted = performance.now();
 
   const { data: created, error } = await supabase
@@ -129,16 +132,16 @@ export default async function gameRoutes(fastify) {
       }
     }
 
-    const result = await getOrCreateWordResult(fastify, request.user.id, currentWord.id);
+    const result = await getWordResult(fastify, request.user.id, currentWord.id);
 
     return {
       word_id: currentWord.id,
       length: currentWord.length,
-      nb_tries: result.nb_tries,
+      nb_tries: result?.nb_tries ?? 0,
       max_tries: config.game.maxTries,
-      status: result.status,
+      status: result?.status ?? 'not_started',
       started_at: visibleStartedAt(result),
-      guesses: result.guesses ?? [],
+      guesses: result?.guesses ?? [],
     };
   });
 
@@ -163,7 +166,10 @@ export default async function gameRoutes(fastify) {
       return reply.code(400).send({ error: 'Not a recognized word' });
     }
 
-    const result = await getOrCreateWordResult(fastify, request.user.id, word.id);
+    let result = await getWordResult(fastify, request.user.id, word.id);
+    if (!result) {
+      result = await createWordResult(fastify, request.user.id, word.id);
+    }
     if (result.status !== 'in_progress') {
       return reply.code(409).send({
         error: `Word already ${result.status}`,

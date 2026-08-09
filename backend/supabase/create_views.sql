@@ -12,7 +12,7 @@ select
   u.avatar_url,
   w.draw_date,
   count(*) filter (where wr.status = 'solved') as words_found,
-  coalesce(sum(wr.time_seconds) filter (where wr.status = 'solved'), 0) as total_time,
+  coalesce(sum(wr.time_seconds) filter (where wr.status in ('solved', 'failed')), 0) as total_time,
   coalesce(sum(wr.nb_tries) filter (where wr.status = 'solved'), 0) as total_tries,
   array_agg(coalesce(wr.status, 'not_started') order by w.order_index) as word_statuses
 from active_users au

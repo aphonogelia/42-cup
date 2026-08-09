@@ -178,17 +178,25 @@ GRANT ALL ON public.words TO service_role;
 
 CREATE UNIQUE INDEX words_draw_date_order_index_key ON public.words (draw_date, order_index);
 
-CREATE VIEW public.leaderboard AS SELECT u.id AS user_id,
+CREATE VIEW public.leaderboard AS WITH active_users AS (
+         SELECT DISTINCT wr.user_id,
+            w.draw_date
+           FROM (public.word_results wr
+             JOIN public.words w ON ((w.id = wr.word_id)))
+        )
+ SELECT u.id AS user_id,
     u.login,
     u.avatar_url,
-    w.draw_date,
+    au.draw_date,
     count(*) FILTER (WHERE (wr.status = 'solved'::text)) AS words_found,
-    COALESCE(sum(wr.time_seconds) FILTER (WHERE (wr.status = 'solved'::text)), (0)::numeric) AS total_time,
-    COALESCE(sum(wr.nb_tries) FILTER (WHERE (wr.status = 'solved'::text)), (0)::bigint) AS total_tries
-   FROM ((public.users u
-     JOIN public.word_results wr ON ((wr.user_id = u.id)))
-     JOIN public.words w ON ((w.id = wr.word_id)))
-  GROUP BY u.id, u.login, u.avatar_url, w.draw_date;
+    COALESCE(sum(wr.time_seconds) FILTER (WHERE (wr.status = ANY (ARRAY['solved'::text, 'failed'::text]))), (0)::numeric) AS total_time,
+    COALESCE(sum(wr.nb_tries) FILTER (WHERE (wr.status = 'solved'::text)), (0)::bigint) AS total_tries,
+    array_agg(COALESCE(wr.status, 'not_started'::text) ORDER BY w.order_index) AS word_statuses
+   FROM (((active_users au
+     JOIN public.users u ON ((u.id = au.user_id)))
+     JOIN public.words w ON ((w.draw_date = au.draw_date)))
+     LEFT JOIN public.word_results wr ON (((wr.user_id = u.id) AND (wr.word_id = w.id))))
+  GROUP BY u.id, u.login, u.avatar_url, au.draw_date;
 
 GRANT ALL ON public.leaderboard TO anon;
 
@@ -207,7 +215,7 @@ CREATE VIEW public.leaderboard_new AS WITH active_users AS (
     u.avatar_url,
     au.draw_date,
     count(*) FILTER (WHERE (wr.status = 'solved'::text)) AS words_found,
-    COALESCE(sum(wr.time_seconds) FILTER (WHERE (wr.status = 'solved'::text)), (0)::numeric) AS total_time,
+    COALESCE(sum(wr.time_seconds) FILTER (WHERE (wr.status = ANY (ARRAY['solved'::text, 'failed'::text]))), (0)::numeric) AS total_time,
     COALESCE(sum(wr.nb_tries) FILTER (WHERE (wr.status = 'solved'::text)), (0)::bigint) AS total_tries,
     array_agg(COALESCE(wr.status, 'not_started'::text) ORDER BY w.order_index) AS word_statuses
    FROM (((active_users au

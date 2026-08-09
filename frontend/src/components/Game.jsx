@@ -127,7 +127,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   }, []);
 
   const submitGuess = useCallback(async () => {
-    if (!wordState || finished || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
+    if (!wordState || finished || (wordState.status !== 'not_started' && wordState.status !== 'in_progress') || revealRowIndex !== null) return;
     if (submittingRef.current) return;
     if (currentGuess.length !== wordState.length) {
       setErrorMessage(`Guess must be ${wordState.length} letters`);
@@ -186,7 +186,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
 
   const handleKey = useCallback(
     (key) => {
-      if (finished || !wordState || wordState.status !== 'in_progress' || revealRowIndex !== null) return;
+      if (finished || !wordState || (wordState.status !== 'not_started' && wordState.status !== 'in_progress') || revealRowIndex !== null) return;
       if (key === 'enter') {
         submitGuess();
       } else if (key === 'back') {
@@ -228,7 +228,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   }
 
   const letterStates = computeLetterStates(wordState.guesses);
-  const isPlayable = wordState.status === 'in_progress' && !finished && revealRowIndex === null;
+  const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
 
   return (
     <div className="game-panel">
