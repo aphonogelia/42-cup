@@ -911,6 +911,7 @@ body.theme-light .info-copy a:hover {
   align-items: center;
   gap: 3px;
   margin-left: 6px;
+  transform: translateY(2px);
 }
 
 .status-dot {
