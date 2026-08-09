@@ -882,7 +882,7 @@ body.theme-light .info-copy a:hover {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) auto auto;
   gap: 10px;
-  align-items: baseline;
+  align-items: center;
   padding: 7px 4px;
   border-bottom: 1px dashed var(--line-soft);
   font-size: 13px;
@@ -911,7 +911,6 @@ body.theme-light .info-copy a:hover {
   align-items: center;
   gap: 3px;
   margin-left: 6px;
-  transform: translateY(1px);
 }
 
 .status-dot {
