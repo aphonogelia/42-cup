@@ -907,11 +907,25 @@ body.theme-light .info-copy a:hover {
 }
 
 .leaderboard-statuses {
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--tile-absent);
+  flex-shrink: 0;
+}
+
+.status-dot.solved { background: var(--tile-correct); }
+.status-dot.failed { background: var(--crimson); }
+.status-dot.in_progress { background: var(--amber); opacity: 0.7; }
+.status-dot.not_started {
+  background: transparent;
+  border: 1px solid var(--tile-empty-border);
 }
 
 .ledger-row .time {
@@ -1075,5 +1089,16 @@ body.theme-light .info-copy a:hover {
   .tile {
     font-size: clamp(16px, 7vw, 22px);
   }
+
+  .leaderboard-statuses {
+  flex-basis: 100%;
+  margin-top: 4px;
+  gap: 5px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+}
 
 }
