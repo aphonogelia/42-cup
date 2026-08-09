@@ -99,17 +99,18 @@ export default function Leaderboard({ totalWords }) {
     };
   }, [selectedDate, fetchLeaderboard]);
 
-  const tiers = [];
-  if (rows) {
-    let current = null;
-    for (const row of rows) {
-      if (!current || current.words_found !== row.words_found) {
-        current = { words_found: row.words_found, rows: [] };
-        tiers.push(current);
-      }
-      current.rows.push(row);
+
+const tiers = [];
+if (rows) {
+  let current = null;
+  rows.forEach((row, index) => {
+    if (!current || current.words_found !== row.words_found) {
+      current = { words_found: row.words_found, rows: [] };
+      tiers.push(current);
     }
-  }
+    current.rows.push({ ...row, rank: index + 1 });
+  });
+}
 
   const loading = !rows || !datesLoaded;
 
@@ -141,9 +142,9 @@ export default function Leaderboard({ totalWords }) {
                 <div className="ledger-tier-label">
                   {tier.words_found}/{totalWords ?? tier.words_found} solved
                 </div>
-                {tier.rows.map((row, i) => (
+                {tier.rows.map((row) => (
                   <div className="ledger-row" key={row.user_id}>
-                    <span className="rank">{i + 1}</span>
+                    <span className="rank">{row.rank}</span>
                     <span className="login">
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
                       <span className="login-name">{row.login}</span>

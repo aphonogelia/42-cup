@@ -11,47 +11,59 @@ WITH active_users AS (
     FROM public.word_results wr
     JOIN public.words w
         ON w.id = wr.word_id
-    WHERE wr.nb_tries > 0
+    WHERE wr.status IN ('solved', 'failed')
 )
 SELECT
     u.id AS user_id,
     u.login,
     u.avatar_url,
     au.draw_date,
+
     count(*) FILTER (
         WHERE wr.status = 'solved'
     ) AS words_found,
+
     COALESCE(
         sum(wr.time_seconds) FILTER (
             WHERE wr.status IN ('solved', 'failed')
         ),
         0
     ) AS total_time,
+
     COALESCE(
         sum(wr.nb_tries) FILTER (
             WHERE wr.status IN ('solved', 'failed')
         ),
         0
     ) AS total_tries,
+
     array_agg(
         COALESCE(wr.status, 'not_started')
         ORDER BY w.order_index
     ) AS word_statuses
+
 FROM active_users au
+
 JOIN public.users u
     ON u.id = au.user_id
+
 JOIN public.words w
     ON w.draw_date = au.draw_date
+
 LEFT JOIN public.word_results wr
     ON wr.user_id = u.id
     AND wr.word_id = w.id
-WHERE wr.id IS NOT NULL
-  AND wr.nb_tries > 0
+
 GROUP BY
     u.id,
     u.login,
     u.avatar_url,
-    au.draw_date;
+    au.draw_date
+
+HAVING
+    sum(
+        CASE WHEN wr.status IN ('solved', 'failed') THEN 1 ELSE 0 END
+    ) > 0;
 
 GRANT ALL ON public.leaderboard TO anon;
 GRANT ALL ON public.leaderboard TO authenticated;
