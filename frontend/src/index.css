@@ -909,23 +909,29 @@ body.theme-light .info-copy a:hover {
 .leaderboard-statuses {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .status-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  background: var(--tile-absent);
-  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
 }
 
-.status-dot.solved { background: var(--tile-correct); }
-.status-dot.failed { background: var(--crimson); }
-.status-dot.in_progress { background: var(--amber); opacity: 0.7; }
-.status-dot.not_started {
+.status-dot.solved {
+  background: var(--tile-correct);
+  opacity: 0.85;
+}
+
+.status-dot.failed {
   background: transparent;
-  border: 1px solid var(--tile-empty-border);
+  border: 1px solid var(--text-faint);
+}
+
+.status-dot.in_progress,
+.status-dot.not_started {
+  background: var(--text-faint);
+  opacity: 0.35;
 }
 
 .ledger-row .time {
@@ -1089,16 +1095,15 @@ body.theme-light .info-copy a:hover {
   .tile {
     font-size: clamp(16px, 7vw, 22px);
   }
-
-  .leaderboard-statuses {
+.leaderboard-statuses {
   flex-basis: 100%;
   margin-top: 4px;
-  gap: 5px;
+  gap: 4px;
 }
 
 .status-dot {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
 }
 
 }

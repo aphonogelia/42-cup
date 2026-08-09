@@ -153,9 +153,10 @@ export default function Leaderboard({ totalWords }) {
     .map((s) => STATUS_LABEL[s])
     .join(', ')}`}
 >
+
   {getStatusList(row.word_statuses, totalWords).map((status, i) => (
-    <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
-  ))}
+  <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
+))}
 </span>
 
                     </span>
