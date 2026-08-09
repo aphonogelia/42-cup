@@ -919,13 +919,13 @@ body.theme-light .info-copy a:hover {
 }
 
 .status-dot.solved {
-  background: var(--tile-correct);
+  background: var(--bg1);
   opacity: 0.85;
 }
 
 .status-dot.failed {
   background: transparent;
-  border: 1px solid var(--text-faint);
+  border: 1px solid var(--crimson);
 }
 
 .status-dot.in_progress,
@@ -1096,14 +1096,14 @@ body.theme-light .info-copy a:hover {
     font-size: clamp(16px, 7vw, 22px);
   }
 .leaderboard-statuses {
-  flex-basis: 100%;
-  margin-top: 4px;
-  gap: 4px;
+  /* flex-basis: 100%;
+  margin-top: 4px; */
+  gap: 2px;
 }
 
 .status-dot {
-  width: 7px;
-  height: 7px;
+  width: 5px;
+  height: 5px;
 }
 
 }
