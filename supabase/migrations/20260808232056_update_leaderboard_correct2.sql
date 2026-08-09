@@ -11,6 +11,7 @@ WITH active_users AS (
     FROM public.word_results wr
     JOIN public.words w
         ON w.id = wr.word_id
+    WHERE wr.nb_tries > 0
 )
 SELECT
     u.id AS user_id,
@@ -44,6 +45,8 @@ JOIN public.words w
 LEFT JOIN public.word_results wr
     ON wr.user_id = u.id
     AND wr.word_id = w.id
+WHERE wr.id IS NOT NULL
+  AND wr.nb_tries > 0
 GROUP BY
     u.id,
     u.login,

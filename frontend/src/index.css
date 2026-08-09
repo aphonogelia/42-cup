@@ -910,6 +910,8 @@ body.theme-light .info-copy a:hover {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  margin-left: 6px;
+  transform: translateY(1px);
 }
 
 .status-dot {
@@ -1105,5 +1107,10 @@ body.theme-light .info-copy a:hover {
   width: 5px;
   height: 5px;
 }
+
+ .ledger-row {
+    grid-template-columns: 20px minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+  }
 
 }

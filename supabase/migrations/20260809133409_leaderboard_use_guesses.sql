@@ -13,6 +13,7 @@ WITH active_users AS (
         ON wr.id = g.word_result_id
     JOIN public.words w
         ON w.id = wr.word_id
+    WHERE wr.nb_tries > 0
 )
 SELECT
     u.id AS user_id,
@@ -55,6 +56,9 @@ LEFT JOIN public.word_results wr
     ON wr.user_id = u.id
     AND wr.word_id = w.id
 
+WHERE wr.id IS NOT NULL
+  AND wr.nb_tries > 0
+
 GROUP BY
     u.id,
     u.login,
@@ -65,5 +69,3 @@ GROUP BY
 GRANT ALL ON public.leaderboard TO anon;
 GRANT ALL ON public.leaderboard TO authenticated;
 GRANT ALL ON public.leaderboard TO service_role;
-
-pg_dump  "postgresql://postgres:_nfy6Rq_G?h45WA@db.bocxptqhzejredyvhlwx.supabase.co:5432/postgres"   -f prod_dump.sql
