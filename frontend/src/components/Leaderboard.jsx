@@ -17,6 +17,23 @@ function formatDateLabel(dateStr) {
   });
 }
 
+
+
+const STATUS_LABEL = {
+  solved: 'Solved',
+  failed: 'Failed',
+  in_progress: 'In progress',
+  not_started: 'Not started',
+};
+
+function getStatusList(statuses, totalWords) {
+  const normalized = Array.isArray(statuses) ? statuses : [];
+  return Array.from(
+    { length: totalWords ?? normalized.length },
+    (_, i) => normalized[i] ?? 'not_started'
+  );
+}
+
 export default function Leaderboard({ totalWords }) {
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
@@ -82,17 +99,18 @@ export default function Leaderboard({ totalWords }) {
     };
   }, [selectedDate, fetchLeaderboard]);
 
-  const tiers = [];
-  if (rows) {
-    let current = null;
-    for (const row of rows) {
-      if (!current || current.words_found !== row.words_found) {
-        current = { words_found: row.words_found, rows: [] };
-        tiers.push(current);
-      }
-      current.rows.push(row);
+
+const tiers = [];
+if (rows) {
+  let current = null;
+  rows.forEach((row, index) => {
+    if (!current || current.words_found !== row.words_found) {
+      current = { words_found: row.words_found, rows: [] };
+      tiers.push(current);
     }
-  }
+    current.rows.push({ ...row, rank: index + 1 });
+  });
+}
 
   const loading = !rows || !datesLoaded;
 
@@ -124,12 +142,24 @@ export default function Leaderboard({ totalWords }) {
                 <div className="ledger-tier-label">
                   {tier.words_found}/{totalWords ?? tier.words_found} solved
                 </div>
-                {tier.rows.map((row, i) => (
+                {tier.rows.map((row) => (
                   <div className="ledger-row" key={row.user_id}>
-                    <span className="rank">{i + 1}</span>
+                    <span className="rank">{row.rank}</span>
                     <span className="login">
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      {row.login}
+                      <span className="login-name">{row.login}</span>
+                      <span
+  className="leaderboard-statuses"
+  aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
+    .map((s) => STATUS_LABEL[s])
+    .join(', ')}`}
+>
+
+  {getStatusList(row.word_statuses, totalWords).map((status, i) => (
+  <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
+))}
+</span>
+
                     </span>
                     <span className="tries">{row.total_tries} tries</span>
                     <span className="time">{formatTime(row.total_time)}</span>
