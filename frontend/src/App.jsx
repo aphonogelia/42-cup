@@ -10,17 +10,12 @@ import AlertModal from './components/AlertModal.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
-// const RESULT_CHAR = {
-//   correct: '●',
-//   present: '◐',
-//   absent: '○',
-// };
-
 const RESULT_CHAR = {
-  correct: '■',
-  present: '◢',
-  absent: '□',
+  correct: '●',
+  present: '◐',
+  absent: '○',
 };
+
 
 
 const INFO_PAGES = {
@@ -167,7 +162,6 @@ function writeCachedProgress(login, words, dateKey = getBerlinDateKey()) {
 }
 
 
-
 function buildShareText(shareWords, dateKey) {
   const solved = shareWords.filter((w) => w.status === 'solved').length;
   const totalTime = shareWords.reduce((sum, w) => sum + (w.time_seconds || 0), 0);
@@ -175,36 +169,18 @@ function buildShareText(shareWords, dateKey) {
     .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
     .replace(/\//g, '.');
 
-  const colWidth = (shareWords[0]?.guesses[0]?.length ?? 5) + 2; // cells + gap
-  const maxRows = Math.max(1, ...shareWords.map((w) => w.guesses.length));
+  const dotWidth = Math.max(...shareWords.map((w) => w.guesses.length), 1) + 1;
 
-  const timeLine = shareWords
-    .map((w) => formatTimeShort(w.time_seconds).padEnd(colWidth))
-    .join('')
-    .trimEnd();
-
-  const gridLines = [];
-  for (let row = 0; row < maxRows; row++) {
-    const line = shareWords
-      .map((w) => {
-        const r = w.guesses[row];
-        const cells = r ? r.map((c) => RESULT_CHAR[c] ?? '○').join('') : '';
-        return cells.padEnd(colWidth);
-      })
-      .join('')
-      .trimEnd();
-    gridLines.push(line);
-  }
+  const wordLines = shareWords.map((w, i) => {
+    const dot = w.status === 'solved' ? '●' : '○';
+    const dots = dot.repeat(w.guesses.length);
+    return `word${i + 1}  ${dots.padEnd(dotWidth)} ${formatTimeShort(w.time_seconds)}`;
+  });
 
   return [
-    `wordel   ${dateLabel}  // ${solved}/${shareWords.length} solved in ${formatTimeShort(totalTime)} min`,
+    `wordel  ${dateLabel}  ${solved}/${shareWords.length} solved  ${formatTimeShort(totalTime)} total  wordel-sepia-nu.vercel.app`,
     '',
-    '```',
-    timeLine,
-    ...gridLines,
-    '```',
-    '',
-    'wordel-sepia-nu.vercel.app',
+    ...wordLines,
   ].join('\n');
 }
 
