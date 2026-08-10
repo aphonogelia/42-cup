@@ -229,6 +229,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
 
   const letterStates = computeLetterStates(wordState.guesses);
   const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
+  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
   return (
     <div className="game-panel">
@@ -258,16 +259,16 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
         </div>
       )}
 
-      {finished &&
-        finished.status === 'solved' &&
-        nextOrderIndex != null &&
-        nextOrderIndex !== orderIndex && (
+
+      <div className="game-footer-action">
+        {showNextWordButton ? (
           <button type="button" className="next-word-btn" onClick={onNext}>
             Next word →
           </button>
+        ) : (
+          <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
         )}
-
-      <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
+      </div>
     </div>
   );
 }

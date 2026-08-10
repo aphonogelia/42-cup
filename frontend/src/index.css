@@ -20,6 +20,8 @@
   --crimson: #EF476F;
   --crimson-dim: #6e2b26;
 
+  --lila:  #af9fd6;
+
   --tile-correct: #0fbd49;
   --tile-present: #e0e264;
   --tile-absent: #3a4147;
@@ -288,7 +290,9 @@ button {
 }
 
 .next-word-btn {
-  margin-top: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 0;
   background: var(--surface-raised);
   border: 1px solid rgba(234, 236, 97, 0.28);
   color: var(--text);
@@ -778,6 +782,13 @@ body.theme-light .info-copy a:hover {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.game-footer-action {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
 .answer-reveal {
   display: inline-flex;
   gap: 1px;
@@ -797,7 +808,6 @@ body.theme-light .info-copy a:hover {
   gap: 6px;
   width: 100%;
   max-width: 480px;
-  margin-top: 12px;
   margin-bottom: 8px;
 }
 
@@ -925,6 +935,11 @@ body.theme-light .info-copy a:hover {
   opacity: 0.85;
 }
 
+
+body.theme-light .status-dot.solved {
+  background: var(--lila);
+}
+
 .status-dot.failed {
   background: transparent;
   border: 1px solid var(--crimson);
@@ -941,6 +956,7 @@ body.theme-light .status-dot.in_progress,
 body.theme-light .status-dot.not_started {
   background: var(--line);
 }
+
 
 
 .ledger-row .time {
