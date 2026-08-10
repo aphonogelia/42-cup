@@ -268,9 +268,8 @@ button {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 0 10px;
-  height: 30px;
+  height: 28px;
   line-height: 1;
-  border-radius: var(--radius);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
