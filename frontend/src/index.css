@@ -277,10 +277,9 @@ button {
   animation: share-pulse 2.5s ease-in-out 2;
 }
 
-.share-header-btn svg {
-  width: 40px;
-  height: 40px;
-  display: block;
+.share-header-btn.icon-btn svg {
+  width: 30px;
+  height: 30px;
 }
 
 
