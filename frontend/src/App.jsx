@@ -11,9 +11,9 @@ const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
 const RESULT_COLORS = {
-  correct: #c09bce,
-  present: #fa0643,
-  absent: #b8b8b8,
+  correct: "#c09bce",
+  present: "#fa0643",
+  absent: "#b8b8b8",
 };
 
 const INFO_PAGES = {
@@ -339,35 +339,35 @@ export default function App() {
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
 
 
-const handleShare = async () => {
-  try {
-    const data = await api.shareData();
-    const blob = await generateShareImage(data.words);
-    const file = new File([blob], `42cup-${data.date}.png`, { type: 'image/png' });
+  const handleShare = async () => {
+    try {
+      const data = await api.shareData();
+      const blob = await generateShareImage(data.words);
+      const file = new File([blob], `42cup-${data.date}.png`, { type: 'image/png' });
 
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file] });
-      return;
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+
+      if (navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        setShareCopied(true);
+        if (shareCopiedTimeoutRef.current) window.clearTimeout(shareCopiedTimeoutRef.current);
+        shareCopiedTimeoutRef.current = window.setTimeout(() => setShareCopied(false), 1500);
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // cancelled share sheet or clipboard denied
     }
-
-    if (navigator.clipboard?.write) {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      setShareCopied(true);
-      if (shareCopiedTimeoutRef.current) window.clearTimeout(shareCopiedTimeoutRef.current);
-      shareCopiedTimeoutRef.current = window.setTimeout(() => setShareCopied(false), 1500);
-      return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch {
-    // cancelled share sheet or clipboard denied
-  }
-};
+  };
 
   if (!authChecked) {
     return (
