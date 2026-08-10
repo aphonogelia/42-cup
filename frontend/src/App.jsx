@@ -109,10 +109,9 @@ function LogoutIcon() {
 function ShareIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="18" cy="5" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="6" cy="12" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="18" cy="19" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M14 3h7v7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 3l-9 9" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -383,21 +382,6 @@ export default function App() {
         </div>
 
         <div className="masthead-controls">
-          <nav className="masthead-nav">
-            <button
-              className={`nav-btn ${view === 'play' ? 'active' : ''}`}
-              onClick={() => setView('play')}
-            >
-              Play
-            </button>
-            <button
-              className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => setView('leaderboard')}
-            >
-              Ledger
-            </button>
-          </nav>
-
           {isDayComplete && (
             <button
               type="button"
@@ -409,6 +393,15 @@ export default function App() {
               {shareCopied ? 'Copied' : <ShareIcon />}
             </button>
           )}
+
+          <nav className="masthead-nav">
+            <button className={`nav-btn ${view === 'play' ? 'active' : ''}`} onClick={() => setView('play')}>
+              Play
+            </button>
+            <button className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`} onClick={() => setView('leaderboard')}>
+              Ledger
+            </button>
+          </nav>
 
           <button
             className="icon-btn theme-toggle"

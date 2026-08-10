@@ -208,13 +208,6 @@ button {
   gap: 4px;
 }
 
-/* .masthead-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-} */
 
 .masthead-controls {
   display: flex;
@@ -274,16 +267,22 @@ button {
   font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 6px 10px;
+  padding: 0 10px;
+  height: 30px;
+  line-height: 1;
   border-radius: var(--radius);
   cursor: pointer;
-  animation: share-pulse 2.2s ease-in-out infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: share-pulse 2.5s ease-in-out 2;
 }
 
 .share-header-btn:hover {
   filter: brightness(1.15);
   animation-play-state: paused;
 }
+
 
 
 .share-header-btn:hover {
@@ -1094,11 +1093,11 @@ body.theme-light .status-dot.not_started {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(234, 236, 97, 0.45);
+    box-shadow: 0 0 0 0 var(--bg1);
   }
 
   50% {
-    box-shadow: 0 0 0 5px rgba(234, 236, 97, 0);
+    box-shadow: 0 0 0 5px transparent;
   }
 }
 
@@ -1156,10 +1155,6 @@ body.theme-light .status-dot.not_started {
     gap: 12px;
     flex-direction: column;
   }
-
-  /* .masthead-controls {
-    justify-content: space-between;
-  } */
 
 
   .masthead-controls {
