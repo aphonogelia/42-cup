@@ -12,7 +12,7 @@ const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
 const RESULT_CHAR = {
   correct: '●',
-  present: '◍',
+  present: '◐',
   absent: '○',
 };
 
