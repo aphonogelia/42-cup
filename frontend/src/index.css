@@ -937,8 +937,8 @@ body.theme-light .info-copy a:hover {
 }
 
 
-.status-dot.in_progress.theme-light,
-.status-dot.not_started.theme-light {
+body.theme-light .status-dot.in_progress,
+body.theme-light .status-dot.not_started {
   background: var(--line);
 }
 
