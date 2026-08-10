@@ -137,18 +137,7 @@ function getBerlinDateKey(date = new Date()) {
   }).format(date);
 }
 
-function toBoldUnicode(str) {
-  const boldMap = {};
-  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lower = 'abcdefghijklmnopqrstuvwxyz';
-  const digits = '0123456789';
 
-  [...upper].forEach((ch, i) => (boldMap[ch] = String.fromCodePoint(0x1d400 + i)));
-  [...lower].forEach((ch, i) => (boldMap[ch] = String.fromCodePoint(0x1d41a + i)));
-  [...digits].forEach((ch, i) => (boldMap[ch] = String.fromCodePoint(0x1d7ce + i)));
-
-  return [...str].map((ch) => boldMap[ch] || ch).join('');
-}
 
 function getProgressCacheKey(login, dateKey = getBerlinDateKey()) {
   return `${PROGRESS_CACHE_PREFIX}-${login}-${dateKey}`;
@@ -195,7 +184,7 @@ function buildShareText(shareWords, dateKey) {
   });
 
   return [
-    toBoldUnicode(`wordel // ${dateLabel}`),
+    `WORDEL // ${dateLabel}`,
     `${solved} / ${shareWords.length} solved · ${formatTimeShort(totalTime)} total`,
     '',
     ...wordLines,
