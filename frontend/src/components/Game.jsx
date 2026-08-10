@@ -229,6 +229,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
 
   const letterStates = computeLetterStates(wordState.guesses);
   const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
+  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
   return (
     <div className="game-panel">
@@ -249,25 +250,27 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
         <AlertModal message={errorMessage} onClose={() => setErrorMessage('')} />
       </div>
 
-      {finished && finished.status !== 'solved' && (
-        <div className={`result-banner ${finished.status}`}>
-          <span>Word was:</span>
-          {finished.answer && (
-            <AnimatedAnswer answer={finished.answer.toUpperCase()} />
-          )}
-        </div>
-      )}
-
-      {finished &&
-        finished.status === 'solved' &&
-        nextOrderIndex != null &&
-        nextOrderIndex !== orderIndex && (
-          <button type="button" className="next-word-btn" onClick={onNext}>
-            Next word →
-          </button>
+      <div className="game-footer-action">
+        {finished ? (
+          <div className="finished-panel">
+            {finished.status !== 'solved' && (
+              <div className={`result-banner ${finished.status}`}>
+                <span>Word was:</span>
+                {finished.answer && (
+                  <AnimatedAnswer answer={finished.answer.toUpperCase()} />
+                )}
+              </div>
+            )}
+            {showNextWordButton && (
+              <button type="button" className="next-word-btn" onClick={onNext}>
+                Next word →
+              </button>
+            )}
+          </div>
+        ) : (
+          <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
         )}
-
-      <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
+      </div>
     </div>
   );
 }

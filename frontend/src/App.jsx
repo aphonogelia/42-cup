@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import Login from './components/Login.jsx';
 import WordTabs from './components/WordTabs.jsx';
@@ -9,7 +9,6 @@ import AlertModal from './components/AlertModal.jsx';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
-
 
 const INFO_PAGES = {
   privacy: {
@@ -32,12 +31,22 @@ const INFO_PAGES = {
           Slack channel
         </a>.
       </>,
-       'Each day brings a fresh set of words, randomly drawn from the ~2,300 past Wordle answers. Everything resets at midnight.',
-  'For each word, the clock starts with your first guess and stops when you solve it or make your sixth wrong guess. Your times are then added together across all words — so speed matters as much as accuracy.',
-  'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
-],
+      'Each day brings a fresh set of words, randomly drawn from the ~2,300 past Wordle answers. Everything resets at midnight.',
+      'For each word, the clock starts with your first guess and stops when you solve it or make your sixth wrong guess. Your times are then added together across all words — so speed matters as much as accuracy.',
+      'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
+    ],
   },
 };
+
+function formatTimeShort(seconds) {
+  if (seconds == null) return '--:--';
+
+  const totalSeconds = Math.round(seconds);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 function InfoModal({ page, onClose }) {
   const content = INFO_PAGES[page];
@@ -97,6 +106,17 @@ function LogoutIcon() {
   );
 }
 
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M20.55 2.85c.72-.23 1.39.45 1.16 1.17l-4.91 16.05c-.42 1.38-2.35 1.47-2.91.14l-2.48-5.92-6.55-1.93c-1.64-.48-1.7-2.76-.09-3.34L20.55 2.85z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 
 function getNextOpenWord(words, currentOrderIndex) {
   const open = words.filter((w) => w.status === 'not_started' || w.status === 'in_progress');
@@ -145,14 +165,42 @@ function writeCachedProgress(login, words, dateKey = getBerlinDateKey()) {
 }
 
 
+function buildShareText(shareWords, dateKey) {
+  const solved = shareWords.filter((w) => w.status === 'solved').length;
+  const totalTime = shareWords.reduce((sum, w) => sum + (w.time_seconds || 0), 0);
+  const dateLabel = new Date(`${dateKey}T00:00:00`)
+    .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    .replace(/\//g, '.');
+
+  const dotWidth = Math.max(...shareWords.map((w) => w.guesses.length), 1);
+
+  const wordLines = shareWords.map((w, i) => {
+    const dot = w.status === 'solved' ? '●' : '○';
+    const dots = dot.repeat(w.guesses.length).padEnd(dotWidth);
+    return `      #${i + 1}  ${dots}  ${formatTimeShort(w.time_seconds)}`;
+  });
+
+  return [
+    `wordel // ${dateLabel}`,
+    '',
+    `${solved} / ${shareWords.length} solved · ${formatTimeShort(totalTime)} total`,
+    '',
+    ...wordLines,
+    '',
+    'https://wordel-sepia-nu.vercel.app',
+  ].join('\n');
+}
+
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState(null);
   const [view, setView] = useState('play'); // 'play' | 'leaderboard'
   const [words, setWords] = useState([]);
   const [showCompletionToast, setShowCompletionToast] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
+  const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
     return window.localStorage.getItem('wordel-theme') || 'dark';
@@ -224,6 +272,12 @@ export default function App() {
     window.localStorage.setItem('wordel-theme', theme);
   }, [theme]);
 
+  useEffect(() => () => {
+    if (shareCopiedTimeoutRef.current) {
+      window.clearTimeout(shareCopiedTimeoutRef.current);
+    }
+  }, []);
+
   useEffect(() => {
     if (!infoPage) return undefined;
 
@@ -255,6 +309,38 @@ export default function App() {
     setSelectedOrderIndex(null);
   };
 
+  const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
+  const handleShare = async () => {
+    try {
+      const data = await api.shareData();
+      const text = buildShareText(data.words, data.date);
+      const blob = new Blob([text], { type: 'text/plain' });
+      const file = new File([blob], `42cup-${data.date}.txt`, { type: 'text/plain' });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+
+      if (navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+        setShareCopied(true);
+        if (shareCopiedTimeoutRef.current) window.clearTimeout(shareCopiedTimeoutRef.current);
+        shareCopiedTimeoutRef.current = window.setTimeout(() => setShareCopied(false), 1500);
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('share failed:', err); // temporary — remove once confirmed working
+    }
+  };
+
   if (!authChecked) {
     return (
       <div className="app-shell loading-shell">
@@ -278,24 +364,50 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="masthead">
-        <h1 className="masthead-title">
-          wordel <span>// 42 CUP</span>
-        </h1>
-        <div className="masthead-controls">
-          <nav className="masthead-nav">
+        <div className="masthead-title-row">
+          <h1 className="masthead-title">
+            wordel <span>// 42 CUP</span>
+          </h1>
+
+          {isDayComplete && (
             <button
-              className={`nav-btn ${view === 'play' ? 'active' : ''}`}
-              onClick={() => setView('play')}
+              type="button"
+              className="icon-btn share-header-btn share-btn-mobile"
+              onClick={handleShare}
+              aria-label={shareCopied ? 'Copied' : 'Share results'}
+              title={shareCopied ? 'Copied' : 'Share results'}
             >
+              <span className="share-content">
+                {shareCopied ? 'COPIED' : <ShareIcon />}
+              </span>
+            </button>
+          )}
+        </div>
+
+        <div className="masthead-controls">
+          {isDayComplete && (
+            <button
+              type="button"
+              className="icon-btn share-header-btn share-btn-desktop"
+              onClick={handleShare}
+              aria-label={shareCopied ? 'Copied' : 'Share results'}
+              title={shareCopied ? 'Copied' : 'Share results'}
+            >
+              <span className="share-content">
+                {shareCopied ? 'COPIED' : <ShareIcon />}
+              </span>
+            </button>
+          )}
+
+          <nav className="masthead-nav">
+            <button className={`nav-btn ${view === 'play' ? 'active' : ''}`} onClick={() => setView('play')}>
               Play
             </button>
-            <button
-              className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => setView('leaderboard')}
-            >
+            <button className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`} onClick={() => setView('leaderboard')}>
               Ledger
             </button>
           </nav>
+
           <button
             className="icon-btn theme-toggle"
             onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
@@ -366,6 +478,6 @@ export default function App() {
         }}
       />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
-    </div>
+    </div >
   );
 }
