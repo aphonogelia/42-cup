@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import Login from './components/Login.jsx';
 import WordTabs from './components/WordTabs.jsx';
@@ -9,6 +9,13 @@ import AlertModal from './components/AlertModal.jsx';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
+
+const SHARE_SYMBOL = {
+  solved: '■',
+  failed: '□',
+  in_progress: '·',
+  not_started: '·',
+};
 
 
 const INFO_PAGES = {
@@ -144,6 +151,23 @@ function writeCachedProgress(login, words, dateKey = getBerlinDateKey()) {
   }
 }
 
+function buildShareText(words, dateKey) {
+  const sortedWords = words.slice().sort((a, b) => a.order_index - b.order_index);
+  const strip = sortedWords.map((word) => SHARE_SYMBOL[word.status] ?? '·').join(' ');
+  const solved = sortedWords.filter((word) => word.status === 'solved').length;
+  const totalTries = sortedWords.reduce((sum, word) => sum + (word.nb_tries ?? 0), 0);
+
+  return [
+    `wordel // 42 CUP — ${dateKey}`,
+    `${solved}/${sortedWords.length} solved  ${strip}`,
+    `${totalTries} tries`,
+  ].join('\n');
+}
+
+function formatPercent(value) {
+  return `${Math.round(value)}%`;
+}
+
 
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -151,8 +175,10 @@ export default function App() {
   const [view, setView] = useState('play'); // 'play' | 'leaderboard'
   const [words, setWords] = useState([]);
   const [showCompletionToast, setShowCompletionToast] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
+  const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
     return window.localStorage.getItem('wordel-theme') || 'dark';
@@ -224,6 +250,12 @@ export default function App() {
     window.localStorage.setItem('wordel-theme', theme);
   }, [theme]);
 
+  useEffect(() => () => {
+    if (shareCopiedTimeoutRef.current) {
+      window.clearTimeout(shareCopiedTimeoutRef.current);
+    }
+  }, []);
+
   useEffect(() => {
     if (!infoPage) return undefined;
 
@@ -255,6 +287,32 @@ export default function App() {
     setSelectedOrderIndex(null);
   };
 
+  const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
+
+  const handleShare = async () => {
+    const text = buildShareText(words, getBerlinDateKey());
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+        return;
+      }
+
+      await navigator.clipboard.writeText(text);
+      setShareCopied(true);
+
+      if (shareCopiedTimeoutRef.current) {
+        window.clearTimeout(shareCopiedTimeoutRef.current);
+      }
+
+      shareCopiedTimeoutRef.current = window.setTimeout(() => {
+        setShareCopied(false);
+      }, 1500);
+    } catch {
+      // User cancelled the native share sheet or clipboard access was denied.
+    }
+  };
+
   if (!authChecked) {
     return (
       <div className="app-shell loading-shell">
@@ -274,6 +332,8 @@ export default function App() {
 
   const solvedCount = words.filter((w) => w.status === 'solved').length;
   const totalWords = words.length;
+  const totalTimeSeconds = words.reduce((sum, word) => sum + (word.time_seconds ?? 0), 0);
+  const sortedWords = words.slice().sort((a, b) => a.order_index - b.order_index);
 
   return (
     <div className="app-shell">
@@ -337,7 +397,41 @@ export default function App() {
         ) : (
           <Leaderboard totalWords={words.length} />
         )}
+
       </main>
+
+      {isDayComplete && (
+        <section className="completion-summary" aria-labelledby="completion-summary-title">
+          <div className="completion-summary-head">
+            <div>
+              <p className="completion-summary-eyebrow">Finished for the day</p>
+              <h2 id="completion-summary-title">Share your run</h2>
+            </div>
+            <button type="button" className="share-results-btn" onClick={handleShare}>
+              {shareCopied ? 'Copied' : 'Share results'}
+            </button>
+          </div>
+
+          <div className="time-share-bars" role="list" aria-label="Time spent per word">
+            {sortedWords.map((word) => {
+              const share = totalTimeSeconds > 0 ? ((word.time_seconds ?? 0) / totalTimeSeconds) * 100 : 0;
+
+              return (
+                <div className="time-share-row" role="listitem" key={word.order_index}>
+                  <span className="time-share-label">Word {word.order_index}</span>
+                  <div className="time-share-track" aria-hidden="true">
+                    <div
+                      className={`time-share-fill ${word.status}`}
+                      style={{ width: `${share}%` }}
+                    />
+                  </div>
+                  <span className="time-share-value">{formatPercent(share)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <footer className="app-footer">
         <button type="button" onClick={() => setInfoPage('privacy')}>Privacy</button>
