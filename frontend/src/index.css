@@ -258,7 +258,7 @@ button {
 }
 
 .share-header-btn {
-  background: var(--amber);
+  background: #ffffff;
   color: #1a1305;
   border: 1px solid var(--amber-dim);
   font-family: var(--font-display);
@@ -273,8 +273,20 @@ button {
 }
 
 .share-header-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(0.97);
   animation-play-state: paused;
+}
+
+.masthead-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.share-btn-mobile {
+  display: none;
 }
 
 .info-overlay {
@@ -1132,6 +1144,14 @@ body.theme-light .status-dot.not_started {
 
   .masthead-controls {
     justify-content: space-between;
+  }
+
+   .share-btn-mobile {
+    display: inline-flex;
+  }
+
+  .share-btn-desktop {
+    display: none;
   }
 
   .user-chip {

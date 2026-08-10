@@ -187,7 +187,7 @@ function buildShareText(shareWords, dateKey) {
     '',
     ...wordLines,
     '',
-    'wordel-sepia-nu.vercel.app',
+    'https://wordel-sepia-nu.vercel.app',
   ].join('\n');
 }
 
@@ -364,17 +364,26 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="masthead">
-        <h1 className="masthead-title">
-          wordel <span>// 42 CUP</span>
-        </h1>
+        <div className="masthead-title-row">
+          <h1 className="masthead-title">
+            wordel <span>// 42 CUP</span>
+          </h1>
+
+          {isDayComplete && (
+            <button
+              type="button"
+              className="icon-btn share-header-btn share-btn-mobile"
+              onClick={handleShare}
+              aria-label={shareCopied ? 'Copied' : 'Share results'}
+              title={shareCopied ? 'Copied' : 'Share results'}
+            >
+              {shareCopied ? 'Copied' : <ShareIcon />}
+            </button>
+          )}
+        </div>
+
         <div className="masthead-controls">
           <nav className="masthead-nav">
-
-            {isDayComplete && (
-              < button type="button" className="icon-btn share-header-btn" onClick={handleShare} aria-label={shareCopied ? 'Copied' : 'Share results'} title={shareCopied ? 'Copied' : 'Share results'}>
-                <ShareIcon />
-              </button>
-            )}
             <button
               className={`nav-btn ${view === 'play' ? 'active' : ''}`}
               onClick={() => setView('play')}
@@ -389,7 +398,17 @@ export default function App() {
             </button>
           </nav>
 
-
+          {isDayComplete && (
+            <button
+              type="button"
+              className="icon-btn share-header-btn share-btn-desktop"
+              onClick={handleShare}
+              aria-label={shareCopied ? 'Copied' : 'Share results'}
+              title={shareCopied ? 'Copied' : 'Share results'}
+            >
+              {shareCopied ? 'Copied' : <ShareIcon />}
+            </button>
+          )}
 
           <button
             className="icon-btn theme-toggle"
@@ -406,7 +425,7 @@ export default function App() {
             </button>
           </div>
         </div>
-      </header >
+      </header>
 
       <main className="app-content">
         {view === "play" ? (
