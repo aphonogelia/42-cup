@@ -10,6 +10,12 @@ import AlertModal from './components/AlertModal.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
+const RESULT_CHAR = {
+  correct: '●',
+  present: '◍',
+  absent: '○',
+};
+
 const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
@@ -344,7 +350,7 @@ export default function App() {
       console.error('share failed:', err); // temporary — remove once confirmed working
     }
   };
-  
+
   if (!authChecked) {
     return (
       <div className="app-shell loading-shell">
