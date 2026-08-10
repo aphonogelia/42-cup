@@ -164,10 +164,6 @@ function buildShareText(words, dateKey) {
   ].join('\n');
 }
 
-function formatPercent(value) {
-  return `${Math.round(value)}%`;
-}
-
 
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -332,8 +328,6 @@ export default function App() {
 
   const solvedCount = words.filter((w) => w.status === 'solved').length;
   const totalWords = words.length;
-  const totalTimeSeconds = words.reduce((sum, word) => sum + (word.time_seconds ?? 0), 0);
-  const sortedWords = words.slice().sort((a, b) => a.order_index - b.order_index);
 
   return (
     <div className="app-shell">
@@ -356,6 +350,13 @@ export default function App() {
               Ledger
             </button>
           </nav>
+
+          {isDayComplete && (
+            <button type="button" className="share-header-btn" onClick={handleShare}>
+              {shareCopied ? 'Copied' : 'Share results'}
+            </button>
+          )}
+
           <button
             className="icon-btn theme-toggle"
             onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
@@ -397,41 +398,7 @@ export default function App() {
         ) : (
           <Leaderboard totalWords={words.length} />
         )}
-
       </main>
-
-      {isDayComplete && (
-        <section className="completion-summary" aria-labelledby="completion-summary-title">
-          <div className="completion-summary-head">
-            <div>
-              <p className="completion-summary-eyebrow">Finished for the day</p>
-              <h2 id="completion-summary-title">Share your run</h2>
-            </div>
-            <button type="button" className="share-results-btn" onClick={handleShare}>
-              {shareCopied ? 'Copied' : 'Share results'}
-            </button>
-          </div>
-
-          <div className="time-share-bars" role="list" aria-label="Time spent per word">
-            {sortedWords.map((word) => {
-              const share = totalTimeSeconds > 0 ? ((word.time_seconds ?? 0) / totalTimeSeconds) * 100 : 0;
-
-              return (
-                <div className="time-share-row" role="listitem" key={word.order_index}>
-                  <span className="time-share-label">Word {word.order_index}</span>
-                  <div className="time-share-track" aria-hidden="true">
-                    <div
-                      className={`time-share-fill ${word.status}`}
-                      style={{ width: `${share}%` }}
-                    />
-                  </div>
-                  <span className="time-share-value">{formatPercent(share)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       <footer className="app-footer">
         <button type="button" onClick={() => setInfoPage('privacy')}>Privacy</button>
