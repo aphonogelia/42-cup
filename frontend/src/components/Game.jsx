@@ -250,21 +250,23 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
         <AlertModal message={errorMessage} onClose={() => setErrorMessage('')} />
       </div>
 
-      {finished && finished.status !== 'solved' && (
-        <div className={`result-banner ${finished.status}`}>
-          <span>Word was:</span>
-          {finished.answer && (
-            <AnimatedAnswer answer={finished.answer.toUpperCase()} />
-          )}
-        </div>
-      )}
-
-
       <div className="game-footer-action">
-        {showNextWordButton ? (
-          <button type="button" className="next-word-btn" onClick={onNext}>
-            Next word →
-          </button>
+        {finished ? (
+          <div className="finished-panel">
+            {finished.status !== 'solved' && (
+              <div className={`result-banner ${finished.status}`}>
+                <span>Word was:</span>
+                {finished.answer && (
+                  <AnimatedAnswer answer={finished.answer.toUpperCase()} />
+                )}
+              </div>
+            )}
+            {showNextWordButton && (
+              <button type="button" className="next-word-btn" onClick={onNext}>
+                Next word →
+              </button>
+            )}
+          </div>
         ) : (
           <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
         )}
