@@ -930,15 +930,18 @@ body.theme-light .info-copy a:hover {
   border: 1px solid var(--crimson);
 }
 
-.status-dot.in_progress.theme-light,
-.status-dot.not_started.theme-light {
-  background: var(--text);
+.status-dot.in_progress,
+.status-dot.not_started {
+  background: var(--text-faint);
   opacity: 0.35;
 }
 
-body.theme-light .info-copy a {
-  color: #004d99;
+
+.status-dot.in_progress.theme-light,
+.status-dot.not_started.theme-light {
+  background: var(--line);
 }
+
 
 .ledger-row .time {
   color: var(--paper);
