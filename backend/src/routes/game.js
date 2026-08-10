@@ -189,6 +189,41 @@ export default async function gameRoutes(fastify) {
       }
     }
 
+    // Returns full guess history + timing for today, for share-image generation.
+    fastify.get('/api/game/share', async (request, reply) => {
+      let words;
+      try {
+        ({ words } = await getActiveDraw());
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.code(500).send({ error: 'Failed to load words' });
+      }
+
+      const { data: results, error } = await supabase
+        .from('word_results')
+        .select('word_id, status, time_seconds, guesses(feedback, created_at)')
+        .eq('user_id', request.user.id)
+        .order('created_at', { referencedTable: 'guesses' });
+
+      if (error) return reply.code(500).send({ error: 'Failed to load share data' });
+
+      const byWordId = Object.fromEntries(results.map((r) => [r.word_id, r]));
+      const data = words
+        .slice()
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((w) => {
+          const r = byWordId[w.id];
+          return {
+            order_index: w.order_index,
+            status: r?.status ?? 'not_started',
+            time_seconds: r?.time_seconds ?? null,
+            guesses: (r?.guesses ?? []).map((g) => g.feedback),
+          };
+        });
+
+      return { date: getBerlinDateKey(), words: data };
+    });
+
 
     const feedback = computeFeedback(guess, word.answer);
     const win = isWin(feedback);
