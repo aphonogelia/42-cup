@@ -20,7 +20,7 @@
   --crimson: #EF476F;
   --crimson-dim: #6e2b26;
 
-  --lila:  #af9fd6;
+  --lila: #af9fd6;
 
   --tile-correct: #0fbd49;
   --tile-present: #e0e264;
@@ -208,11 +208,19 @@ button {
   gap: 4px;
 }
 
-.masthead-controls {
+/* .masthead-controls {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: flex-end;
+} */
+
+.masthead-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
   justify-content: flex-end;
 }
 
@@ -258,9 +266,9 @@ button {
 }
 
 .share-header-btn {
-  background: #ffffff;
-  color: #1a1305;
-  border: 1px solid var(--amber-dim);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 11px;
@@ -271,6 +279,12 @@ button {
   cursor: pointer;
   animation: share-pulse 2.2s ease-in-out infinite;
 }
+
+.share-header-btn:hover {
+  filter: brightness(1.15);
+  animation-play-state: paused;
+}
+
 
 .share-header-btn:hover {
   filter: brightness(0.97);
@@ -1077,6 +1091,7 @@ body.theme-light .status-dot.not_started {
 }
 
 @keyframes share-pulse {
+
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(234, 236, 97, 0.45);
@@ -1142,11 +1157,16 @@ body.theme-light .status-dot.not_started {
     flex-direction: column;
   }
 
-  .masthead-controls {
+  /* .masthead-controls {
     justify-content: space-between;
+  } */
+
+
+  .masthead-controls {
+    flex-wrap: wrap;
   }
 
-   .share-btn-mobile {
+  .share-btn-mobile {
     display: inline-flex;
   }
 
@@ -1183,18 +1203,19 @@ body.theme-light .status-dot.not_started {
   .tile {
     font-size: clamp(16px, 7vw, 22px);
   }
-.leaderboard-statuses {
-  /* flex-basis: 100%;
+
+  .leaderboard-statuses {
+    /* flex-basis: 100%;
   margin-top: 4px; */
-  gap: 2px;
-}
+    gap: 2px;
+  }
 
-.status-dot {
-  width: 5px;
-  height: 5px;
-}
+  .status-dot {
+    width: 5px;
+    height: 5px;
+  }
 
- .ledger-row {
+  .ledger-row {
     grid-template-columns: 20px minmax(0, 1fr) auto auto;
     column-gap: 8px;
   }
