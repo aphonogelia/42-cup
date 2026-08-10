@@ -10,14 +10,6 @@ import AlertModal from './components/AlertModal.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
-const RESULT_CHAR = {
-  correct: '●',
-  present: '◐',
-  absent: '○',
-};
-
-
-
 const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
@@ -114,6 +106,17 @@ function LogoutIcon() {
   );
 }
 
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="18" cy="5" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="6" cy="12" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="18" cy="19" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 
 function getNextOpenWord(words, currentOrderIndex) {
   const open = words.filter((w) => w.status === 'not_started' || w.status === 'in_progress');
@@ -169,18 +172,22 @@ function buildShareText(shareWords, dateKey) {
     .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
     .replace(/\//g, '.');
 
-  const dotWidth = Math.max(...shareWords.map((w) => w.guesses.length), 1) + 1;
+  const dotWidth = Math.max(...shareWords.map((w) => w.guesses.length), 1);
 
   const wordLines = shareWords.map((w, i) => {
     const dot = w.status === 'solved' ? '●' : '○';
-    const dots = dot.repeat(w.guesses.length);
-    return `word${i + 1}  ${dots.padEnd(dotWidth)} ${formatTimeShort(w.time_seconds)}`;
+    const dots = dot.repeat(w.guesses.length).padEnd(dotWidth);
+    return `      #${i + 1}  ${dots}  ${formatTimeShort(w.time_seconds)}`;
   });
 
   return [
-    `wordel  ${dateLabel}  ${solved}/${shareWords.length} solved  ${formatTimeShort(totalTime)} total  wordel-sepia-nu.vercel.app`,
+    `wordel // ${dateLabel}`,
+    '',
+    `${solved} / ${shareWords.length} solved · ${formatTimeShort(totalTime)} total`,
     '',
     ...wordLines,
+    '',
+    'wordel-sepia-nu.vercel.app',
   ].join('\n');
 }
 
@@ -362,6 +369,12 @@ export default function App() {
         </h1>
         <div className="masthead-controls">
           <nav className="masthead-nav">
+
+            {isDayComplete && (
+              < button type="button" className="icon-btn share-header-btn" onClick={handleShare} aria-label={shareCopied ? 'Copied' : 'Share results'} title={shareCopied ? 'Copied' : 'Share results'}>
+                <ShareIcon />
+              </button>
+            )}
             <button
               className={`nav-btn ${view === 'play' ? 'active' : ''}`}
               onClick={() => setView('play')}
@@ -376,11 +389,7 @@ export default function App() {
             </button>
           </nav>
 
-          {isDayComplete && (
-            <button type="button" className="share-header-btn" onClick={handleShare}>
-              {shareCopied ? 'Copied' : 'Share results'}
-            </button>
-          )}
+
 
           <button
             className="icon-btn theme-toggle"
@@ -397,7 +406,7 @@ export default function App() {
             </button>
           </div>
         </div>
-      </header>
+      </header >
 
       <main className="app-content">
         {view === "play" ? (
@@ -452,6 +461,6 @@ export default function App() {
         }}
       />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
-    </div>
+    </div >
   );
 }
