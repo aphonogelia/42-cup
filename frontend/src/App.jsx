@@ -177,14 +177,13 @@ function buildShareText(shareWords, dateKey) {
   const wordLines = shareWords.map((w, i) => {
     const dot = w.status === 'solved' ? '●' : '○';
     const dots = dot.repeat(w.guesses.length).padEnd(dotWidth);
-    return `      #${i + 1}  ${dots}  ${formatTimeShort(w.time_seconds)}`;
+
+    return `#${i + 1}  ${dots}  ${formatTimeShort(w.time_seconds)}`;
   });
 
   return [
     `wordel // ${dateLabel}`,
-    '',
     `${solved} / ${shareWords.length} solved · ${formatTimeShort(totalTime)} total`,
-    '',
     ...wordLines,
     '',
     'https://wordel-sepia-nu.vercel.app',
