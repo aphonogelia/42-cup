@@ -378,7 +378,7 @@ export default function App() {
               title={shareCopied ? 'Copied' : 'Share results'}
             >
               <span className="share-content">
-                {shareCopied ? 'Copied' : <ShareIcon />}
+                {shareCopied ? 'COPIED' : <ShareIcon />}
               </span>
             </button>
           )}
@@ -394,7 +394,7 @@ export default function App() {
               title={shareCopied ? 'Copied' : 'Share results'}
             >
               <span className="share-content">
-                {shareCopied ? 'Copied' : <ShareIcon />}
+                {shareCopied ? 'COPIED' : <ShareIcon />}
               </span>
             </button>
           )}
