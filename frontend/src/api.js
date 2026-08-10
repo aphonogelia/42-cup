@@ -24,6 +24,8 @@ async function request(path, options = {}) {
 
   let body = null;
   const text = await res.text();
+  const text = await res.text();
+  console.log('[api] raw response for', path, ':', text);
   if (text) {
     try {
       body = JSON.parse(text);
@@ -48,9 +50,9 @@ export const api = {
   progress: () => request('/api/game/progress'),
   start: (order_index) =>
     request('/api/game/start', { method: 'POST', body: JSON.stringify({ order_index }) }),
-  guess: (word_id, guess) => 
+  guess: (word_id, guess) =>
     request('/api/game/guess', { method: 'POST', body: JSON.stringify({ word_id, guess }) }),
-  
+
   shareData: () => request('/api/game/share'),
   leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
   leaderboardDates: () => request('/api/leaderboard/dates'),

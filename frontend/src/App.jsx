@@ -314,12 +314,11 @@ export default function App() {
   };
 
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
-
-
   const handleShare = async () => {
     try {
       const data = await api.shareData();
-      const blob = await buildShareText(data.words, data.date).then((text) => new Blob([text], { type: 'text/plain' }));
+      const text = buildShareText(data.words, data.date);
+      const blob = new Blob([text], { type: 'text/plain' });
       const file = new File([blob], `42cup-${data.date}.txt`, { type: 'text/plain' });
 
       if (navigator.canShare?.({ files: [file] })) {
@@ -341,11 +340,11 @@ export default function App() {
       a.download = file.name;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      // cancelled share sheet or clipboard denied
+    } catch (err) {
+      console.error('share failed:', err); // temporary — remove once confirmed working
     }
   };
-
+  
   if (!authChecked) {
     return (
       <div className="app-shell loading-shell">
