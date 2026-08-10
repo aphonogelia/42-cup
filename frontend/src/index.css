@@ -15,20 +15,15 @@
   --text-muted: #93998f;
   --text-faint: #5f6a64;
 
-  /* --amber: #eaec61; */
-  --amber: #d8da7a;
+  --amber: #eaec61;
   --amber-dim: #393a05;
   --crimson: #EF476F;
   --crimson-dim: #6e2b26;
 
   --lila: #af9fd6;
 
-  /* --tile-correct: #0fbd49; */
-    --tile-correct: #43eb7b;
-
-  /* --tile-present: #e0e264; */
-    --tile-present: #d8da7a;
-
+  --tile-correct: #0fbd49;
+  --tile-present: #e0e264;
   --tile-absent: #3a4147;
   --tile-empty-border: #414f57;
 
