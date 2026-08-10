@@ -259,8 +259,8 @@ button {
 }
 
 .share-header-btn {
-  background: var(--lila);
-  color: var(--text);
+  background: transparent;
+  color: var(--text-muted);
   border: 1px solid var(--line);
   font-family: var(--font-display);
   font-weight: 700;
@@ -278,15 +278,11 @@ button {
   animation: share-pulse 2.5s ease-in-out 2;
 }
 
-.share-header-btn:hover {
-  filter: brightness(1.15);
-  animation-play-state: paused;
-}
-
 
 
 .share-header-btn:hover {
-  filter: brightness(0.97);
+  border-color: var(--amber-dim);
+  color: var(--paper);
   animation-play-state: paused;
 }
 
@@ -1091,7 +1087,7 @@ body.theme-light .status-dot.not_started {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 var(--bg1);
+    box-shadow: 0 0 0 0 var(--line-soft);
   }
 
   50% {
