@@ -260,15 +260,15 @@ button {
 
 .share-header-btn {
   background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--line);
+  color: var(--amber);
+ 
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 0 10px;
-  height: 28px;
+  height: 30px;
   line-height: 1;
   cursor: pointer;
   display: inline-flex;
