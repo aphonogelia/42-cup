@@ -313,28 +313,32 @@ export default function App() {
     try {
       const data = await api.shareData();
       const text = buildShareText(data.words, data.date);
-      const blob = new Blob([text], { type: 'text/plain' });
-      const file = new File([blob], `42cup-${data.date}.txt`, { type: 'text/plain' });
 
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ text }))) {
+        await navigator.share({ text });
         return;
       }
 
-      if (navigator.clipboard?.write) {
-        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
         setShareCopied(true);
         if (shareCopiedTimeoutRef.current) window.clearTimeout(shareCopiedTimeoutRef.current);
         shareCopiedTimeoutRef.current = window.setTimeout(() => setShareCopied(false), 1500);
         return;
       }
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Very old/unsupported browsers: last-resort clipboard attempt via a temporary textarea
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setShareCopied(true);
+      if (shareCopiedTimeoutRef.current) window.clearTimeout(shareCopiedTimeoutRef.current);
+      shareCopiedTimeoutRef.current = window.setTimeout(() => setShareCopied(false), 1500);
     } catch (err) {
       console.error('share failed:', err); // temporary — remove once confirmed working
     }
