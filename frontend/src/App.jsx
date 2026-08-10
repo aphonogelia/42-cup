@@ -182,8 +182,9 @@ function buildShareText(shareWords, dateKey) {
   });
 
   return [
-    `wordel // ${dateLabel}`,
+    `*wordel // ${dateLabel}*`,
     `${solved} / ${shareWords.length} solved · ${formatTimeShort(totalTime)} total`,
+    '',
     ...wordLines,
     '',
     'https://wordel-sepia-nu.vercel.app',
