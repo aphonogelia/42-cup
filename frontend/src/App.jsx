@@ -377,7 +377,9 @@ export default function App() {
               aria-label={shareCopied ? 'Copied' : 'Share results'}
               title={shareCopied ? 'Copied' : 'Share results'}
             >
-              {shareCopied ? 'Copied' : <ShareIcon />}
+              <span className="share-content">
+                {shareCopied ? 'Copied' : <ShareIcon />}
+              </span>
             </button>
           )}
         </div>
@@ -391,7 +393,9 @@ export default function App() {
               aria-label={shareCopied ? 'Copied' : 'Share results'}
               title={shareCopied ? 'Copied' : 'Share results'}
             >
-              {shareCopied ? 'Copied' : <ShareIcon />}
+              <span className="share-content">
+                {shareCopied ? 'Copied' : <ShareIcon />}
+              </span>
             </button>
           )}
 

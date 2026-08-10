@@ -183,7 +183,7 @@ button {
 
 .masthead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
   padding-bottom: 14px;
@@ -258,28 +258,36 @@ button {
   color: var(--paper);
 }
 
+.share-content {
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-content svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
 .share-header-btn {
   background: transparent;
   color: var(--amber);
   border: none;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0 10px;
+  width: 44px;
   height: 30px;
-  line-height: 1;
-  cursor: pointer;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  animation: share-pulse 2.5s ease-in-out 2;
+  cursor: pointer;
 }
 
 .share-header-btn.icon-btn svg {
-  width: 30px;
-  height: 30px;
+  animation: share-pulse 2.5s ease-in-out 2;
+  width: 24px;
+  height: 24px;
 }
 
 
