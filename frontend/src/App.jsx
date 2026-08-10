@@ -10,12 +10,6 @@ import AlertModal from './components/AlertModal.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
-const RESULT_COLORS = {
-  correct: "#c09bce",
-  present: "#fa0643",
-  absent: "#b8b8b8",
-};
-
 const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
@@ -44,9 +38,13 @@ const INFO_PAGES = {
   },
 };
 
-function formatTime(totalSeconds) {
+function formatTimeShort(seconds) {
+  if (seconds == null) return '--:--';
+
+  const totalSeconds = Math.round(seconds);
   const m = Math.floor(totalSeconds / 60);
-  const s = Math.round(totalSeconds % 60);
+  const s = totalSeconds % 60;
+
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
@@ -155,68 +153,47 @@ function writeCachedProgress(login, words, dateKey = getBerlinDateKey()) {
   }
 }
 
-async function generateShareImage(shareWords) {
-  const cell = 9, gap = 2, colGap = 14, padding = 18;
-  const headerH = 30, barH = 12, barGap = 14, footerH = 20;
 
-  const maxRows = Math.max(1, ...shareWords.map((w) => w.guesses.length || 1));
-  const colWidths = shareWords.map((w) => {
-    const letters = w.guesses[0]?.length || 5;
-    return letters * cell + (letters - 1) * gap;
-  });
-  const gridW = colWidths.reduce((a, b) => a + b, 0) + colGap * (shareWords.length - 1);
-  const gridH = maxRows * cell + (maxRows - 1) * gap;
 
-  const width = gridW + padding * 2;
-  const height = headerH + gridH + barGap + barH + footerH + padding * 2;
-
-  const canvas = document.createElement('canvas');
-  const scale = 2;
-  canvas.width = width * scale;
-  canvas.height = height * scale;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(scale, scale);
-
-  ctx.fillStyle = '#121213';
-  ctx.fillRect(0, 0, width, height);
-
+function buildShareText(shareWords, dateKey) {
   const solved = shareWords.filter((w) => w.status === 'solved').length;
   const totalTime = shareWords.reduce((sum, w) => sum + (w.time_seconds || 0), 0);
+  const dateLabel = new Date(`${dateKey}T00:00:00`)
+    .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    .replace(/\//g, '.');
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 14px -apple-system, Helvetica, Arial, sans-serif';
-  ctx.textBaseline = 'top';
-  ctx.fillText(`42 Cup — ${solved}/${shareWords.length} in ${formatTime(totalTime)}`, padding, padding);
+  const colWidth = (shareWords[0]?.guesses[0]?.length ?? 5) + 2; // cells + gap
+  const maxRows = Math.max(1, ...shareWords.map((w) => w.guesses.length));
 
-  let x = padding;
-  const gridY = padding + headerH;
-  shareWords.forEach((word, wi) => {
-    word.guesses.forEach((rowFeedback, ri) => {
-      rowFeedback.forEach((cellResult, ci) => {
-        ctx.fillStyle = RESULT_COLORS[cellResult] || '#3a3a3c';
-        ctx.fillRect(x + ci * (cell + gap), gridY + ri * (cell + gap), cell, cell);
-      });
-    });
-    x += colWidths[wi] + colGap;
-  });
+  const timeLine = shareWords
+    .map((w) => formatTimeShort(w.time_seconds).padEnd(colWidth))
+    .join('')
+    .trimEnd();
 
-  const barY = gridY + gridH + barGap;
-  let bx = padding;
-  shareWords.forEach((word) => {
-    const frac = totalTime > 0 ? (word.time_seconds || 0) / totalTime : 1 / shareWords.length;
-    const segW = frac * gridW;
-    ctx.fillStyle = '#5a5a5c';
-    ctx.fillRect(bx, barY, Math.max(segW - 2, 1), barH);
-    bx += segW;
-  });
+  const gridLines = [];
+  for (let row = 0; row < maxRows; row++) {
+    const line = shareWords
+      .map((w) => {
+        const r = w.guesses[row];
+        const cells = r ? r.map((c) => RESULT_CHAR[c] ?? '○').join('') : '';
+        return cells.padEnd(colWidth);
+      })
+      .join('')
+      .trimEnd();
+    gridLines.push(line);
+  }
 
-  ctx.fillStyle = '#8a8a8d';
-  ctx.font = '10px -apple-system, Helvetica, Arial, sans-serif';
-  ctx.fillText('42 Cup · wordel-sepia-nu.vercel.app', padding, barY + barH + 8);
-
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  return [
+    `wordel   ${dateLabel}  // ${solved}/${shareWords.length} solved in ${formatTimeShort(totalTime)} min`,
+    '',
+    '```',
+    timeLine,
+    ...gridLines,
+    '```',
+    '',
+    'wordel-sepia-nu.vercel.app',
+  ].join('\n');
 }
-
 
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -342,8 +319,8 @@ export default function App() {
   const handleShare = async () => {
     try {
       const data = await api.shareData();
-      const blob = await generateShareImage(data.words);
-      const file = new File([blob], `42cup-${data.date}.png`, { type: 'image/png' });
+      const blob = await buildShareText(data.words, data.date).then((text) => new Blob([text], { type: 'text/plain' }));
+      const file = new File([blob], `42cup-${data.date}.txt`, { type: 'text/plain' });
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
@@ -351,7 +328,7 @@ export default function App() {
       }
 
       if (navigator.clipboard?.write) {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
         setShareCopied(true);
         if (shareCopiedTimeoutRef.current) window.clearTimeout(shareCopiedTimeoutRef.current);
         shareCopiedTimeoutRef.current = window.setTimeout(() => setShareCopied(false), 1500);
