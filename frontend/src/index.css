@@ -277,6 +277,11 @@ button {
   animation: share-pulse 2.5s ease-in-out 2;
 }
 
+.share-header-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
 
 
 .share-header-btn:hover {
@@ -1086,11 +1091,11 @@ body.theme-light .status-dot.not_started {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 var(--line-soft);
+    filter: drop-shadow(0 0 0 transparent);
   }
 
   50% {
-    box-shadow: 0 0 0 5px transparent;
+    filter: drop-shadow(0 0 5px var(--amber));
   }
 }
 
