@@ -109,9 +109,10 @@ function LogoutIcon() {
 function ShareIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M14 3h7v7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M21 3l-9 9" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M20.55 2.85c.72-.23 1.39.45 1.16 1.17l-4.91 16.05c-.42 1.38-2.35 1.47-2.91.14l-2.48-5.92-6.55-1.93c-1.64-.48-1.7-2.76-.09-3.34L20.55 2.85z"
+        fill="currentColor"
+      />
     </svg>
   );
 }

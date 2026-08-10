@@ -261,7 +261,7 @@ button {
 .share-header-btn {
   background: transparent;
   color: var(--amber);
- 
+  border: none;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 11px;
