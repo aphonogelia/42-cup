@@ -259,7 +259,7 @@ button {
 }
 
 .share-header-btn {
-  background: var(--surface);
+  background: var(--lila);
   color: var(--text);
   border: 1px solid var(--line);
   font-family: var(--font-display);
@@ -335,8 +335,7 @@ button {
 }
 
 .next-word-btn {
-  width: 100%;
-  max-width: 480px;
+  width: auto;
   margin-top: 0;
   background: var(--surface-raised);
   border: 1px solid rgba(234, 236, 97, 0.28);
@@ -345,7 +344,7 @@ button {
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 10px 18px;
+  padding: 14px 32px;
   border-radius: var(--radius);
   cursor: pointer;
 }
@@ -807,8 +806,7 @@ body.theme-light .info-copy a:hover {
   font-size: 13px;
   margin-top: 0;
   padding: 12px 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--line-soft);
+  border: none;
   letter-spacing: 0.03em;
   color: var(--text-muted);
   display: flex;
@@ -819,13 +817,13 @@ body.theme-light .info-copy a:hover {
   text-align: center;
 }
 
-.result-banner.solved {
+/* .result-banner.solved {
   background: rgba(255, 255, 255, 0.02);
 }
 
 .result-banner.failed {
   background: rgba(255, 255, 255, 0.02);
-}
+} */
 
 .game-footer-action {
   width: 100%;
