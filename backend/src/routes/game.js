@@ -5,7 +5,7 @@ import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
 import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
 import { invalidateLeaderboard } from '../lib/leaderboardCache.js';
-
+import { checkPlayerForCheating } from '../lib/cheatDetection.js';
 
 function elapsed(started) {
   return Math.round(performance.now() - started);
@@ -270,6 +270,34 @@ export default async function gameRoutes(fastify) {
 
     invalidateLeaderboard(getBerlinDateKey());
 
+
+    if (updated.status === 'solved' || updated.status === 'failed') {
+      const { data: completedResults, error: completedError } = await supabase
+        .from('word_results')
+        .select('status, word_id')
+        .eq('user_id', request.user.id);
+
+      if (!completedError) {
+        const completedWords = completedResults.filter(
+          (result) => result.status === 'solved' || result.status === 'failed'
+        );
+
+        if (completedWords.length >= 5) {
+          try {
+            await checkPlayerForCheating(
+              request.user.id,
+              getBerlinDateKey(),
+              request.user.login
+            );
+          } catch (error) {
+            fastify.log.error(
+              error,
+              'Failed to check player for cheating'
+            );
+          }
+        }
+      }
+    }
 
     fastify.log.info(
       { ms: Math.round(performance.now() - requestStarted) },
