@@ -70,6 +70,18 @@ export default async function gameRoutes(fastify) {
 
     const words = await ensureDailyDraw({ drawDate });
 
+    console.log(
+      JSON.stringify(
+        words.map((word) => ({
+          wordId: word.word_id,
+          answer: word.words?.answer,
+          guesses: word.guesses,
+        })),
+        null,
+        2
+      )
+    );
+
     dailyWordsCache = words;
     dailyWordsCacheDate = drawDate;
 
@@ -143,6 +155,14 @@ export default async function gameRoutes(fastify) {
       started_at: visibleStartedAt(result),
       guesses: result?.guesses ?? [],
     };
+  });
+
+  fastify.get('/api/test-cheat-detection', async (request) => {
+    return checkPlayerForCheating(
+      request.user.id,
+      getBerlinDateKey(),
+      request.user.login
+    );
   });
 
 
@@ -284,6 +304,16 @@ export default async function gameRoutes(fastify) {
 
         if (completedWords.length >= 5) {
           try {
+
+
+            fastify.log.info(
+              {
+                userId: request.user.id,
+                drawDate: getBerlinDateKey(),
+              },
+              'RUNNING CHEAT DETECTION'
+            );
+
             await checkPlayerForCheating(
               request.user.id,
               getBerlinDateKey(),
