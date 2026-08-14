@@ -167,7 +167,13 @@ export async function checkPlayerForCheating(userId, drawDate, login) {
 
     const reason = reasons.join(', ');
 
-    const { data: inserted, error: insertError } = await supabase
+    // IMPORTANT: don't gate on the row coming back from .select() — if the
+    // client's role has INSERT but not SELECT rights on flagged_users (e.g.
+    // an RLS policy gap), the insert commits fine but the select-back comes
+    // back empty with NO error, and we'd silently skip the Telegram message.
+    // Only insertError (specifically a 23505 unique violation, meaning this
+    // user/draw_date was already flagged) should decide whether we bail out.
+    const { error: insertError } = await supabase
         .from('flagged_users')
         .insert({
             user_id: userId,
@@ -175,21 +181,16 @@ export async function checkPlayerForCheating(userId, drawDate, login) {
             reason,
             fast_gap_words: fastGapWords.length,
             low_variance_words: lowVarianceWords.length,
-        })
-        .select()
-        .maybeSingle();
+        });
 
     if (insertError) {
-        // Unique constraint means the player was already flagged.
+        // Unique constraint on (user_id, draw_date) means the player was
+        // already flagged for this draw — don't re-send the alert.
         if (insertError.code === '23505') {
             return true;
         }
 
         throw insertError;
-    }
-
-    if (!inserted) {
-        return true;
     }
 
     const message = [

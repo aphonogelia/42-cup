@@ -1,0 +1,22 @@
+<!-- See which project is currently linked -->
+npx supabase status
+cat supabase/config.toml
+
+<!-- Pull schema from database -->
+npx supabase db pull
+
+
+<!-- See differences (Generate migration from local DB: -->
+npx supabase db diff
+
+
+<!-- Create migration -->
+npx supabase migration new leaderboard_update
+
+<!-- List migrations -->
+npx supabase migration list
+
+
+<!-- Apply local migrations: -->
+npx supabase db push
+
