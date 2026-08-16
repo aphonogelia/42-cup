@@ -5,7 +5,7 @@ import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
 import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
 import { invalidateLeaderboard } from '../lib/leaderboardCache.js';
-
+import { checkPlayerForCheating } from '../lib/cheatDetection.js';
 
 function elapsed(started) {
   return Math.round(performance.now() - started);
@@ -69,6 +69,7 @@ export default async function gameRoutes(fastify) {
     }
 
     const words = await ensureDailyDraw({ drawDate });
+
 
     dailyWordsCache = words;
     dailyWordsCacheDate = drawDate;
@@ -144,8 +145,6 @@ export default async function gameRoutes(fastify) {
       guesses: result?.guesses ?? [],
     };
   });
-
-
 
   // Returns full guess history + timing for today, for share-image generation.
   fastify.get('/api/game/share', async (request, reply) => {
@@ -268,8 +267,45 @@ export default async function gameRoutes(fastify) {
     );
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
-    invalidateLeaderboard(getBerlinDateKey());
+    
+    
+    if (updated.status === 'solved' || updated.status === 'failed') {
+      const { data: completedResults, error: completedError } = await supabase
+      .from('word_results')
+      .select('status, word_id')
+      .eq('user_id', request.user.id);
+      
+      if (!completedError) {
+        const completedWords = completedResults.filter(
+          (result) => result.status === 'solved' || result.status === 'failed'
+        );
 
+        if (completedWords.length >= 5) {
+          try {
+            fastify.log.info(
+              {
+                userId: request.user.id,
+                drawDate: getBerlinDateKey(),
+              },
+              'RUNNING CHEAT DETECTION'
+            );
+            
+            await checkPlayerForCheating(
+              request.user.id,
+              getBerlinDateKey(),
+              request.user.login
+            );
+          } catch (error) {
+            fastify.log.error(
+              error,
+              'Failed to check player for cheating'
+            );
+          }
+        }
+      }
+    }
+    
+    invalidateLeaderboard(getBerlinDateKey());
 
     fastify.log.info(
       { ms: Math.round(performance.now() - requestStarted) },
