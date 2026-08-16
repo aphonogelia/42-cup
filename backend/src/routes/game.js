@@ -288,15 +288,14 @@ export default async function gameRoutes(fastify) {
     );
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
-    invalidateLeaderboard(getBerlinDateKey());
-
-
+    
+    
     if (updated.status === 'solved' || updated.status === 'failed') {
       const { data: completedResults, error: completedError } = await supabase
-        .from('word_results')
-        .select('status, word_id')
-        .eq('user_id', request.user.id);
-
+      .from('word_results')
+      .select('status, word_id')
+      .eq('user_id', request.user.id);
+      
       if (!completedError) {
         const completedWords = completedResults.filter(
           (result) => result.status === 'solved' || result.status === 'failed'
@@ -304,8 +303,6 @@ export default async function gameRoutes(fastify) {
 
         if (completedWords.length >= 5) {
           try {
-
-
             fastify.log.info(
               {
                 userId: request.user.id,
@@ -313,7 +310,7 @@ export default async function gameRoutes(fastify) {
               },
               'RUNNING CHEAT DETECTION'
             );
-
+            
             await checkPlayerForCheating(
               request.user.id,
               getBerlinDateKey(),
@@ -328,7 +325,9 @@ export default async function gameRoutes(fastify) {
         }
       }
     }
-
+    
+    invalidateLeaderboard(getBerlinDateKey());
+    
     fastify.log.info(
       { ms: Math.round(performance.now() - requestStarted) },
       'guess request'
