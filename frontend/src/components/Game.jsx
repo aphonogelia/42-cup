@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../api.js';
-import GameGrid, { getRevealDurationMs } from './GameGrid.jsx';
+import GameGrid, { getRevealDurationMs, getShakeDurationMs } from './GameGrid.jsx';
 import { computeLetterStates } from '../lib/keyboardState.js';
 import Keyboard from './Keyboard.jsx';
 import AlertModal from './AlertModal.jsx';
@@ -86,10 +86,13 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(null);
   const [revealRowIndex, setRevealRowIndex] = useState(null);
+  const [shakeRowIndex, setShakeRowIndex] = useState(null);
   const [pendingGuess, setPendingGuess] = useState(null);
   const revealTimeout = useRef(null);
+  const shakeTimeout = useRef(null);
   const submittingRef = useRef(false);
 
+  // Reset everything (including shake) when switching to a different word.
   useEffect(() => {
     let cancelled = false;
     const cachedState = readCachedWordState(userLogin, orderIndex);
@@ -104,7 +107,9 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
     setCurrentGuess('');
     setRevealRowIndex(null);
     setPendingGuess(null);
+    setShakeRowIndex(null);
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
+    if (shakeTimeout.current) clearTimeout(shakeTimeout.current);
 
     api
       .start(orderIndex)
@@ -122,17 +127,28 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
     };
   }, [orderIndex]);
 
+  // Cleanup on unmount only — declared once.
   useEffect(() => () => {
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
+    if (shakeTimeout.current) clearTimeout(shakeTimeout.current);
   }, []);
+
+  const triggerShake = useCallback(() => {
+    if (!wordState) return;
+    setShakeRowIndex(wordState.guesses.length);
+    if (shakeTimeout.current) clearTimeout(shakeTimeout.current);
+    shakeTimeout.current = setTimeout(() => setShakeRowIndex(null), getShakeDurationMs());
+  }, [wordState]);
 
   const submitGuess = useCallback(async () => {
     if (!wordState || finished || (wordState.status !== 'not_started' && wordState.status !== 'in_progress') || revealRowIndex !== null) return;
     if (submittingRef.current) return;
     if (currentGuess.length !== wordState.length) {
       setErrorMessage(`Guess must be ${wordState.length} letters`);
+      triggerShake();
       return;
     }
+
     submittingRef.current = true;
     try {
       const result = await api.guess(wordState.word_id, currentGuess);
@@ -179,10 +195,11 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
 
     } catch (err) {
       setErrorMessage(err.message);
+      triggerShake();
     } finally {
       submittingRef.current = false;
     }
-  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished, userLogin, orderIndex]);
+  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished, userLogin, orderIndex, triggerShake]);
 
   const handleKey = useCallback(
     (key) => {
@@ -246,6 +263,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
           }
           currentGuess={currentGuess}
           revealRowIndex={revealRowIndex}
+          shakeRowIndex={shakeRowIndex}
         />
         <AlertModal message={errorMessage} onClose={() => setErrorMessage('')} />
       </div>

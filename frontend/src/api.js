@@ -24,7 +24,7 @@ async function request(path, options = {}) {
 
   let body = null;
   const text = await res.text();
-  console.log('[api] raw response for', path, ':', text);
+  // console.log('[api] raw response for', path, ':', text);
   if (text) {
     try {
       body = JSON.parse(text);

@@ -1,8 +1,13 @@
 const REVEAL_STAGGER_MS = 180;
 const REVEAL_FLIP_MS = 550;
+const SHAKE_MS = 500;
 
 export function getRevealDurationMs(length) {
   return (length - 1) * REVEAL_STAGGER_MS + REVEAL_FLIP_MS;
+}
+
+export function getShakeDurationMs() {
+  return SHAKE_MS;
 }
 
 const FEEDBACK_COLORS = {
@@ -11,7 +16,7 @@ const FEEDBACK_COLORS = {
   absent: { bg: 'var(--tile-absent)', color: 'var(--text-faint)' },
 };
 
-export default function GameGrid({ length, maxTries, guesses, currentGuess, revealRowIndex }) {
+export default function GameGrid({ length, maxTries, guesses, currentGuess, revealRowIndex, shakeRowIndex }) {
   const rows = [];
 
   for (let r = 0; r < maxTries; r++) {
@@ -24,6 +29,7 @@ export default function GameGrid({ length, maxTries, guesses, currentGuess, reve
         : new Array(length).fill(' ');
 
     const isRevealing = r === revealRowIndex;
+    const isShaking = r === shakeRowIndex;
 
     rows.push(
       <div className="grid-row" key={r} style={{ gridTemplateColumns: `repeat(${length}, minmax(0, 1fr))` }}>
@@ -47,6 +53,7 @@ export default function GameGrid({ length, maxTries, guesses, currentGuess, reve
                 !isRevealing && fb ? fb : '',
                 filled ? 'filled' : '',
                 isRevealing && fb ? 'tile-reveal' : '',
+                isShaking ? 'tile-shake' : '',
               ].join(' ').trim()}
               style={style}
             >

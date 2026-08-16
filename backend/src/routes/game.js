@@ -70,17 +70,6 @@ export default async function gameRoutes(fastify) {
 
     const words = await ensureDailyDraw({ drawDate });
 
-    console.log(
-      JSON.stringify(
-        words.map((word) => ({
-          wordId: word.word_id,
-          answer: word.words?.answer,
-          guesses: word.guesses,
-        })),
-        null,
-        2
-      )
-    );
 
     dailyWordsCache = words;
     dailyWordsCacheDate = drawDate;
@@ -156,16 +145,6 @@ export default async function gameRoutes(fastify) {
       guesses: result?.guesses ?? [],
     };
   });
-
-  fastify.get('/api/test-cheat-detection', async (request) => {
-    return checkPlayerForCheating(
-      request.user.id,
-      getBerlinDateKey(),
-      request.user.login
-    );
-  });
-
-
 
   // Returns full guess history + timing for today, for share-image generation.
   fastify.get('/api/game/share', async (request, reply) => {
@@ -327,7 +306,7 @@ export default async function gameRoutes(fastify) {
     }
     
     invalidateLeaderboard(getBerlinDateKey());
-    
+
     fastify.log.info(
       { ms: Math.round(performance.now() - requestStarted) },
       'guess request'
