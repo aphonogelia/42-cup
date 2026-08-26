@@ -18,6 +18,9 @@ export default async function authRoutes(fastify) {
         tokenHost: 'https://api.intra.42.fr',
         tokenPath: '/oauth/token',
       },
+      options: {
+        authorizationMethod: 'body',
+      },
     },
     startRedirectPath: '/api/auth/42',
     callbackUri: config.fortyTwo.callbackUrl,
