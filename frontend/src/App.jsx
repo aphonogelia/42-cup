@@ -177,9 +177,9 @@ function buildShareText(shareWords, dateKey) {
   const dotWidth = Math.max(...shareWords.map((w) => w.guesses.length), 1);
 
   const wordLines = shareWords.map((w, i) => {
-    // const dot = w.status === 'solved' ? '●' : '○';
+    const dot = w.status === 'solved' ? '●' : '○';
     // const dot = w.status === 'solved' ? '█' : '░';
-    const dot = w.status === 'solved' ? '■' : '□';
+    // const dot = w.status === 'solved' ? '■' : '□';
 
     const dots = dot.repeat(w.guesses.length).padEnd(dotWidth);
 
