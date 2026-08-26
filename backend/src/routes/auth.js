@@ -22,6 +22,11 @@ export default async function authRoutes(fastify) {
         authorizationMethod: 'body',
       },
     },
+    cookie: {
+      sameSite: 'none',
+      secure: true,
+      path: '/',
+    },
     startRedirectPath: '/api/auth/42',
     callbackUri: config.fortyTwo.callbackUrl,
     // no `cookie` option needed anymore — that was only for the oauth2 state cookie
