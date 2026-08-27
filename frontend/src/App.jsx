@@ -166,7 +166,6 @@ function writeCachedProgress(login, words, dateKey = getBerlinDateKey()) {
   }
 }
 
-
 function buildShareText(shareWords, dateKey) {
   const solved = shareWords.filter((w) => w.status === 'solved').length;
   const totalTime = shareWords.reduce((sum, w) => sum + (w.time_seconds || 0), 0);
@@ -177,15 +176,13 @@ function buildShareText(shareWords, dateKey) {
   const dotWidth = Math.max(...shareWords.map((w) => w.guesses.length), 1);
 
   const wordLines = shareWords.map((w, i) => {
-    const dot = w.status === 'solved' ? '●' : '○';
-    // const dot = w.status === 'solved' ? '█' : '░';
-    // const dot = w.status === 'solved' ? '■' : '□';
-
-    const dots = dot.repeat(w.guesses.length).padEnd(dotWidth);
+    const dots =
+      w.status === 'solved'
+        ? '●'.repeat(w.guesses.length).padEnd(dotWidth)
+        : `(-_-'`.padEnd(dotWidth);
 
     return `#${i + 1}  ${dots}  ${formatTimeShort(w.time_seconds)}`;
   });
-  
 
   return [
     `WORDEL // ${dateLabel}`,
