@@ -18,9 +18,9 @@ export default async function authRoutes(fastify) {
         tokenHost: 'https://api.intra.42.fr',
         tokenPath: '/oauth/token',
       },
-      options: {
-        authorizationMethod: 'body',
-      },
+      // options: {
+      //   authorizationMethod: 'body',
+      // },
     },
     cookie: {
       sameSite: 'none',
