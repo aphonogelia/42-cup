@@ -1261,6 +1261,7 @@ body.theme-light .status-dot.not_started {
   cursor: pointer;
   text-align: left;
 }
+
 .word-times-card {
   width: min(100%, 560px);
   padding: 16px;
@@ -1270,7 +1271,7 @@ body.theme-light .status-dot.not_started {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .word-time-col {
@@ -1278,13 +1279,15 @@ body.theme-light .status-dot.not_started {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  flex: 0 0 auto;
+  min-width: 90px;
+  max-width: 130px;
 }
 
 .word-time-header {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  align-items: baseline;
+  gap: 6px;
   font-family: var(--font-mono);
 }
 
@@ -1299,36 +1302,6 @@ body.theme-light .status-dot.not_started {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-size: 11px;
-}
-
-.word-time-squares {
-  display: inline-flex;
-  gap: 2px;
-}
-
-.time-square {
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-}
-
-.time-square.solved {
-  background: var(--bg1);
-  opacity: 0.85;
-}
-
-body.theme-light .time-square.solved {
-  background: var(--lila);
-}
-
-.time-square.failed {
-  background: transparent;
-  border: 1px solid var(--crimson);
-}
-
-.time-square.in_progress {
-  background: var(--text-faint);
-  opacity: 0.35;
 }
 
 .guess-history {
