@@ -97,6 +97,23 @@ function MoonIcon() {
   );
 }
 
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 3l18 18M10.58 10.58a3 3 0 0 0 4.24 4.24M6.53 6.53C4.11 8.14 2 12 2 12s3.5 7 10 7c1.61 0 3.02-.38 4.24-.98M17.47 17.47C19.89 15.86 22 12 22 12s-1.3-2.6-3.53-4.53" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function LogoutIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -312,6 +329,17 @@ export default function App() {
     setSelectedOrderIndex(null);
   };
 
+  const handleTogglePrivacy = async () => {
+    const next = !user.privacy_enabled;
+    setUser((u) => ({ ...u, privacy_enabled: next })); // optimistic
+    try {
+      await api.updatePrivacy(next);
+    } catch (err) {
+      console.error('privacy update failed:', err); // temporary — remove once confirmed working
+      setUser((u) => ({ ...u, privacy_enabled: !next })); // revert on failure
+    }
+  };
+
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
   const handleShare = async () => {
     try {
@@ -391,45 +419,33 @@ export default function App() {
           )}
         </div>
 
-        <div className="masthead-controls">
-          {isDayComplete && (
-            <button
-              type="button"
-              className="icon-btn share-header-btn share-btn-desktop"
-              onClick={handleShare}
-              aria-label={shareCopied ? 'Copied' : 'Share results'}
-              title={shareCopied ? 'Copied' : 'Share results'}
-            >
-              <span className="share-content">
-                {shareCopied ? 'COPIED' : <ShareIcon />}
-              </span>
-            </button>
-          )}
+        <button
+          className="icon-btn theme-toggle"
+          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
 
-          <nav className="masthead-nav">
-            <button className={`nav-btn ${view === 'play' ? 'active' : ''}`} onClick={() => setView('play')}>
-              Play
-            </button>
-            <button className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`} onClick={() => setView('leaderboard')}>
-              Ledger
-            </button>
-          </nav>
+        <button
+          className="icon-btn theme-toggle"
+          onClick={handleTogglePrivacy}
+          aria-label={user.privacy_enabled ? 'Make profile public' : 'Make profile private'}
+          title={user.privacy_enabled ? 'Private — hidden from leaderboard clicks' : 'Public'}
+        >
+          {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+        </button>
 
-          <button
-            className="icon-btn theme-toggle"
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </button>
-          <div className="user-chip">
-            <span>{user.login}</span>
-            <button className="icon-btn logout-link" onClick={handleLogout} aria-label="Log out" title="Log out">
-              <LogoutIcon />
-            </button>
-          </div>
-        </div>
+        <button
+          className="icon-btn theme-toggle"
+          onClick={handleLogout}
+          aria-label="Log out"
+          title="Log out"
+        >
+          <LogoutIcon />
+        </button>
+        
       </header>
 
       <main className="app-content">

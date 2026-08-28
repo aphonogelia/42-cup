@@ -151,14 +151,13 @@ export default function Leaderboard({ totalWords }) {
                 <div className="ledger-tier-label">
                   {tier.words_found}/{totalWords ?? tier.words_found} solved
                 </div>
-                {tier.rows.map((row) => (
-                  <div className="ledger-row" key={row.user_id}>
-                    <span className="rank">{row.rank}</span>
-                    <button
-                      type="button"
-                      className="login login-clickable"
-                      onClick={() => setActivePlayer({ userId: row.user_id, login: row.login })}
-                    >
+                {tier.rows.map((row) => {
+                  const hasPlayed = row.total_tries > 0;
+                  const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
+                  const clickable = hasPlayed && !isPrivate;
+
+                  const nameBlock = (
+                    <>
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
                       <span className="login-name">{row.login}</span>
                       <span
@@ -171,11 +170,30 @@ export default function Leaderboard({ totalWords }) {
                           <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
                         ))}
                       </span>
-                    </button>
-                    <span className="tries">{row.total_tries} tries</span>
-                    <span className="time">{formatTime(row.total_time)}</span>
-                  </div>
-                ))}
+                    </>
+                  );
+
+                  return (
+                    <div className="ledger-row" key={row.user_id}>
+                      <span className="rank">{row.rank}</span>
+                      {clickable ? (
+                        <button
+                          type="button"
+                          className="login login-clickable"
+                          onClick={() => setActivePlayer({ userId: row.user_id, login: row.login })}
+                        >
+                          {nameBlock}
+                        </button>
+                      ) : (
+                        <span className={`login ${hasPlayed && isPrivate ? 'login-private' : ''}`}>
+                          {nameBlock}
+                        </span>
+                      )}
+                      <span className="tries">{row.total_tries} tries</span>
+                      <span className="time">{formatTime(row.total_time)}</span>
+                    </div>
+                  );
+                })}
               </div>
             ))
           )}

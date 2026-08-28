@@ -45,6 +45,8 @@ export const api = {
     localStorage.removeItem(TOKEN_KEY);
     return request('/api/auth/logout', { method: 'POST' });
   },
+  updatePrivacy: (privacy_enabled) =>
+    request('/api/auth/privacy', { method: 'PATCH', body: JSON.stringify({ privacy_enabled }) }),
   progress: () => request('/api/game/progress'),
   start: (order_index) =>
     request('/api/game/start', { method: 'POST', body: JSON.stringify({ order_index }) }),

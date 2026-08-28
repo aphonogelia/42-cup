@@ -1367,3 +1367,7 @@ body.theme-light .status-dot.not_started {
 .guess-history-status.error {
   color: var(--crimson);
 }
+
+.login-private {
+  opacity: 0.55;
+}

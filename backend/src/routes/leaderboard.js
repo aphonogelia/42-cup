@@ -50,11 +50,24 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   // Per-word breakdown (times + tries) for one player on one day, for the
-  // leaderboard popup. Safe to expose publicly: no letters revealed here.
+  // leaderboard popup. Blocked server-side if the target has privacy on —
+  // this is the enforcement point, not just the frontend grey-out.
   fastify.get('/api/leaderboard/word-times', async (request, reply) => {
     const { userId, date } = request.query;
     if (!userId || !date) {
       return reply.code(400).send({ error: 'userId and date required' });
+    }
+
+    const { data: targetUser, error: userErr } = await supabase
+      .from('users')
+      .select('privacy_enabled')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (userErr) return reply.code(500).send({ error: 'Failed to load user' });
+    if (!targetUser) return reply.code(404).send({ error: 'User not found' });
+    if (targetUser.privacy_enabled) {
+      return reply.code(403).send({ error: 'This player has hidden their word times' });
     }
 
     const cached = getCachedWordTimes(userId, date);

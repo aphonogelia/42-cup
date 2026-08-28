@@ -2,9 +2,6 @@ import { supabase } from '../supabase.js';
 import { getBerlinDateKey, ensureDailyDraw } from '../lib/dailyDraw.js';
 import { getCachedGuesses, setCachedGuesses } from '../lib/leaderboardCache.js';
 
-// Same bar as the share button: only someone who has finished every word
-// today is allowed to see anyone's guesses for today (guesses leak letter
-// info via feedback). Past days are locked/unplayable, so they're open.
 async function hasCompletedToday(userId, drawDate) {
   const words = await ensureDailyDraw({ drawDate });
   const wordIds = words.map((w) => w.id);
@@ -29,12 +26,23 @@ export default async function wordResultsRoutes(fastify) {
 
     const { data: wordResult, error: wrErr } = await supabase
       .from('word_results')
-      .select('id, status, word_id')
+      .select('id, status, word_id, user_id')
       .eq('id', id)
       .maybeSingle();
 
     if (wrErr) return reply.code(500).send({ error: 'Failed to load word result' });
     if (!wordResult) return reply.code(404).send({ error: 'Not found' });
+
+    const { data: owner, error: ownerErr } = await supabase
+      .from('users')
+      .select('privacy_enabled')
+      .eq('id', wordResult.user_id)
+      .maybeSingle();
+
+    if (ownerErr) return reply.code(500).send({ error: 'Failed to load user' });
+    if (owner?.privacy_enabled) {
+      return reply.code(403).send({ error: 'This player has hidden their guesses' });
+    }
 
     const { data: word, error: wordErr } = await supabase
       .from('words')
