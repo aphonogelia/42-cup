@@ -58,15 +58,15 @@ function WordTimeRow({ word }) {
   const squares = Math.max(word.nb_tries, 0);
 
   return (
-    <div className="word-time-row">
+    <div className="word-time-col">
       <div className="word-time-header">
         <span className="word-time-index">#{word.order_index}</span>
+        <span className="word-time-value">{formatTime(word.time_seconds)}</span>
         <span className="word-time-squares">
           {Array.from({ length: squares }).map((_, i) => (
             <span key={i} className={`time-square ${word.status}`} />
           ))}
         </span>
-        <span className="word-time-value">{formatTime(word.time_seconds)}</span>
       </div>
       <GuessHistory wordResultId={word.word_result_id} />
     </div>

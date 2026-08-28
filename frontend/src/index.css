@@ -1261,46 +1261,54 @@ body.theme-light .status-dot.not_started {
   cursor: pointer;
   text-align: left;
 }
-
 .word-times-card {
-  width: min(100%, 420px);
+  width: min(100%, 560px);
   padding: 16px;
 }
+
 .word-times-list {
-  display: grid;
-  gap: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-start;
 }
 
-.word-time-row {
-  border-bottom: 1px dashed var(--line-soft);
-  padding: 6px 2px;
+.word-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .word-time-header {
-  display: grid;
-  grid-template-columns: 26px 1fr auto;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: var(--text);
+  gap: 2px;
   font-family: var(--font-mono);
-  font-size: 12px;
 }
 
 .word-time-index {
-  color: var(--text-faint);
+  color: var(--amber);
   font-family: var(--font-display);
+  font-size: 11px;
+}
+
+.word-time-value {
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
 }
 
 .word-time-squares {
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: 3px;
+  gap: 2px;
 }
 
 .time-square {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 2px;
 }
 
@@ -1323,23 +1331,16 @@ body.theme-light .time-square.solved {
   opacity: 0.35;
 }
 
-.word-time-value {
-  color: var(--paper);
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-}
-
 .guess-history {
   display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  padding: 4px 0 6px;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .guess-history-row {
   display: flex;
   gap: 2px;
+  justify-content: center;
 }
 
 .guess-tile-mini {
@@ -1380,6 +1381,7 @@ body.theme-light .time-square.solved {
   padding: 4px 2px;
   font-size: 11px;
   color: var(--text-muted);
+  text-align: center;
 }
 
 .guess-history-status.error {
