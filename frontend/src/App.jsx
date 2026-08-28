@@ -48,6 +48,71 @@ function formatTimeShort(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+function SettingsModal({ user, theme, onToggleTheme, privacyEnabled, onTogglePrivacy, onLogout, onClose }) {
+  return (
+    <div className="info-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="info-card settings-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="info-card-head">
+          <p className="info-eyebrow">{user.login}</p>
+          <button className="icon-btn info-close" onClick={onClose} aria-label="Close dialog" title="Close">
+            ×
+          </button>
+        </div>
+        <h2 id="settings-title">Settings</h2>
+
+        <div className="settings-list">
+          <div className="settings-row">
+            <div className="settings-row-text">
+              <span className="settings-row-label">Appearance</span>
+              <span className="settings-row-desc">{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>
+            </div>
+            <button
+              type="button"
+              className="icon-btn theme-toggle"
+              onClick={onToggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </button>
+          </div>
+
+          <div className="settings-row">
+            <div className="settings-row-text">
+              <span className="settings-row-label">Privacy</span>
+              <span className="settings-row-desc">
+                {privacyEnabled ? 'Your guesses are hidden from other players' : 'Other players can view your guesses'}
+              </span>
+            </div>
+            <button
+              type="button"
+              className={`toggle-switch ${privacyEnabled ? 'on' : ''}`}
+              role="switch"
+              aria-checked={privacyEnabled}
+              onClick={onTogglePrivacy}
+            >
+              <span className="toggle-switch-knob" />
+            </button>
+          </div>
+
+          <div className="settings-row settings-row-action">
+            <button type="button" className="settings-logout" onClick={onLogout}>
+              <LogoutIcon />
+              <span>Log out</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function InfoModal({ page, onClose }) {
   const content = INFO_PAGES[page];
 
@@ -204,6 +269,8 @@ export default function App() {
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
   const shareCopiedTimeoutRef = useRef(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [privacyEnabled, setPrivacyEnabled] = useState(true);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
     return window.localStorage.getItem('wordel-theme') || 'dark';
@@ -275,6 +342,10 @@ export default function App() {
     window.localStorage.setItem('wordel-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (user) setPrivacyEnabled(user.privacy_enabled ?? true);
+  }, [user]);
+
   useEffect(() => () => {
     if (shareCopiedTimeoutRef.current) {
       window.clearTimeout(shareCopiedTimeoutRef.current);
@@ -282,17 +353,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!infoPage) return undefined;
+    if (!infoPage && !showSettings) return undefined;
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setInfoPage(null);
+        setShowSettings(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [infoPage]);
+  }, [infoPage, showSettings]);
 
   useEffect(() => {
     document.body.classList.remove('theme-dark', 'theme-light');
@@ -310,6 +382,17 @@ export default function App() {
     setUser(null);
     setWords([]);
     setSelectedOrderIndex(null);
+  };
+
+  const handleTogglePrivacy = async () => {
+    const next = !privacyEnabled;
+    setPrivacyEnabled(next); // optimistic
+    try {
+      await api.updatePrivacy(next);
+    } catch (err) {
+      setPrivacyEnabled(!next); // revert on failure
+      console.error('privacy update failed:', err);
+    }
   };
 
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
@@ -416,19 +499,16 @@ export default function App() {
           </nav>
 
           <button
-            className="icon-btn theme-toggle"
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            type="button"
+            className="settings-trigger"
+            onClick={() => setShowSettings(true)}
+            aria-label="Settings"
+            title="Settings"
           >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            {user.login}
           </button>
-          <div className="user-chip">
-            <span>{user.login}</span>
-            <button className="icon-btn logout-link" onClick={handleLogout} aria-label="Log out" title="Log out">
-              <LogoutIcon />
-            </button>
-          </div>
+
+
         </div>
       </header>
 
@@ -485,6 +565,17 @@ export default function App() {
         }}
       />
       <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
+      {showSettings && (
+        <SettingsModal
+          user={user}
+          theme={theme}
+          onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          privacyEnabled={privacyEnabled}
+          onTogglePrivacy={handleTogglePrivacy}
+          onLogout={handleLogout}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div >
   );
 }

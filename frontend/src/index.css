@@ -494,7 +494,7 @@ body.theme-light .info-copy a:hover {
   height: 16px;
   display: block;
 }
-
+/* 
 .user-chip {
   display: flex;
   align-items: center;
@@ -520,7 +520,7 @@ body.theme-light .info-copy a:hover {
 .logout-link:hover {
   border-color: var(--amber-dim);
   color: var(--paper);
-}
+} */
 
 /* ---- Login -------------------------------------------------------------- */
 .login-shell {
@@ -1262,6 +1262,11 @@ body.theme-light .status-dot.not_started {
   text-align: left;
 }
 
+
+.login-clickable:disabled {
+  cursor: default;
+}
+
 .word-times-card {
   width: min(100%, 760px);
   padding: 16px;
@@ -1366,4 +1371,117 @@ body.theme-light .status-dot.not_started {
 
 .guess-history-status.error {
   color: var(--crimson);
+}
+
+
+.settings-trigger {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.settings-trigger:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.settings-card {
+  width: min(100%, 360px);
+}
+
+.settings-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 2px;
+  border-bottom: 1px dashed var(--line-soft);
+}
+
+.settings-row-action {
+  border-bottom: none;
+  padding-top: 16px;
+}
+
+.settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-row-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.settings-row-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  padding: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch.on {
+  background: var(--amber-dim);
+  border-color: var(--amber);
+}
+
+.toggle-switch-knob {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  transition: transform 140ms ease, background 140ms ease;
+}
+
+.toggle-switch.on .toggle-switch-knob {
+  background: var(--amber);
+  transform: translateX(18px);
+}
+
+.settings-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--crimson-dim);
+  color: var(--crimson);
+  font: inherit;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.settings-logout:hover {
+  background: rgba(239, 71, 111, 0.08);
+}
+
+.settings-logout svg {
+  width: 16px;
+  height: 16px;
 }
