@@ -6,7 +6,7 @@
   <img src="./docs/game.png" alt="wordel // 42 Cup game" width="30%" />
 </p>
 
-Live app: https://wordel-sepia-nu.vercel.app
+Live app: https://wd42.xyz
 
 wordel // 42 Cup is a wordle-style game built for 42 students. It lets players sign in with their 42 account, play through the daily word set, and compare results on the leaderboard.
 

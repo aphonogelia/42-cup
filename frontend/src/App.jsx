@@ -193,7 +193,7 @@ function buildShareText(shareWords, dateKey) {
     '',
     ...wordLines,
     '',
-    'https://wordel-sepia-nu.vercel.app',
+    'https://wd42.xyz',
   ].join('\n');
 }
 
