@@ -503,6 +503,10 @@ body.theme-light .info-copy a:hover {
   color: var(--text-muted);
 }
 
+.user-chip>span {
+  display: none;
+}
+
 .user-chip img {
   width: 22px;
   height: 22px;
@@ -1183,14 +1187,27 @@ body.theme-light .status-dot.not_started {
 
 @media (max-width: 640px) {
   .masthead {
-    align-items: stretch;
-    gap: 12px;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    align-items: center;
   }
 
+  .masthead-title-row {
+    grid-column: 1 / -1;
+  }
 
   .masthead-controls {
-    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .masthead-nav {
+    margin-right: auto;
   }
 
   .share-btn-mobile {
@@ -1202,8 +1219,9 @@ body.theme-light .status-dot.not_started {
   }
 
   .user-chip {
-    margin-left: auto;
+    margin-left: 0;
   }
+
 
   .tab-strip {
     gap: 6px;

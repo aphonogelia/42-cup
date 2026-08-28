@@ -407,7 +407,7 @@ export default function App() {
           {isDayComplete && (
             <button
               type="button"
-              className="icon-btn share-header-btn share-btn-mobile"
+              className="icon-btn share-header-btn"
               onClick={handleShare}
               aria-label={shareCopied ? 'Copied' : 'Share results'}
               title={shareCopied ? 'Copied' : 'Share results'}
@@ -419,33 +419,52 @@ export default function App() {
           )}
         </div>
 
-        <button
-          className="icon-btn theme-toggle"
-          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-        >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </button>
+        <div className="masthead-controls">
+          <nav className="masthead-nav">
+            <button
+              className={`nav-btn ${view === 'play' ? 'active' : ''}`}
+              onClick={() => setView('play')}
+            >
+              Play
+            </button>
 
-        <button
-          className="icon-btn theme-toggle"
-          onClick={handleTogglePrivacy}
-          aria-label={user.privacy_enabled ? 'Make profile public' : 'Make profile private'}
-          title={user.privacy_enabled ? 'Private — hidden from leaderboard clicks' : 'Public'}
-        >
-          {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
-        </button>
+            <button
+              className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
+              onClick={() => setView('leaderboard')}
+            >
+              Ledger
+            </button>
+          </nav>
 
-        <button
-          className="icon-btn theme-toggle"
-          onClick={handleLogout}
-          aria-label="Log out"
-          title="Log out"
-        >
-          <LogoutIcon />
-        </button>
-        
+          <div className="masthead-icons">
+            <button
+              className="icon-btn theme-toggle"
+              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </button>
+
+            <button
+              className="icon-btn theme-toggle"
+              onClick={handleTogglePrivacy}
+              aria-label={user.privacy_enabled ? 'Make profile public' : 'Make profile private'}
+              title={user.privacy_enabled ? 'Private' : 'Public'}
+            >
+              {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+
+            <button
+              className="icon-btn theme-toggle"
+              onClick={handleLogout}
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogoutIcon />
+            </button>
+          </div>
+        </div>
       </header>
 
       <main className="app-content">
