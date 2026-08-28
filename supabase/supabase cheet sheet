@@ -1,3 +1,7 @@
+
+<!-- Link a project  -->
+npx supabase link --project-ref PROD_REF
+
 <!-- See which project is currently linked -->
 npx supabase status
 cat supabase/config.toml
