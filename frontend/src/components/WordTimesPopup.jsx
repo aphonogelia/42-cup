@@ -55,17 +55,11 @@ function GuessHistory({ wordResultId }) {
 }
 
 function WordTimeRow({ word }) {
-  const [expanded, setExpanded] = useState(false);
   const squares = Math.max(word.nb_tries, 0);
 
   return (
     <div className="word-time-row">
-      <button
-        className="word-time-toggle"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <span className={`word-time-arrow ${expanded ? 'open' : ''}`}>▸</span>
+      <div className="word-time-header">
         <span className="word-time-index">#{word.order_index}</span>
         <span className="word-time-squares">
           {Array.from({ length: squares }).map((_, i) => (
@@ -73,8 +67,8 @@ function WordTimeRow({ word }) {
           ))}
         </span>
         <span className="word-time-value">{formatTime(word.time_seconds)}</span>
-      </button>
-      {expanded && <GuessHistory wordResultId={word.word_result_id} />}
+      </div>
+      <GuessHistory wordResultId={word.word_result_id} />
     </div>
   );
 }
