@@ -1247,6 +1247,10 @@ body.theme-light .status-dot.not_started {
     column-gap: 8px;
   }
 
+
+}
+
+
   /* ---- Word-times popup -------------------------------------------------- */
   .login-clickable {
     background: transparent;
@@ -1393,6 +1397,3 @@ body.theme-light .status-dot.not_started {
   .guess-history-status.error {
     color: var(--crimson);
   }
-
-
-}
