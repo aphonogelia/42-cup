@@ -157,7 +157,6 @@ export default function Leaderboard({ totalWords }) {
                     <button
                       type="button"
                       className="login login-clickable"
-                      disabled={row.privacy_enabled ?? true}
                       onClick={() => setActivePlayer({ userId: row.user_id, login: row.login })}
                     >
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
