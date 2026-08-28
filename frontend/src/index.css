@@ -190,6 +190,13 @@ button {
   margin-bottom: 20px;
 }
 
+.masthead-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .masthead-title {
   font-family: var(--font-display);
   font-weight: 800;
