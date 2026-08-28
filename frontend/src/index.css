@@ -1308,6 +1308,7 @@ body.theme-light .status-dot.not_started {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-bottom: 10px;
 }
 
 .guess-history-row {
