@@ -1270,7 +1270,7 @@ body.theme-light .status-dot.not_started {
 .word-times-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px clamp(18px, 5vw, 35px);
+  gap: 14px clamp(24px, 5vw, 35px);
   justify-content: center;
 }
 
