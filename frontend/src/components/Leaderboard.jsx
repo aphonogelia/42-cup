@@ -154,6 +154,7 @@ export default function Leaderboard({ totalWords }) {
                 {tier.rows.map((row) => {
                   const hasPlayed = row.total_tries > 0;
                   const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
+                  console.log({row});
                   const clickable = hasPlayed && !isPrivate;
 
                   const nameBlock = (
