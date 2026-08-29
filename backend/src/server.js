@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.js';
 import gameRoutes from './routes/game.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import { ensureDailyDraw, getBerlinDateKey, getNextBerlinMidnightDelayMs } from './lib/dailyDraw.js';
+import wordResultsRoutes from './routes/wordResults.js';
 
 const fastify = Fastify({ logger: true, trustProxy: true });
 
@@ -31,6 +32,7 @@ await fastify.register(authPlugin);
 await fastify.register(authRoutes);
 await fastify.register(gameRoutes);
 await fastify.register(leaderboardRoutes);
+await fastify.register(wordResultsRoutes);
 
 async function refreshDailyDraw() {
   await ensureDailyDraw({ drawDate: getBerlinDateKey() });

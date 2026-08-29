@@ -24,7 +24,6 @@ async function request(path, options = {}) {
 
   let body = null;
   const text = await res.text();
-  // console.log('[api] raw response for', path, ':', text);
   if (text) {
     try {
       body = JSON.parse(text);
@@ -46,6 +45,8 @@ export const api = {
     localStorage.removeItem(TOKEN_KEY);
     return request('/api/auth/logout', { method: 'POST' });
   },
+  updatePrivacy: (privacy_enabled) =>
+    request('/api/auth/privacy', { method: 'PATCH', body: JSON.stringify({ privacy_enabled }) }),
   progress: () => request('/api/game/progress'),
   start: (order_index) =>
     request('/api/game/start', { method: 'POST', body: JSON.stringify({ order_index }) }),
@@ -55,6 +56,9 @@ export const api = {
   shareData: () => request('/api/game/share'),
   leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
   leaderboardDates: () => request('/api/leaderboard/dates'),
+  wordTimes: (userId, date) =>
+    request(`/api/leaderboard/word-times?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`),
+  guesses: (wordResultId) => request(`/api/word-results/${wordResultId}/guesses`),
   loginUrl: () => `${API_URL}/api/auth/42`,
 };
 

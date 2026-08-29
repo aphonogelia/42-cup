@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import AlertModal from './AlertModal.jsx';
+import WordTimesPopup from './WordTimesPopup.jsx';
 
 function formatTime(seconds) {
   if (seconds == null) return '—';
@@ -16,8 +17,6 @@ function formatDateLabel(dateStr) {
     day: 'numeric',
   });
 }
-
-
 
 const STATUS_LABEL = {
   solved: 'Solved',
@@ -40,6 +39,7 @@ export default function Leaderboard({ totalWords }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
+  const [activePlayer, setActivePlayer] = useState(null); // { userId, login }
   const skipNextFetch = useRef(false);
 
   const fetchLeaderboard = useCallback((date, { resetRows = false } = {}) => {
@@ -99,24 +99,42 @@ export default function Leaderboard({ totalWords }) {
     };
   }, [selectedDate, fetchLeaderboard]);
 
+  useEffect(() => {
+  const handlePrivacyChanged = () => {
+    fetchLeaderboard(selectedDate);
+  };
 
-const tiers = [];
-if (rows) {
-  let current = null;
-  rows.forEach((row, index) => {
-    if (!current || current.words_found !== row.words_found) {
-      current = { words_found: row.words_found, rows: [] };
-      tiers.push(current);
-    }
-    current.rows.push({ ...row, rank: index + 1 });
-  });
-}
+  window.addEventListener('privacy-changed', handlePrivacyChanged);
+  return () => window.removeEventListener('privacy-changed', handlePrivacyChanged);
+}, [selectedDate, fetchLeaderboard]);
+
+  const tiers = [];
+  if (rows) {
+    let current = null;
+    rows.forEach((row, index) => {
+      if (!current || current.words_found !== row.words_found) {
+        current = { words_found: row.words_found, rows: [] };
+        tiers.push(current);
+      }
+      current.rows.push({ ...row, rank: index + 1 });
+    });
+  }
 
   const loading = !rows || !datesLoaded;
+  const effectiveDate = selectedDate ?? (dates.length > 0 ? dates[0] : null);
 
   return (
     <div>
       <AlertModal message={error} onClose={() => setError('')} />
+
+      {activePlayer && effectiveDate && (
+        <WordTimesPopup
+          userId={activePlayer.userId}
+          login={activePlayer.login}
+          date={effectiveDate}
+          onClose={() => setActivePlayer(null)}
+        />
+      )}
 
       {loading ? (
         <div className="ledger-loading" aria-busy="true">
@@ -142,29 +160,51 @@ if (rows) {
                 <div className="ledger-tier-label">
                   {tier.words_found}/{totalWords ?? tier.words_found} solved
                 </div>
-                {tier.rows.map((row) => (
-                  <div className="ledger-row" key={row.user_id}>
-                    <span className="rank">{row.rank}</span>
-                    <span className="login">
+                {tier.rows.map((row) => {
+                  const hasPlayed = row.total_tries > 0;
+                  const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
+                  const clickable = hasPlayed && !isPrivate;
+
+                  const nameBlock = (
+                    <>
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      <span className="login-name">{row.login}</span>
+                      <span className={`login-name ${hasPlayed && !isPrivate ? 'login-public' : ''}`}>
+                        {row.login}
+                      </span>
                       <span
-  className="leaderboard-statuses"
-  aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
-    .map((s) => STATUS_LABEL[s])
-    .join(', ')}`}
->
+                        className="leaderboard-statuses"
+                        aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
+                          .map((s) => STATUS_LABEL[s])
+                          .join(', ')}`}
+                      >
+                        {getStatusList(row.word_statuses, totalWords).map((status, i) => (
+                          <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
+                        ))}
+                      </span>
+                    </>
+                  );
 
-  {getStatusList(row.word_statuses, totalWords).map((status, i) => (
-  <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
-))}
-</span>
-
-                    </span>
-                    <span className="tries">{row.total_tries} tries</span>
-                    <span className="time">{formatTime(row.total_time)}</span>
-                  </div>
-                ))}
+                  return (
+                    <div className="ledger-row" key={row.user_id}>
+                      <span className="rank">{row.rank}</span>
+                      {clickable ? (
+                        <button
+                          type="button"
+                          className="login login-clickable"
+                          onClick={() => setActivePlayer({ userId: row.user_id, login: row.login })}
+                        >
+                          {nameBlock}
+                        </button>
+                      ) : (
+                        <span className="login">
+                          {nameBlock}
+                        </span>
+                      )}
+                      <span className="tries">{row.total_tries} tries</span>
+                      <span className="time">{formatTime(row.total_time)}</span>
+                    </div>
+                  );
+                })}
               </div>
             ))
           )}

@@ -4,7 +4,7 @@ import { isAllowedGuess } from '../lib/dictionary.js';
 import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
 import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
-import { invalidateLeaderboard } from '../lib/leaderboardCache.js';
+import { invalidateLeaderboard, invalidateWordTimes } from '../lib/leaderboardCache.js';
 import { checkPlayerForCheating } from '../lib/cheatDetection.js';
 
 function elapsed(started) {
@@ -267,20 +267,20 @@ export default async function gameRoutes(fastify) {
     );
     if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
-    
-    
-    if (updated.status === 'solved' || updated.status === 'failed') {
-      const { data: completedResults, error: completedError } = await supabase
-      .from('word_results')
-      .select('status, word_id')
-      .eq('user_id', request.user.id);
-      
-      if (!completedError) {
-        const completedWords = completedResults.filter(
-          (result) => result.status === 'solved' || result.status === 'failed'
-        );
 
-        if (completedWords.length >= 5) {
+
+    if (updated.status === 'solved' || updated.status === 'failed') {
+
+
+      const { count: completedCount, error: completedError } = await supabase
+        .from('word_results')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', request.user.id)
+        .in('status', ['solved', 'failed']);
+
+      if (!completedError) {
+        if (completedCount >= 5) {
+
           try {
             fastify.log.info(
               {
@@ -289,7 +289,7 @@ export default async function gameRoutes(fastify) {
               },
               'RUNNING CHEAT DETECTION'
             );
-            
+
             await checkPlayerForCheating(
               request.user.id,
               getBerlinDateKey(),
@@ -304,8 +304,9 @@ export default async function gameRoutes(fastify) {
         }
       }
     }
-    
+
     invalidateLeaderboard(getBerlinDateKey());
+    invalidateWordTimes(request.user.id, getBerlinDateKey());
 
     fastify.log.info(
       { ms: Math.round(performance.now() - requestStarted) },
