@@ -185,9 +185,12 @@ export default function Leaderboard({ totalWords }) {
                           {nameBlock}
                         </button>
                       ) : (
-                        <span className={`login ${hasPlayed && isPrivate ? 'login-private' : ''}`}>
-                          {nameBlock}
-                        </span>
+<span className="login login-private">
+  {nameBlock}
+  <span className="privacy-badge" title="This player has hidden their word times">
+    Sealed
+  </span>
+</span>
                       )}
                       <span className="tries">{row.total_tries} tries</span>
                       <span className="time">{formatTime(row.total_time)}</span>
