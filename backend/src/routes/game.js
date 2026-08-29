@@ -270,17 +270,17 @@ export default async function gameRoutes(fastify) {
 
 
     if (updated.status === 'solved' || updated.status === 'failed') {
-      const { data: completedResults, error: completedError } = await supabase
+
+
+      const { count: completedCount, error: completedError } = await supabase
         .from('word_results')
-        .select('status, word_id')
-        .eq('user_id', request.user.id);
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', request.user.id)
+        .in('status', ['solved', 'failed']);
 
       if (!completedError) {
-        const completedWords = completedResults.filter(
-          (result) => result.status === 'solved' || result.status === 'failed'
-        );
+        if (completedCount >= 5) {
 
-        if (completedWords.length >= 5) {
           try {
             fastify.log.info(
               {

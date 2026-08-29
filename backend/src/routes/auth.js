@@ -1,6 +1,7 @@
 import oauthPlugin from '@fastify/oauth2';
 import { config } from '../config.js';
 import { supabase } from '../supabase.js';
+import { invalidateAllLeaderboards } from '../lib/leaderboardCache.js';
 
 export default async function authRoutes(fastify) {
   console.log('OAuth callback:', config.fortyTwo.callbackUrl);
@@ -107,6 +108,8 @@ export default async function authRoutes(fastify) {
       .single();
 
     if (error) return reply.code(500).send({ error: 'Failed to update privacy' });
+    
+    invalidateAllLeaderboards();
     return user;
   });
 }

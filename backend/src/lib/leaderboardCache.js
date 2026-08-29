@@ -95,3 +95,7 @@ export function getCachedGuesses(wordResultId) {
 export function setCachedGuesses(wordResultId, guesses) {
     setCacheEntry(guessesCache, wordResultId, guesses, GUESSES_TTL_MS);
 }
+
+export function invalidateAllLeaderboards() {
+    invalidateLeaderboard();
+}

@@ -33,25 +33,21 @@ export default async function wordResultsRoutes(fastify) {
     if (wrErr) return reply.code(500).send({ error: 'Failed to load word result' });
     if (!wordResult) return reply.code(404).send({ error: 'Not found' });
 
-    const { data: owner, error: ownerErr } = await supabase
-      .from('users')
-      .select('privacy_enabled')
-      .eq('id', wordResult.user_id)
-      .maybeSingle();
+    const [
+      { data: owner, error: ownerErr },
+      { data: word, error: wordErr },
+    ] = await Promise.all([
+      supabase.from('users').select('privacy_enabled').eq('id', wordResult.user_id).maybeSingle(),
+      supabase.from('words').select('draw_date').eq('id', wordResult.word_id).maybeSingle(),
+    ]);
 
     if (ownerErr) return reply.code(500).send({ error: 'Failed to load user' });
     if (owner?.privacy_enabled) {
       return reply.code(403).send({ error: 'This player has hidden their guesses' });
     }
-
-    const { data: word, error: wordErr } = await supabase
-      .from('words')
-      .select('draw_date')
-      .eq('id', wordResult.word_id)
-      .maybeSingle();
-
     if (wordErr || !word) return reply.code(500).send({ error: 'Failed to load word' });
 
+    
     const today = getBerlinDateKey();
     if (word.draw_date === today) {
       let allowed = false;

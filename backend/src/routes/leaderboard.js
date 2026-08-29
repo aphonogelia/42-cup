@@ -57,30 +57,29 @@ export default async function leaderboardRoutes(fastify) {
     if (!userId || !date) {
       return reply.code(400).send({ error: 'userId and date required' });
     }
+    const cached = getCachedWordTimes(userId, date);
 
-    const { data: targetUser, error: userErr } = await supabase
-      .from('users')
-      .select('privacy_enabled')
-      .eq('id', userId)
-      .maybeSingle();
+    const [
+      { data: targetUser, error: userErr },
+      { data: words, error: wordsErr },
+    ] = await Promise.all([
+      supabase.from('users').select('privacy_enabled').eq('id', userId).maybeSingle(),
+      cached ? Promise.resolve({ data: null, error: null }) : supabase
+        .from('words')
+        .select('id, order_index, length')
+        .eq('draw_date', date)
+        .order('order_index', { ascending: true }),
+    ]);
 
     if (userErr) return reply.code(500).send({ error: 'Failed to load user' });
     if (!targetUser) return reply.code(404).send({ error: 'User not found' });
     if (targetUser.privacy_enabled) {
       return reply.code(403).send({ error: 'This player has hidden their word times' });
     }
-
-    const cached = getCachedWordTimes(userId, date);
     if (cached) return { userId, date, words: cached };
-
-    const { data: words, error: wordsErr } = await supabase
-      .from('words')
-      .select('id, order_index, length')
-      .eq('draw_date', date)
-      .order('order_index', { ascending: true });
-
     if (wordsErr) return reply.code(500).send({ error: 'Failed to load words' });
 
+    
     const wordIds = (words ?? []).map((w) => w.id);
     let results = [];
 
