@@ -99,6 +99,15 @@ export default function Leaderboard({ totalWords }) {
     };
   }, [selectedDate, fetchLeaderboard]);
 
+  useEffect(() => {
+  const handlePrivacyChanged = () => {
+    fetchLeaderboard(selectedDate);
+  };
+
+  window.addEventListener('privacy-changed', handlePrivacyChanged);
+  return () => window.removeEventListener('privacy-changed', handlePrivacyChanged);
+}, [selectedDate, fetchLeaderboard]);
+
   const tiers = [];
   if (rows) {
     let current = null;

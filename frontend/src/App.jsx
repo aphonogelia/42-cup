@@ -329,16 +329,17 @@ export default function App() {
     setSelectedOrderIndex(null);
   };
 
-  const handleTogglePrivacy = async () => {
-    const next = !user.privacy_enabled;
-    setUser((u) => ({ ...u, privacy_enabled: next })); // optimistic
-    try {
-      await api.updatePrivacy(next);
-    } catch (err) {
-      console.error('privacy update failed:', err); // temporary — remove once confirmed working
-      setUser((u) => ({ ...u, privacy_enabled: !next })); // revert on failure
-    }
-  };
+const handleTogglePrivacy = async () => {
+  const next = !user.privacy_enabled;
+  setUser((u) => ({ ...u, privacy_enabled: next })); // optimistic
+  try {
+    await api.updatePrivacy(next);
+    window.dispatchEvent(new CustomEvent('privacy-changed', { detail: { privacy_enabled: next } }));
+  } catch (err) {
+    console.error('privacy update failed:', err);
+    setUser((u) => ({ ...u, privacy_enabled: !next })); // revert on failure
+  }
+};
 
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
   const handleShare = async () => {
