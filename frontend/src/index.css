@@ -1401,55 +1401,67 @@ body.theme-light .status-dot.not_started {
   text-decoration-color: var(--text-faint, var(--line));
   text-underline-offset: 0.3em;
 }
+
+
 .stats-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
-.stats-section-title {
+.stats-group {
+  border: 1px solid var(--line);
+  padding: 10px 12px 12px;
+}
+
+.stats-group-title {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-dim, var(--line));
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.stats-grid {
+.stats-group-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
-.stats-grid-3 {
+.stats-group-row-1 {
+  grid-template-columns: 1fr;
+}
+
+.stats-group-row-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.stats-group-row-3 {
   grid-template-columns: repeat(3, 1fr);
 }
 
-.stats-card {
-  border: 1px solid var(--line);
-  padding: 8px 10px;
+.stats-item {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.stats-card-value {
+.stats-item-value {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 22px;
   color: var(--amber);
   line-height: 1.1;
 }
 
-.stats-card-label {
+.stats-item-label {
   font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--text-dim, var(--line));
+  color: var(--paper);
 }
 
-.stats-card-sub {
+.stats-item-sub {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-dim, var(--line));
@@ -1460,7 +1472,7 @@ body.theme-light .status-dot.not_started {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  height: 100px;
+  height: 90px;
 }
 
 .stats-dist-col {
@@ -1474,8 +1486,8 @@ body.theme-light .status-dot.not_started {
 
 .stats-dist-count {
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-dim, var(--line));
+  font-size: 11px;
+  color: var(--paper);
 }
 
 .stats-dist-bar-track-v {
@@ -1495,17 +1507,6 @@ body.theme-light .status-dot.not_started {
 .stats-dist-label {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--paper);
+  color: var(--text-dim, var(--line));
 }
 
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .stats-card-value {
-    font-size: 16px;
-  }
-  .stats-distribution-vertical {
-    height: 80px;
-  }
-}

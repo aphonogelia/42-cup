@@ -468,8 +468,8 @@ const handleTogglePrivacy = async () => {
   <button
     className="icon-btn theme-toggle"
     onClick={handleTogglePrivacy}
-    aria-label={user.privacy_enabled ? 'Make profile public' : 'Make profile private'}
-    title={user.privacy_enabled ? 'Private' : 'Public'}
+    aria-label={user.privacy_enabled ? 'Make profile private': 'Make profile public' }
+    title={user.privacy_enabled ? 'Public' : 'Private'}
   >
     {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
   </button>

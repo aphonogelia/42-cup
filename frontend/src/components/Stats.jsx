@@ -40,12 +40,21 @@ function GuessDistribution({ distribution }) {
   );
 }
 
-function StatCard({ label, value, sub }) {
+function StatGroup({ title, children, columns = 2 }) {
   return (
-    <div className="stats-card">
-      <p className="stats-card-value">{value}</p>
-      <p className="stats-card-label">{label}</p>
-      {sub && <p className="stats-card-sub">{sub}</p>}
+    <div className="stats-group">
+      <p className="stats-group-title">{title}</p>
+      <div className={`stats-group-row stats-group-row-${columns}`}>{children}</div>
+    </div>
+  );
+}
+
+function StatItem({ value, label, sub }) {
+  return (
+    <div className="stats-item">
+      <p className="stats-item-value">{value}</p>
+      <p className="stats-item-label">{label}</p>
+      {sub && <p className="stats-item-sub">{sub}</p>}
     </div>
   );
 }
@@ -80,30 +89,43 @@ export default function Stats() {
 
   return (
     <div className="stats-page">
-      <section className="stats-section">
-        <h2 className="stats-section-title">Guess distribution</h2>
+      <StatGroup title="Guess distribution" columns={1}>
         <GuessDistribution distribution={data.guessDistribution} />
-      </section>
+      </StatGroup>
 
-      <section className="stats-section stats-grid">
-        <StatCard label="Fastest solve" value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'} sub={data.fastestSolve ? `#${data.fastestSolve.order_index} · ${formatDateLabel(data.fastestSolve.draw_date)}` : null} />
-        <StatCard label="Fastest day" value={data.fastestDay ? formatTime(data.fastestDay.total_time) : '—'} sub={data.fastestDay ? formatDateLabel(data.fastestDay.draw_date) : null} />
-        <StatCard label="Avg word time" value={formatTime(data.avgWordTime)} />
-        <StatCard label="Avg (no outliers)" value={formatTime(data.avgWordTimeFiltered)} sub="excl. > 30 min" />
-      </section>
+      <StatGroup title="Fastest">
+        <StatItem
+          value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'}
+          label="Solve"
+          sub={data.fastestSolve ? `#${data.fastestSolve.order_index} · ${formatDateLabel(data.fastestSolve.draw_date)}` : null}
+        />
+        <StatItem
+          value={data.fastestDay ? formatTime(data.fastestDay.total_time) : '—'}
+          label="Day"
+          sub={data.fastestDay ? formatDateLabel(data.fastestDay.draw_date) : null}
+        />
+      </StatGroup>
 
-      <section className="stats-section stats-grid">
-        <StatCard label="Streak solved" value={data.streakSolved.current} sub={`Best: ${data.streakSolved.longest}`} />
-        <StatCard label="Streak played" value={data.streakPlayed.current} sub={`Best: ${data.streakPlayed.longest}`} />
-        <StatCard label="Perfect days" value={data.daysAllSolved} sub={`of ${data.daysStarted} started`} />
-        <StatCard label="Success rate" value={successRate != null ? `${successRate}%` : '—'} />
-      </section>
+      <StatGroup title="Average word time">
+        <StatItem value={formatTime(data.avgWordTime)} label="All solves" />
+        <StatItem value={formatTime(data.avgWordTimeFiltered)} label="Excl. outliers" sub="> 30 min removed" />
+      </StatGroup>
 
-      <section className="stats-section stats-grid stats-grid-3">
-        <StatCard label="Top 1" value={data.top1} />
-        <StatCard label="Top 3" value={data.top3} />
-        <StatCard label="Top 5" value={data.top5} />
-      </section>
+      <StatGroup title="Streaks">
+        <StatItem value={data.streakSolved.current} label="All solved" sub={`Best: ${data.streakSolved.longest}`} />
+        <StatItem value={data.streakPlayed.current} label="All played" sub={`Best: ${data.streakPlayed.longest}`} />
+      </StatGroup>
+
+      <StatGroup title="Consistency">
+        <StatItem value={data.daysAllSolved} label="Perfect days" sub={`of ${data.daysStarted} started`} />
+        <StatItem value={successRate != null ? `${successRate}%` : '—'} label="Success rate" />
+      </StatGroup>
+
+      <StatGroup title="Podium finishes" columns={3}>
+        <StatItem value={data.top1} label="Top 1" />
+        <StatItem value={data.top3} label="Top 3" />
+        <StatItem value={data.top5} label="Top 5" />
+      </StatGroup>
     </div>
   );
 }
