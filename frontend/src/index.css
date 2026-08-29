@@ -1393,7 +1393,7 @@ body.theme-light .status-dot.not_started {
   color: var(--crimson);
 }
 
-.login-name.login-private {
+.login-name.login-public {
   text-decoration: underline;
   text-decoration-style: dotted;
   text-decoration-color: var(--text-dim, var(--line));

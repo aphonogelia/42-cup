@@ -169,7 +169,7 @@ export default function Leaderboard({ totalWords }) {
                   const nameBlock = (
                     <>
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      <span className={`login-name ${hasPlayed && isPrivate ? 'login-private' : ''}`}>
+                      <span className={`login-name ${hasPlayed && !isPrivate ? 'login-public' : ''}`}>
                         {row.login}
                       </span>
                       <span
