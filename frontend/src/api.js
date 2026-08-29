@@ -60,6 +60,7 @@ export const api = {
     request(`/api/leaderboard/word-times?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`),
   guesses: (wordResultId) => request(`/api/word-results/${wordResultId}/guesses`),
   loginUrl: () => `${API_URL}/api/auth/42`,
+  stats: () => request('/api/stats/me'),
 };
 
 export { ApiError, API_URL, TOKEN_KEY };
