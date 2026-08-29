@@ -39,13 +39,11 @@ function GuessDistribution({ distribution }) {
   );
 }
 
-function StatGroup({ title, children, columns }) {
+function StatGroup({ title, children, bare = false }) {
   return (
     <div className="stats-group">
       <p className="stats-group-title">{title}</p>
-      <div className={columns ? `stats-group-row stats-group-row-${columns}` : 'stats-rows'}>
-        {children}
-      </div>
+      {bare ? children : <div className="stats-rows">{children}</div>}
     </div>
   );
 }
@@ -53,21 +51,39 @@ function StatGroup({ title, children, columns }) {
 function StatRow({ label, value, sub }) {
   return (
     <div className="stat-row">
-      <span className="stat-row-label">{label}</span>
-      <span className="stat-row-leader" />
-      <span className="stat-row-value">
-        {value}
-        {sub && <span className="stat-row-sub"> · {sub}</span>}
-      </span>
+      <div className="stat-row-left">
+        <span className="stat-row-label">{label}</span>
+        {sub && <span className="stat-row-sub">{sub}</span>}
+      </div>
+      <span className="stat-row-value">{value}</span>
     </div>
   );
 }
 
-function StatItem({ value, label }) {
+function Podium({ top1, top3, top5, total }) {
+  const items = [
+    { key: 't1', label: 'Top 1', value: top1 },
+    { key: 't3', label: 'Top 3', value: top3 },
+    { key: 't5', label: 'Top 5', value: top5 },
+  ];
+  const max = Math.max(top1, top3, top5, 1);
+
   return (
-    <div className="stats-item">
-      <p className="stats-item-value">{value}</p>
-      <p className="stats-item-label">{label}</p>
+    <div className="podium">
+      {items.map((item) => {
+        const pct = total > 0 ? Math.round((item.value / total) * 100) : null;
+        const heightPct = Math.max((item.value / max) * 100, item.value > 0 ? 12 : 0);
+        return (
+          <div className="podium-col" key={item.key}>
+            <div className="podium-figures">
+              <span className="podium-value">{item.value}</span>
+              {pct != null && <span className="podium-pct">{pct}%</span>}
+            </div>
+            <div className={`podium-block podium-block-${item.key}`} style={{ height: `${heightPct}%` }} />
+            <span className="podium-label">{item.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -102,7 +118,7 @@ export default function Stats() {
 
   return (
     <div className="stats-page">
-      <StatGroup title="Guess distribution">
+      <StatGroup title="Guess distribution" bare>
         <GuessDistribution distribution={data.guessDistribution} />
       </StatGroup>
 
@@ -134,10 +150,8 @@ export default function Stats() {
         <StatRow label="Success rate" value={successRate != null ? `${successRate}%` : '—'} />
       </StatGroup>
 
-      <StatGroup title="Podium finishes" columns={3}>
-        <StatItem value={data.top1} label="Top 1" />
-        <StatItem value={data.top3} label="Top 3" />
-        <StatItem value={data.top5} label="Top 5" />
+      <StatGroup title="Podium finishes" bare>
+        <Podium top1={data.top1} top3={data.top3} top5={data.top5} total={data.daysStarted} />
       </StatGroup>
     </div>
   );
