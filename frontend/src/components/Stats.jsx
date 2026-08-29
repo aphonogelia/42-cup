@@ -89,7 +89,7 @@ export default function Stats() {
 
   return (
     <div className="stats-page">
-        <StatGroup title="Guess distribution" columns={1} className="stats-group-full">
+        <StatGroup title="Guess distribution">
         <GuessDistribution distribution={data.guessDistribution} />
       </StatGroup>
 

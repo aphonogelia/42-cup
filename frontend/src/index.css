@@ -1417,14 +1417,6 @@ body.theme-light .status-dot.not_started {
   align-items: start;
 }
 
-.stats-group:first-child {
-  grid-column: 1 / -1;
-}
-
-.stats-group-full {
-  grid-column: 1 / -1;
-}
-
 .stats-group {
   border: 1px solid var(--line);
   padding: 14px 16px 16px;
@@ -1456,6 +1448,20 @@ body.theme-light .status-dot.not_started {
 
 .stats-group-row-3 {
   grid-template-columns: repeat(3, 1fr);
+}
+
+.stats-group-square {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-group-square .stats-group-row {
+  flex: 1;
+}
+
+.stats-group-square .stats-distribution-vertical {
+  height: 100%;
 }
 
 .stats-item {
