@@ -1308,7 +1308,7 @@ body.theme-light .status-dot.not_started {
 .word-time-col {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 4px;
   flex: 0 0 auto;
   min-width: 90px;
@@ -1317,11 +1317,11 @@ body.theme-light .status-dot.not_started {
 
 .word-time-header {
   display: flex;
-  /* align-items: baseline; */
   gap: 6px;
   font-family: var(--font-mono);
   align-items: center;
   justify-content: space-between;
+  width: 100%;
 }
 
 .word-time-index {
