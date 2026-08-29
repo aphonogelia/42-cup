@@ -1317,9 +1317,11 @@ body.theme-light .status-dot.not_started {
 
 .word-time-header {
   display: flex;
-  align-items: baseline;
+  /* align-items: baseline; */
   gap: 6px;
   font-family: var(--font-mono);
+  align-items: center;
+  justify-content: space-between;
 }
 
 .word-time-index {
