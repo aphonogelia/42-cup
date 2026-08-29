@@ -6,6 +6,7 @@ import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
 import AlertModal from './components/AlertModal.jsx';
+import Stats from './components/Stats.jsx';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
@@ -130,6 +131,14 @@ function ShareIcon() {
         d="M20.55 2.85c.72-.23 1.39.45 1.16 1.17l-4.91 16.05c-.42 1.38-2.35 1.47-2.91.14l-2.48-5.92-6.55-1.93c-1.64-.48-1.7-2.76-.09-3.34L20.55 2.85z"
         fill="currentColor"
       />
+    </svg>
+  );
+}
+
+function StatsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 20V10M12 20V4M20 20v-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -437,61 +446,72 @@ const handleTogglePrivacy = async () => {
             </button>
           </nav>
 
-          <div className="masthead-icons">
-            <button
-              className="icon-btn theme-toggle"
-              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-            >
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-            </button>
+<div className="masthead-icons">
+  <button
+    className="icon-btn theme-toggle"
+    onClick={() => setView(view === 'stats' ? 'play' : 'stats')}
+    aria-label="View stats"
+    title="Stats"
+  >
+    <StatsIcon />
+  </button>
 
-            <button
-              className="icon-btn theme-toggle"
-              onClick={handleTogglePrivacy}
-              aria-label={user.privacy_enabled ? 'Make profile public' : 'Make profile private'}
-              title={user.privacy_enabled ? 'Private' : 'Public'}
-            >
-              {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
+  <button
+    className="icon-btn theme-toggle"
+    onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+    aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+    title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+  >
+    {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+  </button>
 
-            <button
-              className="icon-btn theme-toggle"
-              onClick={handleLogout}
-              aria-label="Log out"
-              title="Log out"
-            >
-              <LogoutIcon />
+  <button
+    className="icon-btn theme-toggle"
+    onClick={handleTogglePrivacy}
+    aria-label={user.privacy_enabled ? 'Make profile public' : 'Make profile private'}
+    title={user.privacy_enabled ? 'Private' : 'Public'}
+  >
+    {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+  </button>
+
+  <button
+    className="icon-btn theme-toggle"
+    onClick={handleLogout}
+    aria-label="Log out"
+    title="Log out"
+  >
+       <LogoutIcon />
             </button>
           </div>
         </div>
       </header>
 
       <main className="app-content">
-        {view === "play" ? (
-          <>
-            {words.length > 0 && (
-              <WordTabs
-                words={words}
-                selectedOrderIndex={selectedOrderIndex}
-                onSelect={setSelectedOrderIndex}
-              />
-            )}
+{view === "play" ? (
+  <>
+    {words.length > 0 && (
+      <WordTabs
+        words={words}
+        selectedOrderIndex={selectedOrderIndex}
+        onSelect={setSelectedOrderIndex}
+      />
+    )}
 
-            {selectedOrderIndex && (
-              <Game
-                userLogin={user.login}
-                orderIndex={selectedOrderIndex}
-                onWordFinished={() => refreshProgress({ checkCompletion: true })}
-                nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
-                onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
-              />
-            )}
-          </>
-        ) : (
-          <Leaderboard totalWords={words.length} />
-        )}
+    {selectedOrderIndex && (
+      <Game
+        userLogin={user.login}
+        orderIndex={selectedOrderIndex}
+        onWordFinished={() => refreshProgress({ checkCompletion: true })}
+        nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
+        onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
+      />
+    )}
+  </>
+) : view === "leaderboard" ? (
+  <Leaderboard totalWords={words.length} />
+) : (
+  <Stats />
+)}
       </main>
 
       <footer className="app-footer">
