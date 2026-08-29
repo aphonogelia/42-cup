@@ -159,7 +159,9 @@ export default function Leaderboard({ totalWords }) {
                   const nameBlock = (
                     <>
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      <span className="login-name">{row.login}</span>
+                      <span className={`login-name ${hasPlayed && isPrivate ? 'login-private' : ''}`}>
+                        {row.login}
+                      </span>
                       <span
                         className="leaderboard-statuses"
                         aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
@@ -185,12 +187,9 @@ export default function Leaderboard({ totalWords }) {
                           {nameBlock}
                         </button>
                       ) : (
-<span className="login login-private">
-  {nameBlock}
-  <span className="privacy-badge" title="This player has hidden their word times">
-    Sealed
-  </span>
-</span>
+                        <span className="login">
+                          {nameBlock}
+                        </span>
                       )}
                       <span className="tries">{row.total_tries} tries</span>
                       <span className="time">{formatTime(row.total_time)}</span>
