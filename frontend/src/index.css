@@ -1398,6 +1398,6 @@ body.theme-light .status-dot.not_started {
 .login-name.login-public {
   text-decoration: underline;
   text-decoration-style: dotted;
-  text-decoration-color: var(--text-dim, var(--line));
-  text-underline-offset: 0.2em;
+  text-decoration-color: var(--text-faint, var(--line));
+  text-underline-offset: 0.3em;
 }
