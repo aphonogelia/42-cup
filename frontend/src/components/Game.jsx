@@ -225,14 +225,6 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey]);
 
-  const nextWordBtnRef = useRef(null);
-
-useEffect(() => {
-  if (showNextWordButton) {
-    nextWordBtnRef.current?.focus();
-  }
-}, [showNextWordButton]);
-
   if (loading) {
     return (
       <div className="game-panel game-loading" aria-busy="true">
@@ -255,6 +247,14 @@ useEffect(() => {
   const letterStates = computeLetterStates(wordState.guesses);
   const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
   const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
+
+const nextWordBtnRef = useRef(null);
+
+useEffect(() => {
+  if (showNextWordButton) {
+    nextWordBtnRef.current?.focus();
+  }
+}, [showNextWordButton]);
 
   return (
     <div className="game-panel">
