@@ -60,30 +60,50 @@ function StatRow({ label, value, sub }) {
   );
 }
 
+// Fixed, purely visual heights — not driven by counts, so the podium always
+// looks like a podium regardless of how the data happens to skew.
+const PODIUM_HEIGHTS = { t3: 65, t1: 100, t5: 40 };
+
 function Podium({ top1, top3, top5, total }) {
   const items = [
-    { key: 't1', label: 'Top 1', value: top1 },
     { key: 't3', label: 'Top 3', value: top3 },
+    { key: 't1', label: 'Top 1', value: top1 },
     { key: 't5', label: 'Top 5', value: top5 },
   ];
-  const max = Math.max(top1, top3, top5, 1);
 
   return (
     <div className="podium">
       {items.map((item) => {
         const pct = total > 0 ? Math.round((item.value / total) * 100) : null;
-        const heightPct = Math.max((item.value / max) * 100, item.value > 0 ? 12 : 0);
         return (
           <div className="podium-col" key={item.key}>
             <div className="podium-figures">
               <span className="podium-value">{item.value}</span>
               {pct != null && <span className="podium-pct">{pct}%</span>}
             </div>
-            <div className={`podium-block podium-block-${item.key}`} style={{ height: `${heightPct}%` }} />
+            <div
+              className={`podium-block podium-block-${item.key}`}
+              style={{ height: `${PODIUM_HEIGHTS[item.key]}%` }}
+            />
             <span className="podium-label">{item.label}</span>
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function DaysBreakdown({ breakdown }) {
+  if (!breakdown || breakdown.length === 0) return null;
+  return (
+    <div className="stats-rows">
+      {breakdown.map(({ solved, total, count }) => (
+        <StatRow
+          key={`${solved}/${total}`}
+          label={`${solved}/${total} found`}
+          value={`${count} day${count === 1 ? '' : 's'}`}
+        />
+      ))}
     </div>
   );
 }
@@ -112,10 +132,6 @@ export default function Stats() {
     );
   }
 
-  const successRate = data.daysStarted > 0
-    ? Math.round((data.daysAllSolved / data.daysStarted) * 100)
-    : null;
-
   return (
     <div className="stats-page">
       <StatGroup title="Guess distribution" bare>
@@ -126,7 +142,11 @@ export default function Stats() {
         <StatRow
           label="Solve"
           value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'}
-          sub={data.fastestSolve ? `#${data.fastestSolve.order_index} · ${formatDateLabel(data.fastestSolve.draw_date)}` : null}
+          sub={
+            data.fastestSolve
+              ? `${data.fastestSolve.answer} · #${data.fastestSolve.order_index} · ${formatDateLabel(data.fastestSolve.draw_date)}`
+              : null
+          }
         />
         <StatRow
           label="Day"
@@ -145,9 +165,12 @@ export default function Stats() {
         <StatRow label="All played" value={data.streakPlayed.current} sub={`Best: ${data.streakPlayed.longest}`} />
       </StatGroup>
 
-      <StatGroup title="Consistency">
-        <StatRow label="Perfect days" value={data.daysAllSolved} sub={`of ${data.daysStarted} started`} />
-        <StatRow label="Success rate" value={successRate != null ? `${successRate}%` : '—'} />
+      <StatGroup title="Consistency" bare>
+        <div className="stats-rows">
+          <StatRow label="Words found" value={`${data.wordsFound} / ${data.wordsStarted}`} />
+          <StatRow label="Words played" value={data.wordsStarted} />
+        </div>
+        <DaysBreakdown breakdown={data.daysBreakdown} />
       </StatGroup>
 
       <StatGroup title="Podium finishes" bare>

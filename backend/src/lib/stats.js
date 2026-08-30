@@ -20,6 +20,11 @@ export function computeStats(results, dateCounts, todayKey) {
   let daysAllPlayed = 0;
   let daysStarted = 0;
 
+  let wordsFound = 0;
+  let wordsStarted = 0;
+
+  const daysBreakdownMap = new Map(); // key: `${solvedCount}/${total}` -> day count
+
   for (const { draw_date, total } of dateCounts) {
     const dayResults = byDate.get(draw_date) ?? [];
     const solvedCount = dayResults.filter((r) => r.status === 'solved').length;
@@ -32,15 +37,28 @@ export function computeStats(results, dateCounts, todayKey) {
 
     if (allSolved) daysAllSolved++;
     if (allPlayed) daysAllPlayed++;
-    if (anyPlayed) daysStarted++;
+    if (anyPlayed) {
+      daysStarted++;
+      const key = `${solvedCount}/${total}`;
+      daysBreakdownMap.set(key, (daysBreakdownMap.get(key) ?? 0) + 1);
+    }
 
     for (const r of dayResults) {
+      if (r.nb_tries > 0) wordsStarted++;
+
       if (r.status !== 'solved') continue;
+
+      wordsFound++;
 
       if (r.nb_tries >= 1 && r.nb_tries <= 6) guessDistribution[r.nb_tries]++;
 
       if (fastestSolve === null || r.time_seconds < fastestSolve.time_seconds) {
-        fastestSolve = { time_seconds: r.time_seconds, draw_date, order_index: r.order_index };
+        fastestSolve = {
+          time_seconds: r.time_seconds,
+          draw_date,
+          order_index: r.order_index,
+          answer: r.answer,
+        };
       }
 
       solvedTimeSum += r.time_seconds;
@@ -60,6 +78,13 @@ export function computeStats(results, dateCounts, todayKey) {
     }
   }
 
+  const daysBreakdown = [...daysBreakdownMap.entries()]
+    .map(([key, count]) => {
+      const [solved, total] = key.split('/').map(Number);
+      return { solved, total, count };
+    })
+    .sort((a, b) => b.total - a.total || b.solved - a.solved);
+
   return {
     guessDistribution,
     fastestSolve,
@@ -69,6 +94,9 @@ export function computeStats(results, dateCounts, todayKey) {
     daysAllSolved,
     daysAllPlayed,
     daysStarted,
+    wordsFound,
+    wordsStarted,
+    daysBreakdown,
     streakSolved: computeStreak(dayStatus, 'allSolved', todayKey),
     streakPlayed: computeStreak(dayStatus, 'allPlayed', todayKey),
   };

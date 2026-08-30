@@ -1,3 +1,4 @@
+
 import { supabase } from '../supabase.js';
 import { getBerlinDateKey } from '../lib/dailyDraw.js';
 import { computeStats, computeRankCounts } from '../lib/stats.js';
@@ -14,7 +15,7 @@ export default async function statsRoutes(fastify) {
       supabase.from('words').select('draw_date').order('draw_date', { ascending: true }),
       supabase
         .from('word_results')
-        .select('status, nb_tries, time_seconds, words(draw_date, order_index)')
+        .select('status, nb_tries, time_seconds, words(draw_date, order_index, answer)')
         .eq('user_id', request.user.id),
       supabase.from('leaderboard').select('user_id, draw_date, words_found, total_time'),
     ]);
@@ -37,6 +38,7 @@ export default async function statsRoutes(fastify) {
       time_seconds: r.time_seconds,
       draw_date: r.words.draw_date,
       order_index: r.words.order_index,
+      answer: r.words.answer,
     }));
 
     const stats = computeStats(flatResults, dateCounts, getBerlinDateKey());
