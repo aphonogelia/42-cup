@@ -1404,6 +1404,7 @@ body.theme-light .status-dot.not_started {
 
 
 
+
 .stats-page {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1439,7 +1440,8 @@ body.theme-light .status-dot.not_started {
   flex-direction: column;
 }
 
-.stats-rows + .stats-rows {
+.stats-rows + .stats-rows,
+.stats-rows + .stats-distribution-h {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
@@ -1499,6 +1501,11 @@ body.theme-light .status-dot.not_started {
   margin: 0 auto;
 }
 
+.stats-distribution-h-full {
+  width: 100%;
+  margin: 0;
+}
+
 .stats-dist-row {
   display: flex;
   align-items: center;
@@ -1511,6 +1518,10 @@ body.theme-light .status-dot.not_started {
   color: var(--text-dim, #9a9a9a);
   width: 12px;
   text-align: center;
+}
+
+.stats-dist-n-wide {
+  width: 28px;
 }
 
 .stats-dist-track-h {

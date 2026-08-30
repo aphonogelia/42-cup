@@ -60,9 +60,9 @@ function StatRow({ label, value, sub }) {
   );
 }
 
-// Fixed, purely visual heights — not driven by counts, so the podium always
-// looks like a podium regardless of how the data happens to skew.
-const PODIUM_HEIGHTS = { t3: 65, t1: 100, t5: 40 };
+// Fixed, purely visual heights in px — not driven by counts, so the podium
+// always looks like a podium regardless of how the data happens to skew.
+const PODIUM_HEIGHTS = { t3: 95, t1: 140, t5: 60 };
 
 function Podium({ top1, top3, top5, total }) {
   const items = [
@@ -83,7 +83,7 @@ function Podium({ top1, top3, top5, total }) {
             </div>
             <div
               className={`podium-block podium-block-${item.key}`}
-              style={{ height: `${PODIUM_HEIGHTS[item.key]}%` }}
+              style={{ height: `${PODIUM_HEIGHTS[item.key]}px` }}
             />
             <span className="podium-label">{item.label}</span>
           </div>
@@ -93,17 +93,26 @@ function Podium({ top1, top3, top5, total }) {
   );
 }
 
-function DaysBreakdown({ breakdown }) {
+function DaysDistribution({ breakdown }) {
   if (!breakdown || breakdown.length === 0) return null;
+  const max = Math.max(...breakdown.map((b) => b.count), 1);
   return (
-    <div className="stats-rows">
-      {breakdown.map(({ solved, total, count }) => (
-        <StatRow
-          key={`${solved}/${total}`}
-          label={`${solved}/${total} found`}
-          value={`${count} day${count === 1 ? '' : 's'}`}
-        />
-      ))}
+    <div className="stats-distribution-h stats-distribution-h-full">
+      {breakdown.map(({ solved, total, count }) => {
+        const pct = max > 0 ? (count / max) * 100 : 0;
+        return (
+          <div className="stats-dist-row" key={`${solved}/${total}`}>
+            <span className="stats-dist-n stats-dist-n-wide">{`${solved}/${total}`}</span>
+            <div className="stats-dist-track-h">
+              <div
+                className="stats-dist-bar-h"
+                style={{ width: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
+              />
+            </div>
+            <span className="stats-dist-count-h">{count}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -167,10 +176,17 @@ export default function Stats() {
 
       <StatGroup title="Consistency" bare>
         <div className="stats-rows">
-          <StatRow label="Words found" value={`${data.wordsFound} / ${data.wordsStarted}`} />
-          <StatRow label="Words played" value={data.wordsStarted} />
+          <StatRow
+            label="Words found"
+            value={data.wordsFound}
+            sub={
+              data.wordsStarted > 0
+                ? `${Math.round((data.wordsFound / data.wordsStarted) * 100)}% of ${data.wordsStarted} started`
+                : null
+            }
+          />
         </div>
-        <DaysBreakdown breakdown={data.daysBreakdown} />
+        <DaysDistribution breakdown={data.daysBreakdown} />
       </StatGroup>
 
       <StatGroup title="Podium finishes" bare>
