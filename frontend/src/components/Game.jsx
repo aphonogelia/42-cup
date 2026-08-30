@@ -227,6 +227,7 @@ const nextWordBtnRef = useRef(null);
   }, [handleKey]);
 
   
+  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
 useEffect(() => {
   if (showNextWordButton) {
@@ -289,7 +290,6 @@ useEffect(() => {
               </div>
             )}
 
-  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
 
 {showNextWordButton && (
