@@ -225,6 +225,14 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey]);
 
+  const nextWordBtnRef = useRef(null);
+
+useEffect(() => {
+  if (showNextWordButton) {
+    nextWordBtnRef.current?.focus();
+  }
+}, [showNextWordButton]);
+
   if (loading) {
     return (
       <div className="game-panel game-loading" aria-busy="true">
@@ -279,11 +287,19 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
                 )}
               </div>
             )}
-            {showNextWordButton && (
-              <button type="button" className="next-word-btn" onClick={onNext}>
-                Next word →
-              </button>
-            )}
+
+
+{showNextWordButton && (
+  <button
+    type="button"
+    className="next-word-btn"
+    ref={nextWordBtnRef}
+    onClick={onNext}
+  >
+    Next word →
+  </button>
+)}
+
           </div>
         ) : (
           <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
