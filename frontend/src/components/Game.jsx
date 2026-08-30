@@ -91,6 +91,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   const revealTimeout = useRef(null);
   const shakeTimeout = useRef(null);
   const submittingRef = useRef(false);
+const nextWordBtnRef = useRef(null);
 
   // Reset everything (including shake) when switching to a different word.
   useEffect(() => {
@@ -248,7 +249,6 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
   const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
-const nextWordBtnRef = useRef(null);
 
 useEffect(() => {
   if (showNextWordButton) {
