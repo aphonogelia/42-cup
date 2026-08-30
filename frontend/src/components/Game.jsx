@@ -256,7 +256,6 @@ useEffect(() => {
 
   const letterStates = computeLetterStates(wordState.guesses);
   const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
-  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
   return (
     <div className="game-panel">
@@ -289,6 +288,8 @@ useEffect(() => {
                 )}
               </div>
             )}
+
+  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
 
 {showNextWordButton && (
