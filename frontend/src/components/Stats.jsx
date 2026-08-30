@@ -60,35 +60,41 @@ function StatRow({ label, value, sub }) {
   );
 }
 
-// Fixed, purely visual heights in px — not driven by counts, so the podium
-// always looks like a podium regardless of how the data happens to skew.
-const PODIUM_HEIGHTS = { t3: 95, t1: 140, t5: 60 };
-
 function Podium({ top1, top3, top5, total }) {
-  const items = [
-    { key: 't3', label: 'Top 3', value: top3 },
-    { key: 't1', label: 'Top 1', value: top1 },
-    { key: 't5', label: 'Top 5', value: top5 },
+  // Visual position is fixed (podium shape), independent of which rank has
+  // the highest count. left=3rd, middle=1st (tallest), right=5th (shortest).
+  const columns = [
+    { position: 'left', label: 'Top 3', value: top3 },
+    { position: 'middle', label: 'Top 1', value: top1 },
+    { position: 'right', label: 'Top 5', value: top5 },
   ];
 
   return (
     <div className="podium">
-      {items.map((item) => {
-        const pct = total > 0 ? Math.round((item.value / total) * 100) : null;
+      {columns.map((col) => {
+        const pct = total > 0 ? Math.round((col.value / total) * 100) : null;
         return (
-          <div className="podium-col" key={item.key}>
+          <div className="podium-col" key={col.position}>
             <div className="podium-figures">
-              <span className="podium-value">{item.value}</span>
+              <span className="podium-value">{col.value}</span>
               {pct != null && <span className="podium-pct">{pct}%</span>}
             </div>
-            <div
-              className={`podium-block podium-block-${item.key}`}
-              style={{ height: `${PODIUM_HEIGHTS[item.key]}px` }}
-            />
-            <span className="podium-label">{item.label}</span>
+            <div className={`podium-block podium-block--${col.position}`} />
+            <span className="podium-label">{col.label}</span>
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function ConsistencyHero({ wordsFound, wordsStarted }) {
+  const pct = wordsStarted > 0 ? Math.round((wordsFound / wordsStarted) * 100) : null;
+  return (
+    <div className="consistency-hero">
+      <span className="consistency-hero-value">{pct != null ? `${pct}%` : '—'}</span>
+      <span className="consistency-hero-label">words found</span>
+      <span className="consistency-hero-sub">{wordsFound} of {wordsStarted} started</span>
     </div>
   );
 }
@@ -175,17 +181,7 @@ export default function Stats() {
       </StatGroup>
 
       <StatGroup title="Consistency" bare>
-        <div className="stats-rows">
-          <StatRow
-            label="Words found"
-            value={data.wordsFound}
-            sub={
-              data.wordsStarted > 0
-                ? `${Math.round((data.wordsFound / data.wordsStarted) * 100)}% of ${data.wordsStarted} started`
-                : null
-            }
-          />
-        </div>
+        <ConsistencyHero wordsFound={data.wordsFound} wordsStarted={data.wordsStarted} />
         <DaysDistribution breakdown={data.daysBreakdown} />
       </StatGroup>
 
