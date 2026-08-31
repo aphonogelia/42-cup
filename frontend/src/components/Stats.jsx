@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
-const PODIUM_HEIGHTS = { left: 95, middle: 140, right: 60 };
+const PODIUM_HEIGHTS = { left: 58, middle: 84, right: 38 };
 
 function formatTime(seconds) {
   if (seconds == null) return '—';
@@ -50,12 +50,30 @@ function StatGroup({ title, children, bare = false }) {
   );
 }
 
-function StatBlock({ value, label, sub }) {
+function StatBlock({ value, label, sub, compact = false }) {
   return (
-    <div className="stat-block">
+    <div className={`stat-block${compact ? ' stat-block--compact' : ''}`}>
       <span className="stat-block-value">{value}</span>
       <span className="stat-block-label">{label}</span>
       {sub && <span className="stat-block-sub">{sub}</span>}
+    </div>
+  );
+}
+
+function StreakBlock({ label, current, longest }) {
+  return (
+    <div className="stat-block">
+      <span className="stat-block-label">{label}</span>
+      <div className="streak-pair">
+        <div className="streak-pair-item">
+          <span className="streak-pair-value">{current}</span>
+          <span className="streak-pair-tag">current</span>
+        </div>
+        <div className="streak-pair-item">
+          <span className="streak-pair-value">{longest}</span>
+          <span className="streak-pair-tag">best</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -74,8 +92,8 @@ function Podium({ top1, top3, top5, total }) {
         return (
           <div className="podium-col" key={col.position}>
             <div className="podium-figures">
+              <span className="podium-pct">{pct != null ? `${pct}%` : '—'}</span>
               <span className="podium-value">{col.value}</span>
-              {pct != null && <span className="podium-pct">{pct}%</span>}
             </div>
             <div
               className={`podium-block podium-block--${col.position}`}
@@ -136,26 +154,28 @@ export default function Stats() {
       </StatGroup>
 
       <StatGroup title="Streaks">
-        <StatBlock
-          value={data.streakSolved.current}
+        <StreakBlock
           label="All solved"
-          sub={`Best ${data.streakSolved.longest}`}
+          current={data.streakSolved.current}
+          longest={data.streakSolved.longest}
         />
-        <StatBlock
-          value={data.streakPlayed.current}
+        <StreakBlock
           label="All played"
-          sub={`Best ${data.streakPlayed.longest}`}
+          current={data.streakPlayed.current}
+          longest={data.streakPlayed.longest}
         />
       </StatGroup>
 
       <StatGroup title="Word time">
         <StatBlock
+          compact
           value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'}
           label="Fastest"
           sub={data.fastestSolve ? data.fastestSolve.answer : null}
         />
-        <StatBlock value={formatTime(data.avgWordTime)} label="Average" />
+        <StatBlock compact value={formatTime(data.avgWordTime)} label="Average" />
         <StatBlock
+          compact
           value={formatTime(data.avgWordTimeFiltered)}
           label="Excl. outliers"
           sub="> 30m removed"

@@ -1402,17 +1402,14 @@ body.theme-light .status-dot.not_started {
   text-underline-offset: 0.3em;
 }
 
-
 .stats-page {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  align-items: start;
+  column-count: 2;
+  column-gap: 14px;
 }
 
 @media (max-width: 640px) {
   .stats-page {
-    grid-template-columns: 1fr;
+    column-count: 1;
   }
 }
 
@@ -1420,7 +1417,11 @@ body.theme-light .status-dot.not_started {
   border: 1px solid var(--line);
   padding: 14px 16px 16px;
   background: var(--surface);
+  break-inside: avoid;
+  margin-bottom: 14px;
 }
+
+
 .stats-group-title {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1463,6 +1464,15 @@ body.theme-light .status-dot.not_started {
   line-height: 1;
 }
 
+
+.stat-block--compact .stat-block-value {
+  font-size: 15px;
+}
+
+.stat-block--compact .stat-block-sub {
+  font-size: 8px;
+}
+
 .stat-block-label {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1478,22 +1488,45 @@ body.theme-light .status-dot.not_started {
   opacity: 0.7;
 }
 
-/* podium — bottom-aligned columns, no forced container height */
-.podium {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0;
-  min-height: 150px;
+.stats-dist-track-h {
+  flex: 1;
+  height: 14px;
+  background: var(--line-soft);
+  overflow: hidden;
 }
 
-.podium-col {
+/* streak pair (current / best, same weight) */
+.streak-pair {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.streak-pair-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 64px;
+  gap: 2px;
 }
 
+.streak-pair-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+
+.streak-pair-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* podium: % leads, count is the small figure */
 .podium-figures {
   display: flex;
   flex-direction: column;
@@ -1503,7 +1536,7 @@ body.theme-light .status-dot.not_started {
   flex-shrink: 0;
 }
 
-.podium-value {
+.podium-pct {
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 600;
@@ -1511,7 +1544,7 @@ body.theme-light .status-dot.not_started {
   line-height: 1;
 }
 
-.podium-pct {
+.podium-value {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
