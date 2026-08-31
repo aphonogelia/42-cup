@@ -1438,10 +1438,16 @@ body.theme-light .status-dot.not_started {
   flex-direction: column;
 }
 
-.stats-rows + .stats-rows,
-.stats-rows + .stats-distribution-h {
+.stats-rows+.stats-rows,
+.stats-rows+.stats-distribution-h {
   margin-top: 10px;
   padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.stats-rows-after-hero {
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 
@@ -1453,6 +1459,7 @@ body.theme-light .status-dot.not_started {
   padding: 6px 0;
   border-bottom: 1px dashed var(--line);
 }
+
 
 .stat-row:last-child {
   border-bottom: none;
@@ -1587,18 +1594,16 @@ body.theme-light .status-dot.not_started {
   width: 100%;
 }
 
+/* podium blocks: height now set inline in JSX, keep only color here */
 .podium-block--left {
-  height: 95px;
   background: color-mix(in srgb, var(--amber) 55%, var(--surface));
 }
 
 .podium-block--middle {
-  height: 140px;
   background: var(--amber);
 }
 
 .podium-block--right {
-  height: 60px;
   background: color-mix(in srgb, var(--amber) 30%, var(--surface));
 }
 
