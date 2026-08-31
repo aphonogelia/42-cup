@@ -91,6 +91,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   const revealTimeout = useRef(null);
   const shakeTimeout = useRef(null);
   const submittingRef = useRef(false);
+const nextWordBtnRef = useRef(null);
 
   // Reset everything (including shake) when switching to a different word.
   useEffect(() => {
@@ -225,6 +226,16 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey]);
 
+  
+  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
+
+useEffect(() => {
+  if (showNextWordButton) {
+    nextWordBtnRef.current?.focus();
+  }
+}, [showNextWordButton]);
+
+
   if (loading) {
     return (
       <div className="game-panel game-loading" aria-busy="true">
@@ -246,7 +257,6 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
 
   const letterStates = computeLetterStates(wordState.guesses);
   const isPlayable = (wordState.status === 'not_started' || wordState.status === 'in_progress') && !finished && revealRowIndex === null;
-  const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
   return (
     <div className="game-panel">
@@ -279,11 +289,20 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
                 )}
               </div>
             )}
-            {showNextWordButton && (
-              <button type="button" className="next-word-btn" onClick={onNext}>
-                Next word →
-              </button>
-            )}
+
+
+
+{showNextWordButton && (
+  <button
+    type="button"
+    className="next-word-btn"
+    ref={nextWordBtnRef}
+    onClick={onNext}
+  >
+    Next word →
+  </button>
+)}
+
           </div>
         ) : (
           <Keyboard letterStates={letterStates} onKey={handleKey} disabled={!isPlayable} />
