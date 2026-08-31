@@ -45,19 +45,17 @@ function StatGroup({ title, children, bare = false }) {
   return (
     <div className="stats-group">
       <p className="stats-group-title">{title}</p>
-      {bare ? children : <div className="stats-rows">{children}</div>}
+      {bare ? children : <div className="stats-cols">{children}</div>}
     </div>
   );
 }
 
-function StatRow({ label, value, sub }) {
+function StatBlock({ value, label, sub }) {
   return (
-    <div className="stat-row">
-      <div className="stat-row-left">
-        <span className="stat-row-label">{label}</span>
-        {sub && <span className="stat-row-sub">{sub}</span>}
-      </div>
-      <span className="stat-row-value">{value}</span>
+    <div className="stat-block">
+      <span className="stat-block-value">{value}</span>
+      <span className="stat-block-label">{label}</span>
+      {sub && <span className="stat-block-sub">{sub}</span>}
     </div>
   );
 }
@@ -91,17 +89,6 @@ function Podium({ top1, top3, top5, total }) {
   );
 }
 
-function ConsistencyHero({ wordsFound, wordsStarted }) {
-  const pct = wordsStarted > 0 ? Math.round((wordsFound / wordsStarted) * 100) : null;
-  return (
-    <div className="consistency-hero">
-      <span className="consistency-hero-value">{pct != null ? `${pct}%` : '—'}</span>
-      <span className="consistency-hero-label">words found</span>
-      <span className="consistency-hero-sub">{wordsFound} of {wordsStarted} started</span>
-    </div>
-  );
-}
-
 export default function Stats() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -126,17 +113,22 @@ export default function Stats() {
     );
   }
 
+  const pctSolved =
+    data.wordsStarted > 0 ? Math.round((data.wordsFound / data.wordsStarted) * 100) : null;
+
   return (
     <div className="stats-page">
-      <StatGroup title="Consistency" bare>
-        <ConsistencyHero wordsFound={data.wordsFound} wordsStarted={data.wordsStarted} />
-        <div className="stats-rows stats-rows-after-hero">
-          <StatRow
-            label="Fastest day"
-            value={data.fastestDay ? formatTime(data.fastestDay.total_time) : '—'}
-            sub={data.fastestDay ? `All 5 · ${formatDateLabel(data.fastestDay.draw_date)}` : null}
-          />
-        </div>
+      <StatGroup title="Consistency">
+        <StatBlock
+          value={pctSolved != null ? `${pctSolved}%` : '—'}
+          label="Words found"
+          sub={`${data.wordsFound} of ${data.wordsStarted}`}
+        />
+        <StatBlock
+          value={data.fastestDay ? formatTime(data.fastestDay.total_time) : '—'}
+          label="Fastest day"
+          sub={data.fastestDay ? `All 5 · ${formatDateLabel(data.fastestDay.draw_date)}` : null}
+        />
       </StatGroup>
 
       <StatGroup title="Guess distribution" bare>
@@ -144,26 +136,40 @@ export default function Stats() {
       </StatGroup>
 
       <StatGroup title="Streaks">
-        <StatRow label="All solved" value={data.streakSolved.current} sub={`Best: ${data.streakSolved.longest}`} />
-        <StatRow label="All played" value={data.streakPlayed.current} sub={`Best: ${data.streakPlayed.longest}`} />
+        <StatBlock
+          value={data.streakSolved.current}
+          label="All solved"
+          sub={`Best ${data.streakSolved.longest}`}
+        />
+        <StatBlock
+          value={data.streakPlayed.current}
+          label="All played"
+          sub={`Best ${data.streakPlayed.longest}`}
+        />
       </StatGroup>
 
-      <StatGroup title="Words">
-        <StatRow
-          label="Fastest"
+      <StatGroup title="Word time">
+        <StatBlock
           value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'}
-          sub={
-            data.fastestSolve
-              ? `${data.fastestSolve.answer} · #${data.fastestSolve.order_index} · ${formatDateLabel(data.fastestSolve.draw_date)}`
-              : null
-          }
+          label="Fastest"
+          sub={data.fastestSolve ? data.fastestSolve.answer : null}
         />
-        <StatRow label="Average" value={formatTime(data.avgWordTime)} />
-        <StatRow label="Excl. outliers" value={formatTime(data.avgWordTimeFiltered)} sub="> 30 min removed" />
+        <StatBlock value={formatTime(data.avgWordTime)} label="Average" />
+        <StatBlock
+          value={formatTime(data.avgWordTimeFiltered)}
+          label="Excl. outliers"
+          sub="> 30m removed"
+        />
       </StatGroup>
 
       <StatGroup title="Podium finishes" bare>
         <Podium top1={data.top1} top3={data.top3} top5={data.top5} total={data.daysStarted} />
+      </StatGroup>
+
+      <StatGroup title="Perfect days">
+        <StatBlock value={data.daysAllSolved} label="All solved" />
+        <StatBlock value={data.daysAllPlayed} label="All played" />
+        <StatBlock value={data.daysStarted} label="Started" />
       </StatGroup>
     </div>
   );

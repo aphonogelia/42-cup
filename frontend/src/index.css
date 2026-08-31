@@ -1421,7 +1421,6 @@ body.theme-light .status-dot.not_started {
   padding: 14px 16px 16px;
   background: var(--surface);
 }
-
 .stats-group-title {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1430,73 +1429,120 @@ body.theme-light .status-dot.not_started {
   color: var(--amber);
   margin-bottom: 10px;
   opacity: 0.85;
+  text-align: center;
 }
 
-/* row-based groups */
-.stats-rows {
+/* column-based stat groups */
+.stats-cols {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  gap: 4px;
+}
+
+.stat-block {
   display: flex;
   flex-direction: column;
-}
-
-.stats-rows+.stats-rows,
-.stats-rows+.stats-distribution-h {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-}
-
-.stats-rows-after-hero {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
-.stat-row {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--line);
-}
-
-
-.stat-row:last-child {
-  border-bottom: none;
-}
-
-.stat-row-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  text-align: center;
+  gap: 4px;
+  flex: 1;
   min-width: 0;
+  padding: 0 6px;
 }
 
-.stat-row-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim, #9a9a9a);
-  white-space: nowrap;
+.stat-block + .stat-block {
+  border-left: 1px dashed var(--line);
 }
 
-.stat-row-sub {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-dim, #9a9a9a);
-  opacity: 0.6;
-}
-
-.stat-row-value {
+.stat-block-value {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--paper);
-  white-space: nowrap;
+  line-height: 1;
+}
+
+.stat-block-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.stat-block-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* podium — bottom-aligned columns, no forced container height */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  min-height: 150px;
+}
+
+.podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 64px;
+}
+
+.podium-figures {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 6px;
   flex-shrink: 0;
 }
 
+.podium-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--paper);
+  line-height: 1;
+}
+
+.podium-pct {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.podium-block {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.podium-block--left {
+  background: color-mix(in srgb, var(--amber) 55%, var(--surface));
+}
+
+.podium-block--middle {
+  background: var(--amber);
+}
+
+.podium-block--right {
+  background: color-mix(in srgb, var(--amber) 30%, var(--surface));
+}
+
+.podium-label {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
 /* horizontal guess distribution */
 .stats-distribution-h {
   display: flex;
@@ -1550,71 +1596,7 @@ body.theme-light .status-dot.not_started {
   text-align: right;
 }
 
-/* podium */
-.podium {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0;
-  height: 150px;
-}
 
-.podium-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  width: 64px;
-}
-
-.podium-figures {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  margin-bottom: 6px;
-}
-
-.podium-value {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--paper);
-  line-height: 1;
-}
-
-.podium-pct {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-dim, #9a9a9a);
-}
-
-.podium-block {
-  width: 100%;
-}
-
-/* podium blocks: height now set inline in JSX, keep only color here */
-.podium-block--left {
-  background: color-mix(in srgb, var(--amber) 55%, var(--surface));
-}
-
-.podium-block--middle {
-  background: var(--amber);
-}
-
-.podium-block--right {
-  background: color-mix(in srgb, var(--amber) 30%, var(--surface));
-}
-
-.podium-label {
-  margin-top: 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim, #9a9a9a);
-}
 
 /* consistency hero */
 .consistency-hero {
