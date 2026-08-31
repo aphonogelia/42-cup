@@ -177,7 +177,7 @@ export default function Stats() {
         <StatBlock
           compact
           value={formatTime(data.avgWordTimeFiltered)}
-          label="Excl. outliers"
+          label="Excl. outl."
           sub="> 30m removed"
         />
       </StatGroup>
