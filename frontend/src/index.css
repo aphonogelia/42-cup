@@ -1625,7 +1625,7 @@ body.theme-light .status-dot.not_started {
 .stats-dist-track-h {
   flex: 1;
   height: 14px;
-  background: var(--bg1, #1a1a1f);
+  background: var(--surface, #1a1a1f);
   overflow: hidden;
 }
 

@@ -136,7 +136,7 @@ export default function Stats() {
 
   return (
     <div className="stats-page">
-      <StatGroup title="Consistency">
+      <StatGroup title="General">
         <StatBlock
           value={pctSolved != null ? `${pctSolved}%` : '—'}
           label="Words found"
