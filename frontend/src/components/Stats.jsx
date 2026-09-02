@@ -138,14 +138,22 @@ export default function Stats() {
     <div className="stats-page">
       <StatGroup title="General">
         <StatBlock
+          compact
           value={pctSolved != null ? `${pctSolved}%` : '—'}
           label="Words found"
           sub={`${data.wordsFound} of ${data.wordsStarted}`}
         />
         <StatBlock
+          compact
           value={data.fastestDay ? formatTime(data.fastestDay.total_time) : '—'}
           label="Fastest day"
           sub={data.fastestDay ? `All 5 · ${formatDateLabel(data.fastestDay.draw_date)}` : null}
+        />
+        <StatBlock
+          compact
+          value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'}
+          label="Fastest word"
+          sub={data.fastestSolve ? data.fastestSolve.answer : null}
         />
       </StatGroup>
 
@@ -166,20 +174,10 @@ export default function Stats() {
         />
       </StatGroup>
 
-      <StatGroup title="Word time">
-        <StatBlock
-          compact
-          value={data.fastestSolve ? formatTime(data.fastestSolve.time_seconds) : '—'}
-          label="Fastest"
-          sub={data.fastestSolve ? data.fastestSolve.answer : null}
-        />
-        <StatBlock compact value={formatTime(data.avgWordTime)} label="Average" />
-        <StatBlock
-          compact
-          value={formatTime(data.avgWordTimeFiltered)}
-          label="Excl. outl."
-          sub="> 30m removed"
-        />
+      <StatGroup title="Time per word">
+        <StatBlock compact value={formatTime(data.wordTimeQuartiles.q1)} label="Q1" />
+        <StatBlock compact value={formatTime(data.wordTimeQuartiles.q2)} label="Q2" />
+        <StatBlock compact value={formatTime(data.wordTimeQuartiles.q3)} label="Q3" />
       </StatGroup>
 
       <StatGroup title="Podium finishes" bare>

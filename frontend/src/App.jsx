@@ -135,15 +135,6 @@ function ShareIcon() {
   );
 }
 
-function StatsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 20V10M12 20V4M20 20v-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-
 function getNextOpenWord(words, currentOrderIndex) {
   const open = words.filter((w) => w.status === 'not_started' || w.status === 'in_progress');
   if (open.length === 0) return null;
@@ -223,7 +214,7 @@ function buildShareText(shareWords, dateKey) {
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState(null);
-  const [view, setView] = useState('play'); // 'play' | 'leaderboard'
+  const [view, setView] = useState('play'); // 'play' | 'leaderboard' | 'stats'
   const [words, setWords] = useState([]);
   const [showCompletionToast, setShowCompletionToast] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -444,18 +435,16 @@ const handleTogglePrivacy = async () => {
             >
               Ledger
             </button>
+
+            <button
+              className={`nav-btn ${view === 'stats' ? 'active' : ''}`}
+              onClick={() => setView('stats')}
+            >
+              Stats
+            </button>
           </nav>
 
 <div className="masthead-icons">
-  <button
-    className="icon-btn theme-toggle"
-    onClick={() => setView(view === 'stats' ? 'play' : 'stats')}
-    aria-label="View stats"
-    title="Stats"
-  >
-    <StatsIcon />
-  </button>
-
   <button
     className="icon-btn theme-toggle"
     onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
