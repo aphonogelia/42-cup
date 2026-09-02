@@ -174,7 +174,7 @@ export default function Stats() {
         />
       </StatGroup>
 
-      <StatGroup title="Word time">
+      <StatGroup title="Time per word">
         <StatBlock compact value={formatTime(data.wordTimeQuartiles.q1)} label="Q1" />
         <StatBlock compact value={formatTime(data.wordTimeQuartiles.q2)} label="Q2" />
         <StatBlock compact value={formatTime(data.wordTimeQuartiles.q3)} label="Q3" />
