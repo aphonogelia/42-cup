@@ -1,3 +1,14 @@
+function quantile(sortedValues, q) {
+  if (sortedValues.length === 0) return null;
+  const pos = (sortedValues.length - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  if (sortedValues[base + 1] !== undefined) {
+    return sortedValues[base] + rest * (sortedValues[base + 1] - sortedValues[base]);
+  }
+  return sortedValues[base];
+}
+
 export function computeStats(results, dateCounts, todayKey) {
   const byDate = new Map();
   for (const r of results) {
@@ -14,6 +25,7 @@ export function computeStats(results, dateCounts, todayKey) {
   let solvedTimeCount = 0;
   let solvedTimeSumFiltered = 0;
   let solvedTimeCountFiltered = 0;
+  const solvedTimes = [];
   const OUTLIER_THRESHOLD_SECONDS = 30 * 60;
 
   let daysAllSolved = 0;
@@ -63,6 +75,7 @@ export function computeStats(results, dateCounts, todayKey) {
 
       solvedTimeSum += r.time_seconds;
       solvedTimeCount++;
+      solvedTimes.push(r.time_seconds);
 
       if (r.time_seconds <= OUTLIER_THRESHOLD_SECONDS) {
         solvedTimeSumFiltered += r.time_seconds;
@@ -85,12 +98,20 @@ export function computeStats(results, dateCounts, todayKey) {
     })
     .sort((a, b) => b.total - a.total || b.solved - a.solved);
 
+  const sortedSolvedTimes = solvedTimes.slice().sort((a, b) => a - b);
+  const wordTimeQuartiles = {
+    q1: quantile(sortedSolvedTimes, 0.25),
+    q2: quantile(sortedSolvedTimes, 0.5),
+    q3: quantile(sortedSolvedTimes, 0.75),
+  };
+
   return {
     guessDistribution,
     fastestSolve,
     fastestDay,
     avgWordTime: solvedTimeCount > 0 ? solvedTimeSum / solvedTimeCount : null,
     avgWordTimeFiltered: solvedTimeCountFiltered > 0 ? solvedTimeSumFiltered / solvedTimeCountFiltered : null,
+    wordTimeQuartiles,
     daysAllSolved,
     daysAllPlayed,
     daysStarted,
