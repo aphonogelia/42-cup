@@ -42,9 +42,9 @@ async function request(path, options = {}) {
 export const api = {
   me: () => request('/api/auth/me'),
   logout: () => {
-    localStorage.removeItem(TOKEN_KEY);
-    return request('/api/auth/logout', { method: 'POST' });
-  },
+  localStorage.removeItem(TOKEN_KEY);
+  return request('/api/auth/logout', { method: 'POST', body: '{}' });
+},
   updatePrivacy: (privacy_enabled) =>
     request('/api/auth/privacy', { method: 'PATCH', body: JSON.stringify({ privacy_enabled }) }),
   progress: () => request('/api/game/progress'),
