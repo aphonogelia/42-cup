@@ -12,8 +12,17 @@ import statsRoutes from './routes/stats.js';
 
 const fastify = Fastify({ logger: true, trustProxy: true });
 
+const allowedOrigins = [config.frontendUrl, config.legacyFrontendUrl];
+
+
 await fastify.register(cors, {
-  origin: config.frontendUrl,
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      cb(null, true);
+      return;
+    }
+    cb(new Error('Not allowed by CORS'), false);
+  },
   credentials: true,
 });
 
