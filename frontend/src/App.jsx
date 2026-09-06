@@ -430,17 +430,17 @@ const handleTogglePrivacy = async () => {
             </button>
 
             <button
-              className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => setView('leaderboard')}
-            >
-              Ledger
-            </button>
-
-            <button
               className={`nav-btn ${view === 'stats' ? 'active' : ''}`}
               onClick={() => setView('stats')}
             >
               Stats
+            </button>
+
+            <button
+              className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
+              onClick={() => setView('leaderboard')}
+            >
+              Ledger
             </button>
           </nav>
 
@@ -488,12 +488,13 @@ const handleTogglePrivacy = async () => {
 
     {selectedOrderIndex && (
       <Game
-        userLogin={user.login}
-        orderIndex={selectedOrderIndex}
-        onWordFinished={() => refreshProgress({ checkCompletion: true })}
-        nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
-        onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
-      />
+      userLogin={user.login}
+      orderIndex={selectedOrderIndex}
+      onWordFinished={() => refreshProgress({ checkCompletion: true })}
+      onWordStarted={() => refreshProgress()}
+      nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
+      onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
+    />
     )}
   </>
 ) : view === "leaderboard" ? (

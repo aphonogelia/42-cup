@@ -722,6 +722,24 @@ body.theme-light .info-copy a:hover {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
+.tab-stub .timer {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  line-height: 1.1;
+}
+
+.tab-stub.in_progress .timer {
+  color: var(--amber);
+  opacity: 0.85;
+}
+
+.tab-stub.solved .timer,
+.tab-stub.failed .timer {
+  color: var(--text-muted);
+}
+
 /* ---- Game grid ------------------------------------------------------ */
 .game-panel {
   display: flex;
