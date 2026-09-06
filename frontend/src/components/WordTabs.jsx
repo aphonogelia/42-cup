@@ -5,8 +5,8 @@ const STAMP_LABEL = {
   failed: 'FAILED',
 };
 
-function formatMMSS(totalSeconds) {
-  const s = Math.max(0, Math.floor(totalSeconds));
+function formatMMSS(totalSeconds, { round = false } = {}) {
+  const s = Math.max(0, round ? Math.round(totalSeconds) : Math.floor(totalSeconds));
   const mm = Math.floor(s / 60);
   const ss = s % 60;
   return `${mm}:${String(ss).padStart(2, '0')}`;
@@ -33,9 +33,9 @@ export default function WordTabs({ words, selectedOrderIndex, onSelect }) {
 
         if (w.status === 'in_progress' && w.started_at) {
           const elapsedSeconds = (now - new Date(w.started_at).getTime()) / 1000;
-          timerLabel = formatMMSS(elapsedSeconds);
+          timerLabel = formatMMSS(elapsedSeconds, { round: false });
         } else if ((w.status === 'solved' || w.status === 'failed') && typeof w.time_seconds === 'number') {
-          timerLabel = formatMMSS(w.time_seconds);
+          timerLabel = formatMMSS(w.time_seconds, { round: true });
         }
 
         return (

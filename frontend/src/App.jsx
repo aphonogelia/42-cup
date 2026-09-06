@@ -498,7 +498,7 @@ const handleTogglePrivacy = async () => {
     )}
   </>
 ) : view === "leaderboard" ? (
-  <Leaderboard totalWords={words.length} />
+  <Leaderboard totalWords={words.length} viewerIsPrivate={!!user.privacy_enabled} />
 ) : (
   <Stats />
 )}
