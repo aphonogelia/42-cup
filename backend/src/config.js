@@ -14,6 +14,7 @@ export const config = {
   port: Number(process.env.PORT || 3001),
   isProd: process.env.NODE_ENV === 'production',
   frontendUrl: process.env.FRONTEND_URL,
+  legacyFrontendUrl: process.env.LEGACY_FRONTEND_URL,
   jwtSecret: required('JWT_SECRET'),
   fortyTwo: {
     clientId: required('FORTYTWO_CLIENT_ID'),
