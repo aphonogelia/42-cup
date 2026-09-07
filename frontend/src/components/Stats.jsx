@@ -24,7 +24,7 @@ function GuessDistribution({ distribution }) {
   let cumulative = 0;
 
   return (
-    <div className="stats-distribution-h">
+    <div className="stats-distribution-h stats-distribution-h-full">
       {[1, 2, 3, 4, 5, 6].map((n, i) => {
         const count = counts[i];
         const pct = max > 0 ? (count / max) * 100 : 0;
