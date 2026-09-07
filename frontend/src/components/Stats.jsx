@@ -18,12 +18,20 @@ function formatDateLabel(dateStr) {
 }
 
 function GuessDistribution({ distribution }) {
-  const max = Math.max(...Object.values(distribution), 1);
+  const counts = [1, 2, 3, 4, 5, 6].map((n) => distribution[n] ?? 0);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const max = Math.max(...counts, 1);
+  let cumulative = 0;
+
   return (
     <div className="stats-distribution-h">
-      {[1, 2, 3, 4, 5, 6].map((n) => {
-        const count = distribution[n] ?? 0;
+      {[1, 2, 3, 4, 5, 6].map((n, i) => {
+        const count = counts[i];
         const pct = max > 0 ? (count / max) * 100 : 0;
+        const freqPct = total > 0 ? (count / total) * 100 : 0;
+        cumulative += count;
+        const cumPct = total > 0 ? (cumulative / total) * 100 : 0;
+
         return (
           <div className="stats-dist-row" key={n}>
             <span className="stats-dist-n">{n}</span>
@@ -34,6 +42,12 @@ function GuessDistribution({ distribution }) {
               />
             </div>
             <span className="stats-dist-count-h">{count}</span>
+            <span className="stats-dist-freq">
+              {total > 0 ? `${freqPct.toFixed(0)}%` : '—'}
+            </span>
+            <span className="stats-dist-cum">
+              {total > 0 ? `${cumPct.toFixed(0)}%` : '—'}
+            </span>
           </div>
         );
       })}

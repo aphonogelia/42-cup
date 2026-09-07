@@ -1665,6 +1665,13 @@ body.theme-light .status-dot.not_started {
   text-align: right;
 }
 
+.stats-dist-freq,
+.stats-dist-cum {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 2.5rem;
+  text-align: right;
+}
 
 
 /* consistency hero */
@@ -1701,3 +1708,4 @@ body.theme-light .status-dot.not_started {
   color: var(--text-dim, #9a9a9a);
   opacity: 0.7;
 }
+
