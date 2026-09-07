@@ -41,13 +41,15 @@ function GuessDistribution({ distribution }) {
                 style={{ width: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
               />
             </div>
-            <span className="stats-dist-count-h">{count}</span>
-            <span className="stats-dist-freq">
-              {total > 0 ? `${freqPct.toFixed(0)}%` : '—'}
-            </span>
-            <span className="stats-dist-cum">
-              {total > 0 ? `${cumPct.toFixed(0)}%` : '—'}
-            </span>
+            <div className="stats-dist-numbers">
+              <span className="stats-dist-count-h">{count}</span>
+              <span className="stats-dist-freq">
+                {total > 0 ? `${freqPct.toFixed(0)}%` : '—'}
+              </span>
+              <span className="stats-dist-cum">
+                {total > 0 ? `${cumPct.toFixed(0)}%` : '—'}
+              </span>
+            </div>
           </div>
         );
       })}
