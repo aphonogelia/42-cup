@@ -722,6 +722,24 @@ body.theme-light .info-copy a:hover {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
+.tab-stub .timer {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  line-height: 1.1;
+}
+
+.tab-stub.in_progress .timer {
+  color: var(--amber);
+  opacity: 0.85;
+}
+
+.tab-stub.solved .timer,
+.tab-stub.failed .timer {
+  color: var(--text-muted);
+}
+
 /* ---- Game grid ------------------------------------------------------ */
 .game-panel {
   display: flex;
@@ -1599,7 +1617,7 @@ body.theme-light .status-dot.not_started {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 78%;
+  width: 90%;
   margin: 0 auto;
 }
 
@@ -1643,10 +1661,32 @@ body.theme-light .status-dot.not_started {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--paper);
-  width: 24px;
+  width: 20px;
   text-align: right;
 }
 
+.stats-dist-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* .stats-dist-freq,
+.stats-dist-cum {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 2.5rem;
+  text-align: right;
+} */
+
+.stats-dist-freq,
+.stats-dist-cum {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim, #9a9a9a);
+  width: 32px;
+  text-align: right;
+}
 
 
 /* consistency hero */
@@ -1683,3 +1723,4 @@ body.theme-light .status-dot.not_started {
   color: var(--text-dim, #9a9a9a);
   opacity: 0.7;
 }
+

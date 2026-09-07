@@ -79,7 +79,7 @@ function AnimatedAnswer({ answer }) {
   );
 }
 
-export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderIndex, onNext }) {
+export default function Game({ userLogin, orderIndex, onWordFinished, onWordStarted, nextOrderIndex, onNext }) {
   const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -91,7 +91,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, nextOrderI
   const revealTimeout = useRef(null);
   const shakeTimeout = useRef(null);
   const submittingRef = useRef(false);
-const nextWordBtnRef = useRef(null);
+  const nextWordBtnRef = useRef(null);
 
   // Reset everything (including shake) when switching to a different word.
   useEffect(() => {
@@ -155,6 +155,7 @@ const nextWordBtnRef = useRef(null);
       const result = await api.guess(wordState.word_id, currentGuess);
       const rowIndex = wordState.guesses.length;
       const guessedWord = currentGuess;
+      const isFirstGuess = wordState.nb_tries === 0;
 
       setPendingGuess({
         guess: guessedWord,
@@ -191,6 +192,10 @@ const nextWordBtnRef = useRef(null);
         if (result.status !== 'in_progress') {
           setFinished(result);
           onWordFinished?.();
+        } else if (isFirstGuess) {
+          // Timer just started server-side (started_at stamped) — let the
+          // parent refetch progress so the WordTabs timer can pick it up.
+          onWordStarted?.();
         }
       }, duration);
 
@@ -200,7 +205,7 @@ const nextWordBtnRef = useRef(null);
     } finally {
       submittingRef.current = false;
     }
-  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished, userLogin, orderIndex, triggerShake]);
+  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished, onWordStarted, userLogin, orderIndex, triggerShake]);
 
   const handleKey = useCallback(
     (key) => {
@@ -226,14 +231,14 @@ const nextWordBtnRef = useRef(null);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey]);
 
-  
+
   const showNextWordButton = finished && nextOrderIndex != null && nextOrderIndex !== orderIndex;
 
-useEffect(() => {
-  if (showNextWordButton) {
-    nextWordBtnRef.current?.focus();
-  }
-}, [showNextWordButton]);
+  useEffect(() => {
+    if (showNextWordButton) {
+      nextWordBtnRef.current?.focus();
+    }
+  }, [showNextWordButton]);
 
 
   if (loading) {
@@ -292,16 +297,16 @@ useEffect(() => {
 
 
 
-{showNextWordButton && (
-  <button
-    type="button"
-    className="next-word-btn"
-    ref={nextWordBtnRef}
-    onClick={onNext}
-  >
-    Next word →
-  </button>
-)}
+            {showNextWordButton && (
+              <button
+                type="button"
+                className="next-word-btn"
+                ref={nextWordBtnRef}
+                onClick={onNext}
+              >
+                Next word →
+              </button>
+            )}
 
           </div>
         ) : (

@@ -33,13 +33,21 @@ function getStatusList(statuses, totalWords) {
   );
 }
 
-export default function Leaderboard({ totalWords }) {
+function isDayFinished(statusList) {
+  return statusList.every((s) => s === 'solved' || s === 'failed');
+}
+
+export default function Leaderboard({ totalWords, viewerIsPrivate }) {
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
-  const [activePlayer, setActivePlayer] = useState(null); // { userId, login }
+  // activePlayer shapes:
+  //   { type: 'view', userId, login }   -> show WordTimesPopup
+  //   { type: 'viewer-private' }        -> viewer must go public to see anyone's results
+  //   { type: 'incomplete', login }     -> target hasn't finished today's words yet
+  const [activePlayer, setActivePlayer] = useState(null);
   const skipNextFetch = useRef(false);
 
   const fetchLeaderboard = useCallback((date, { resetRows = false } = {}) => {
@@ -108,6 +116,21 @@ export default function Leaderboard({ totalWords }) {
   return () => window.removeEventListener('privacy-changed', handlePrivacyChanged);
 }, [selectedDate, fetchLeaderboard]);
 
+  const handlePlayerClick = (row) => {
+    if (viewerIsPrivate) {
+      setActivePlayer({ type: 'viewer-private' });
+      return;
+    }
+
+    const statusList = getStatusList(row.word_statuses, totalWords);
+    if (!isDayFinished(statusList)) {
+      setActivePlayer({ type: 'incomplete', login: row.login });
+      return;
+    }
+
+    setActivePlayer({ type: 'view', userId: row.user_id, login: row.login });
+  };
+
   const tiers = [];
   if (rows) {
     let current = null;
@@ -127,11 +150,25 @@ export default function Leaderboard({ totalWords }) {
     <div>
       <AlertModal message={error} onClose={() => setError('')} />
 
-      {activePlayer && effectiveDate && (
+      {activePlayer?.type === 'view' && effectiveDate && (
         <WordTimesPopup
           userId={activePlayer.userId}
           login={activePlayer.login}
           date={effectiveDate}
+          onClose={() => setActivePlayer(null)}
+        />
+      )}
+
+      {activePlayer?.type === 'viewer-private' && (
+        <AlertModal
+          message="Your profile is set to private. Make it public to see other players' results."
+          onClose={() => setActivePlayer(null)}
+        />
+      )}
+
+      {activePlayer?.type === 'incomplete' && (
+        <AlertModal
+          message={`${activePlayer.login} hasn't finished today's words yet. Check back once they're done.`}
           onClose={() => setActivePlayer(null)}
         />
       )}
@@ -168,7 +205,7 @@ export default function Leaderboard({ totalWords }) {
                   const nameBlock = (
                     <>
                       {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      <span className={`login-name ${hasPlayed && !isPrivate ? 'login-public' : ''}`}>
+                      <span className={`login-name ${clickable ? 'login-public' : ''}`}>
                         {row.login}
                       </span>
                       <span
@@ -191,7 +228,7 @@ export default function Leaderboard({ totalWords }) {
                         <button
                           type="button"
                           className="login login-clickable"
-                          onClick={() => setActivePlayer({ userId: row.user_id, login: row.login })}
+                          onClick={() => handlePlayerClick(row)}
                         >
                           {nameBlock}
                         </button>
