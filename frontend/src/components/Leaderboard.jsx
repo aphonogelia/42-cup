@@ -33,10 +33,6 @@ function getStatusList(statuses, totalWords) {
   );
 }
 
-function isDayFinished(statusList) {
-  return statusList.every((s) => s === 'solved' || s === 'failed');
-}
-
 export default function Leaderboard({ totalWords, viewerIsPrivate }) {
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
@@ -46,7 +42,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate }) {
   // activePlayer shapes:
   //   { type: 'view', userId, login }   -> show WordTimesPopup
   //   { type: 'viewer-private' }        -> viewer must go public to see anyone's results
-  //   { type: 'incomplete', login }     -> target hasn't finished today's words yet
   const [activePlayer, setActivePlayer] = useState(null);
   const skipNextFetch = useRef(false);
 
@@ -122,12 +117,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate }) {
       return;
     }
 
-    const statusList = getStatusList(row.word_statuses, totalWords);
-    if (!isDayFinished(statusList)) {
-      setActivePlayer({ type: 'incomplete', login: row.login });
-      return;
-    }
-
     setActivePlayer({ type: 'view', userId: row.user_id, login: row.login });
   };
 
@@ -162,13 +151,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate }) {
       {activePlayer?.type === 'viewer-private' && (
         <AlertModal
           message="Your profile is set to private. Make it public to see other players' results."
-          onClose={() => setActivePlayer(null)}
-        />
-      )}
-
-      {activePlayer?.type === 'incomplete' && (
-        <AlertModal
-          message={`${activePlayer.login} hasn't finished today's words yet. Check back once they're done.`}
           onClose={() => setActivePlayer(null)}
         />
       )}
