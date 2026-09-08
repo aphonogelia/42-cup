@@ -12,12 +12,12 @@ import statsRoutes from './routes/stats.js';
 
 const fastify = Fastify({ logger: true, trustProxy: true });
 
-const allowedOrigins = [config.frontendUrl, config.legacyFrontendUrl];
+const allowedOrigins = new Set(config.frontendUrls);
 
 
 await fastify.register(cors, {
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.has(origin)) {
       cb(null, true);
       return;
     }
