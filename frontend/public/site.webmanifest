@@ -1,6 +1,8 @@
 {
   "name": "wordel // 42 cup",
   "short_name": "wordel",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
