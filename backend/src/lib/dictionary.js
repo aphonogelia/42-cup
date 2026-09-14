@@ -4,10 +4,6 @@ import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Same file used by scripts/seed-words.js as the pool the 7 answers are
-// sampled from. Reusing it here means any guess of the right length that's
-// "a real word" (i.e. in your pool) is accepted — one file, one source of
-// truth, no separate list to keep in sync.
 let allowed = null;
 
 function loadDictionary() {
