@@ -35,26 +35,29 @@ draws in the database.
 blank lines and `#` comments ignored) — not the 7 answers directly. Put as
 many words in there as you like.
 
-```bash
-npm run seed:words
-```
-
-This draws 7 words from the pool (via Node's `crypto.randomInt`, not
+The backend draws 5 words from the pool (via Node's `crypto.randomInt`, not
 `Math.random`) and writes them into the `words` table for the active Berlin
 date. The backend selects the current draw by `Europe/Berlin` calendar day,
 so a new set becomes active at midnight Berlin time while older draws stay
 stored in the database.
 
-```bash
-node scripts/seed-words.js --force               # overwrite today's draw
-node scripts/seed-words.js --date 2026-07-29     # seed a specific Berlin date
-node scripts/seed-words.js --count 5             # draw of 5 words instead of 7
-node scripts/seed-words.js data/other.txt        # sample from a different pool file
-```
-
 The same `competition-words.txt` pool also doubles as the guess-validation
 dictionary (see `src/lib/dictionary.js`) — one file, one source of truth,
 guesses of the right length are accepted if they're in your pool.
+
+### Entropy bot experiment
+
+The standalone entropy experiment analyzes random target words without
+connecting to the application or database. It prints every calculation step
+and writes the full data to JSON:
+
+```bash
+npm run analyze:entropy -- --targets 3 --report /tmp/entropy-report.json
+```
+
+For each step, the report includes global letter entropy, entropy for every
+letter position, the top candidate guesses with their score contributions,
+feedback, and the remaining possible answers.
 
 ### Database change required
 

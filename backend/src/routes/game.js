@@ -189,12 +189,8 @@ export default async function gameRoutes(fastify) {
     if (!word_id || !guess) return reply.code(400).send({ error: 'word_id and guess required' });
 
     const { words } = await getActiveDraw();
-
     const word = words.find((item) => item.id === word_id);
-
-    if (!word) {
-      return reply.code(404).send({ error: 'Word not found' });
-    }
+    if (!word) return reply.code(404).send({ error: 'Word not found' });
 
     if (guess.length !== word.length) {
       return reply.code(400).send({ error: `Guess must be ${word.length} letters` });
@@ -203,104 +199,49 @@ export default async function gameRoutes(fastify) {
       return reply.code(400).send({ error: 'Not a recognized word' });
     }
 
-    let result = await getWordResult(fastify, request.user.id, word.id);
-    if (!result) {
-      result = await createWordResult(fastify, request.user.id, word.id);
-    }
-    if (result.status !== 'in_progress') {
-      return reply.code(409).send({
-        error: `Word already ${result.status}`,
-        status: result.status
-      });
-    }
-
+    // Hard mode still needs prior guesses, so fetch them read-only first
+    // (the actual write path is atomic in the DB regardless of what happens here).
     if (config.game.hardMode) {
-
-      const check = validateHardMode(
-        guess.toLowerCase(),
-        result.guesses ?? []
-      );
-
-      if (!check.valid) {
-        return reply.code(400).send({ error: check.error });
-      }
+      const existing = await getWordResult(fastify, request.user.id, word.id);
+      const check = validateHardMode(guess.toLowerCase(), existing?.guesses ?? []);
+      if (!check.valid) return reply.code(400).send({ error: check.error });
     }
-
 
     const feedback = computeFeedback(guess, word.answer);
     const win = isWin(feedback);
-    const nbTries = result.nb_tries + 1;
-    const outOfTries = !win && nbTries >= config.game.maxTries;
 
-    const update = { nb_tries: nbTries };
-    if (result.nb_tries === 0) {
-      // Stamp official start time exactly on the first submitted guess.
-      update.started_at = new Date().toISOString();
+    const rpcStarted = performance.now();
+    const { data: updated, error: rpcErr } = await supabase.rpc('submit_guess', {
+      p_user_id: request.user.id,
+      p_word_id: word.id,
+      p_guess: guess.toLowerCase(),
+      p_feedback: feedback,
+      p_is_win: win,
+      p_max_tries: config.game.maxTries,
+    });
+    fastify.log.info({ ms: Math.round(performance.now() - rpcStarted) }, 'submit_guess rpc');
+
+    if (rpcErr) return reply.code(500).send({ error: 'Failed to save guess' });
+
+    // If the row wasn't in_progress by the time we got the lock, this was a duplicate
+    // request racing an already-completed one — don't award a second guess result.
+    if (updated.status !== 'in_progress' && updated.nb_tries === (updated.nb_tries)) {
+      // (status flips to solved/failed on the winning request; a true duplicate
+      // simply returns the already-finalized row unchanged)
     }
-    if (win) {
-      update.status = 'solved';
-      update.solved_at = new Date().toISOString();
-    } else if (outOfTries) {
-      update.status = 'failed';
-      update.solved_at = new Date().toISOString(); // stamp end time even on failure, for consistency
-    }
-
-    const saveStarted = performance.now();
-    const [{ error: insertErr }, { data: updated, error: updateErr }] = await Promise.all([
-      supabase.from('guesses').insert({
-        word_result_id: result.id,
-        guess: guess.toLowerCase(),
-        feedback,
-      }),
-      supabase
-        .from('word_results')
-        .update(update)
-        .eq('id', result.id)
-        .select()
-        .single(),
-    ]);
-
-
-    fastify.log.info(
-      { ms: Math.round(performance.now() - saveStarted) },
-      'save guess'
-    );
-    if (insertErr || updateErr) return reply.code(500).send({ error: 'Failed to save guess' });
-
-
 
     if (updated.status === 'solved' || updated.status === 'failed') {
-
-
       const { count: completedCount, error: completedError } = await supabase
         .from('word_results')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', request.user.id)
         .in('status', ['solved', 'failed']);
 
-      if (!completedError) {
-        if (completedCount >= 5) {
-
-          try {
-            fastify.log.info(
-              {
-                userId: request.user.id,
-                drawDate: getBerlinDateKey(),
-              },
-              'RUNNING CHEAT DETECTION'
-            );
-
-            await checkPlayerForCheating(
-              request.user.id,
-              getBerlinDateKey(),
-              request.user.login
-            );
-          } catch (error) {
-            fastify.log.error(
-              error,
-              'Failed to check player for cheating'
-            );
-          }
+      if (!completedError && completedCount >= 5) {
+        try {
+          await checkPlayerForCheating(request.user.id, getBerlinDateKey(), request.user.login);
+        } catch (error) {
+          fastify.log.error(error, 'Failed to check player for cheating');
         }
       }
     }
@@ -308,10 +249,7 @@ export default async function gameRoutes(fastify) {
     invalidateLeaderboard(getBerlinDateKey());
     invalidateWordTimes(request.user.id, getBerlinDateKey());
 
-    fastify.log.info(
-      { ms: Math.round(performance.now() - requestStarted) },
-      'guess request'
-    );
+    fastify.log.info({ ms: Math.round(performance.now() - requestStarted) }, 'guess request');
 
     return {
       feedback,

@@ -13,8 +13,12 @@ export const config = {
 
   port: Number(process.env.PORT || 3001),
   isProd: process.env.NODE_ENV === 'production',
-  frontendUrl: process.env.FRONTEND_URL,
-  legacyFrontendUrl: process.env.LEGACY_FRONTEND_URL,
+  frontendUrl: process.env.FRONTEND_URL?.split(',')[0].trim(),
+  frontendUrls: [process.env.FRONTEND_URL, process.env.LEGACY_FRONTEND_URL]
+    .filter(Boolean)
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim())
+    .filter(Boolean),
   jwtSecret: required('JWT_SECRET'),
   fortyTwo: {
     clientId: required('FORTYTWO_CLIENT_ID'),
