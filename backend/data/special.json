@@ -1,0 +1,72 @@
+{
+  "recurring": {
+    "10-31": {
+      "theme": "halloween",
+      "words": [
+        "crypt", "death", "ghoul", "eerie", "curse", "witch", "tombs",
+        "bones", "spook", "haunt", "fangs", "demon", "creep", "raven",
+        "omens", "grave", "black", "fungi"
+      ]
+    },
+    "12-25": {
+      "theme": "christmas",
+      "words": [
+        "santa", "holly", "angel", "feast", "carol", "candy", "snowy",
+        "glove", "scarf", "frost", "cheer", "merry", "jolly", "spicy",
+        "cocoa", "sweet", "bells", "elves", "roast", "gravy", "chill",
+        "drunk"
+      ]
+    },
+    "04-01": {
+      "theme": "april-fools",
+      "words": [
+        "gnash", "xylyl", "qophs", "zloty", "jujus", "fjord", "pygmy",
+        "knurl", "wryly", "tryst", "xviii", "glyph", "lymph", "nymph",
+        "woozy", "thrum", "synod", "prank", "golly", "byway", "bruvs",
+        "bozos"
+      ]
+    },
+    "05-01": {
+      "theme": "may-day",
+      "words": [
+        "union", "labor", "wages", "march", "rally", "riots", "unite",
+        "fists", "flags", "crowd", "power", "equal", "class", "chant",
+        "front", "blocs", "havoc", "torch", "greed"
+      ]
+    }
+  },
+  "oneOff": {
+    "2027-02-06": {
+      "theme": "lunar-new-year",
+      "words": [
+        "lucky", "feast", "dance", "lions", "drums", "gifts", "fresh",
+        "clean", "lunar", "moons", "charm", "bloom", "peach", "coins",
+        "spark"
+      ]
+    },
+    "2027-03-09": {
+      "theme": "eid-al-fitr",
+      "words": [
+        "feast", "fasts", "dates", "gifts", "sweet", "prays", "moons",
+        "lunar", "unity", "grace", "bless", "share", "night", "thank",
+        "charm"
+      ]
+    },
+    "2027-05-16": {
+      "theme": "eid-al-adha",
+      "words": [
+        "feast", "share", "bless", "grace", "prays", "charm", "unity",
+        "faith", "honor", "pious", "thank", "gifts", "night", "moons",
+        "bonds"
+      ]
+    },
+    "2027-10-29": {
+      "theme": "diwali",
+      "words": [
+        "diyas", "light", "glows", "spark", "feast", "sweet", "gifts",
+        "charm", "bloom", "color", "bliss", "lucky", "flame", "night",
+        "shine", "peace", "unity"
+      ]
+    }
+  }
+}

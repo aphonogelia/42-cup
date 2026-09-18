@@ -6,6 +6,7 @@ import { supabase } from '../supabase.js';
 export const BERLIN_TIME_ZONE = 'Europe/Berlin';
 export const DEFAULT_DRAW_COUNT = 5;
 export const DEFAULT_POOL_PATH = path.resolve('data/competition-words.txt');
+export const SPECIAL_POOLS_PATH = path.resolve('data/special.json');
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: BERLIN_TIME_ZONE,
@@ -98,6 +99,47 @@ export function secureSample(pool, count = DEFAULT_DRAW_COUNT) {
     return arr.slice(0, count);
 }
 
+// --- Special-day pools ---------------------------------------------------
+//
+// data/special-day-pools.json has two sections:
+//   - "recurring": keyed by "MM-DD", applies every year (Halloween, Christmas,
+//     April Fool's, May Day)
+//   - "oneOff": keyed by exact "YYYY-MM-DD", for movable-date holidays
+//     (Eid, Diwali, Lunar New Year, ...) that need a specific date added
+//     by hand each year
+//
+// oneOff entries take priority over recurring ones for the same date.
+
+/**
+ * Resolves the special word pool (if any) for a given draw date.
+ *
+ * @param {string} drawDate - 'YYYY-MM-DD' (Berlin date key)
+ * @param {string} [filePath] - override, mainly for testing
+ * @returns {{ theme: string, words: string[] } | null}
+ */
+export function getSpecialPool(drawDate, filePath = SPECIAL_POOLS_PATH) {
+    let raw;
+    try {
+        raw = readFileSync(filePath, 'utf-8');
+    } catch (err) {
+        if (err.code === 'ENOENT') return null;
+        throw err;
+    }
+
+    const pools = JSON.parse(raw);
+
+    const oneOff = pools.oneOff?.[drawDate];
+    if (oneOff) return oneOff;
+
+    const monthDay = drawDate.slice(5); // 'MM-DD'
+    const recurring = pools.recurring?.[monthDay];
+    if (recurring) return recurring;
+
+    return null;
+}
+
+// --- Daily draw ------------------------------------------------------------
+
 export async function getDailyWords(drawDate = getBerlinDateKey()) {
     const { data, error } = await supabase
         .from('words')
@@ -125,7 +167,8 @@ export async function ensureDailyDraw({
         );
     }
 
-    const pool = loadDrawPool(poolPath);
+    const special = getSpecialPool(drawDate);
+    const pool = special ? special.words : loadDrawPool(poolPath);
     validateDrawPool(pool, count);
 
     const chosen = secureSample(pool, count);
