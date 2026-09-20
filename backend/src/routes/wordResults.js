@@ -50,15 +50,14 @@ export default async function wordResultsRoutes(fastify) {
     
     const today = getBerlinDateKey();
     if (word.draw_date === today) {
-      let allowed = false;
       try {
-        allowed = await hasCompletedToday(request.user.id, today);
+        const allowed = await hasCompletedToday(request.user.id, today);
+        if (!allowed) {
+          return reply.code(403).send({ error: "Finish today's words to view guesses" });
+        }
       } catch (error) {
         fastify.log.error(error, 'Failed to verify completion status');
         return reply.code(500).send({ error: 'Failed to verify access' });
-      }
-      if (!allowed) {
-        return reply.code(403).send({ error: "Finish today's words to view guesses" });
       }
     }
 

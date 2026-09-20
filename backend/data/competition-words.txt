@@ -59,6 +59,7 @@ allot
 allow
 alloy
 aloft
+aloha
 alone
 along
 aloof
@@ -115,8 +116,10 @@ ascot
 ashen
 aside
 askew
+aspic
 assay
 asset
+aster
 atoll
 atone
 attic
@@ -175,6 +178,7 @@ begat
 beget
 begin
 begun
+beige
 being
 belch
 belie
@@ -331,6 +335,7 @@ canny
 canoe
 canon
 caper
+capon
 caput
 carat
 cargo
@@ -424,6 +429,7 @@ cluck
 clued
 clump
 clung
+clunk
 coach
 coast
 cobra
@@ -849,6 +855,7 @@ geeky
 geese
 genie
 genre
+geode
 ghost
 ghoul
 giant
@@ -1038,6 +1045,7 @@ inlay
 inlet
 inner
 input
+intel
 inter
 intro
 ionic
@@ -1138,6 +1146,7 @@ liner
 lingo
 lipid
 lithe
+liven
 liver
 livid
 llama
@@ -1300,6 +1309,7 @@ newly
 nicer
 niche
 niece
+nifty
 night
 ninja
 ninny
@@ -1570,6 +1580,7 @@ relax
 relay
 relic
 remit
+remix
 renal
 renew
 repay
@@ -1627,6 +1638,7 @@ rugby
 ruler
 rumba
 rumor
+runny
 rupee
 rural
 rusty
@@ -1843,6 +1855,7 @@ sooth
 sooty
 sorry
 sound
+soupy
 south
 sower
 space
@@ -2138,6 +2151,7 @@ tutor
 twang
 tweak
 tweed
+tween
 tweet
 twice
 twine

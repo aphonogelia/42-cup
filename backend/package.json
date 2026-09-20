@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "analyze:entropy": "node scripts/entropy-bot.js"
+    "analyze:entropy": "node scripts/entropy-bot.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.1",
@@ -17,5 +18,10 @@
     "dotenv": "^16.4.5",
     "fastify": "^5.0.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0"
   }
 }

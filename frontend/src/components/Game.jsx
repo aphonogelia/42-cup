@@ -126,7 +126,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
     return () => {
       cancelled = true;
     };
-  }, [orderIndex]);
+  }, [orderIndex, userLogin]);
 
   // Cleanup on unmount only — declared once.
   useEffect(() => () => {
