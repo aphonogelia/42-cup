@@ -351,7 +351,7 @@ button {
   width: auto;
   margin-top: 0;
   background: var(--surface-raised);
-  border: 1px solid color-mix(in srgb, var(--lila) 45%, transparent);
+  border: 1px solid rgba(234, 236, 97, 0.28);
   color: var(--text);
   font-weight: 700;
   font-size: 12px;
@@ -699,12 +699,12 @@ body.theme-light .info-copy a:hover {
 }
 
 .tab-stub.solved {
-  border-color: var(--lila);
-  background: color-mix(in srgb, var(--lila) 8%, transparent);
+  border-color: var(--tile-correct);
+  background: rgba(15, 189, 73, 0.05);
 }
 
 .tab-stub.solved .stamp {
-  color: var(--lila);
+  color: var(--tile-correct);
 }
 
 .tab-stub.failed {
@@ -1061,6 +1061,7 @@ body.theme-light .status-dot.not_started {
 }
 
 .ledger-date-picker {
+  position: relative;
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
@@ -1068,13 +1069,139 @@ body.theme-light .status-dot.not_started {
   margin-bottom: 14px;
 }
 
-.ledger-date-picker select {
+.ledger-date-trigger {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.ledger-date-trigger svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  color: var(--text-muted);
+}
+
+.ledger-date-trigger:hover,
+.ledger-date-trigger.open {
+  border-color: var(--amber-dim);
+}
+
+/* ---- Calendar popover ---- */
+.ledger-cal {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: min(300px, calc(100vw - 32px));
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  animation: toast-in 120ms ease-out;
+}
+
+.ledger-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ledger-cal-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paper);
+  text-align: center;
+}
+
+.ledger-cal-nav {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ledger-cal-nav svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.ledger-cal-nav:hover:not([aria-disabled='true']) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-cal-nav[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ledger-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.ledger-cal-weekday {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-faint);
+  padding-bottom: 4px;
+}
+
+.ledger-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ledger-cal-day:hover:not(:disabled):not(.selected) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-cal-day:disabled {
+  border-color: transparent;
+  color: var(--text-faint);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ledger-cal-day.selected {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1a1305;
+  font-weight: 700;
 }
 
 .ledger-date-nav {
