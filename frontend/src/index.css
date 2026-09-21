@@ -351,7 +351,7 @@ button {
   width: auto;
   margin-top: 0;
   background: var(--surface-raised);
-  border: 1px solid rgba(234, 236, 97, 0.28);
+  border: 1px solid color-mix(in srgb, var(--lila) 45%, transparent);
   color: var(--text);
   font-weight: 700;
   font-size: 12px;
@@ -699,12 +699,12 @@ body.theme-light .info-copy a:hover {
 }
 
 .tab-stub.solved {
-  border-color: var(--tile-correct);
-  background: rgba(15, 189, 73, 0.05);
+  border-color: var(--lila);
+  background: color-mix(in srgb, var(--lila) 8%, transparent);
 }
 
 .tab-stub.solved .stamp {
-  color: var(--tile-correct);
+  color: var(--lila);
 }
 
 .tab-stub.failed {
@@ -1063,6 +1063,8 @@ body.theme-light .status-dot.not_started {
 .ledger-date-picker {
   display: flex;
   justify-content: flex-end;
+  align-items: stretch;
+  gap: 6px;
   margin-bottom: 14px;
 }
 
@@ -1073,6 +1075,34 @@ body.theme-light .status-dot.not_started {
   border-radius: 8px;
   padding: 8px 10px;
   font: inherit;
+}
+
+.ledger-date-nav {
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ledger-date-nav svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.ledger-date-nav:hover:not(:disabled) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-date-nav:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .app-footer {

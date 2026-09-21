@@ -133,8 +133,19 @@ export default function Leaderboard({ totalWords, viewerIsPrivate }) {
     });
   }
 
-  const loading = !rows || !datesLoaded;
   const effectiveDate = selectedDate ?? (dates.length > 0 ? dates[0] : null);
+
+  // dates is sorted newest -> oldest, so "older" is the next index and "newer" the previous one.
+  // Navigation steps through the dates the API returns, so gaps are skipped automatically.
+  const dateIndex = effectiveDate ? dates.indexOf(effectiveDate) : -1;
+  const olderDate = dateIndex !== -1 ? dates[dateIndex + 1] ?? null : null;
+  const newerDate = dateIndex > 0 ? dates[dateIndex - 1] : null;
+
+  const loader = (
+    <div className="ledger-loading" aria-busy="true">
+      <div className="loader" aria-label="Loading" role="status" />
+    </div>
+  );
 
   return (
     <div>
@@ -156,23 +167,67 @@ export default function Leaderboard({ totalWords, viewerIsPrivate }) {
         />
       )}
 
-      {loading ? (
-        <div className="ledger-loading" aria-busy="true">
-          <div className="loader" aria-label="Loading" role="status" />
-        </div>
+      {!datesLoaded ? (
+        loader
       ) : (
         <>
+          {/* Picker lives outside the rows-loading branch so it stays mounted (and keeps focus) while rows reload */}
           {dates.length > 0 && (
             <div className="ledger-date-picker">
+              {/* aria-disabled instead of disabled: a disabled button drops keyboard focus */}
+              <button
+                type="button"
+                className="ledger-date-nav"
+                onClick={() => olderDate && setSelectedDate(olderDate)}
+                aria-disabled={!olderDate}
+                aria-label="Previous day"
+                title="Previous day"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+
               <select value={selectedDate ?? ''} onChange={(e) => setSelectedDate(e.target.value)}>
                 {dates.map((d) => (
                   <option key={d} value={d}>{formatDateLabel(d)}</option>
                 ))}
               </select>
+
+              <button
+                type="button"
+                className="ledger-date-nav"
+                onClick={() => newerDate && setSelectedDate(newerDate)}
+                aria-disabled={!newerDate}
+                aria-label="Next day"
+                title="Next day"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
             </div>
           )}
 
-          {rows.length === 0 ? (
+          {!rows ? (
+            loader
+          ) : rows.length === 0 ? (
             <div className="empty-state">No entries yet. Be the first.</div>
           ) : (
             tiers.map((tier) => (
