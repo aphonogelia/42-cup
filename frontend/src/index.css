@@ -1204,6 +1204,38 @@ body.theme-light .status-dot.not_started {
   font-weight: 700;
 }
 
+.ledger-cal-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line-soft);
+}
+
+.ledger-cal-today {
+  background: transparent;
+  color: var(--amber);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ledger-cal-today:hover:not([aria-disabled='true']) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-cal-today[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .ledger-date-nav {
   background: var(--surface);
   color: var(--text-muted);
