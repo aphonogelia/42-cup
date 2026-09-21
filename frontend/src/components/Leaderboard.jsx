@@ -57,13 +57,15 @@ function DateCalendar({ dates, value, onSelect }) {
 
   const available = useMemo(() => new Set(dates), [dates]);
 
-  // Oldest / newest month that has data (ISO strings sort lexicographically)
+  // Oldest / newest date and month that have data (ISO strings sort lexicographically)
   const bounds = useMemo(() => {
     if (dates.length === 0) return null;
     const sorted = [...dates].sort();
+    const latest = sorted[sorted.length - 1];
     return {
       min: monthIndex(sorted[0]),
-      max: monthIndex(sorted[sorted.length - 1]),
+      max: monthIndex(latest),
+      latest,
     };
   }, [dates]);
 
@@ -116,6 +118,9 @@ function DateCalendar({ dates, value, onSelect }) {
     setOpen(false);
     triggerRef.current?.focus();
   };
+
+  // leaderboardDates always includes today, so the newest date is "today"
+  const isOnLatest = value === bounds.latest;
 
   return (
     <div className="ledger-date-popover-wrap" ref={wrapRef}>
@@ -221,6 +226,18 @@ function DateCalendar({ dates, value, onSelect }) {
                 </button>
               );
             })}
+          </div>
+
+          <div className="ledger-cal-footer">
+            {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
+            <button
+              type="button"
+              className="ledger-cal-today"
+              onClick={() => !isOnLatest && handleSelect(bounds.latest)}
+              aria-disabled={isOnLatest}
+            >
+              Today
+            </button>
           </div>
         </div>
       )}
