@@ -247,11 +247,7 @@ export default function App() {
         }
       })
       .catch(() => { });
-  }, [user?.login]);
-  // Handle the OAuth callback first, before anything else runs
-  if (window.location.pathname === '/auth/callback') {
-    return <AuthCallback />;
-  }
+  }, [user]);
 
   useEffect(() => {
     api
@@ -322,6 +318,10 @@ export default function App() {
       document.body.classList.remove('theme-dark', 'theme-light');
     };
   }, [user, theme]);
+
+  if (window.location.pathname === '/auth/callback') {
+    return <AuthCallback />;
+  }
 
   const handleLogout = async () => {
     await api.logout().catch(() => { });
@@ -403,7 +403,7 @@ const handleTogglePrivacy = async () => {
       <header className="masthead">
         <div className="masthead-title-row">
           <h1 className="masthead-title">
-            wordel <span>// 42 CUP</span>
+            wordel <span>{'// 42 CUP'}</span>
           </h1>
 
           {isDayComplete && (

@@ -7,10 +7,6 @@ import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
 import { invalidateLeaderboard, invalidateWordTimes } from '../lib/leaderboardCache.js';
 import { checkPlayerForCheating } from '../lib/cheatDetection.js';
 
-function elapsed(started) {
-  return Math.round(performance.now() - started);
-}
-
 function visibleStartedAt(result) {
   // Treat started_at as unset until the user has made a first guess.
   if (!result || !result.nb_tries) return null;
@@ -38,24 +34,6 @@ async function getWordResult(fastify, userId, wordId) {
 
   if (error) throw error;
   return existing ?? null;
-}
-
-async function createWordResult(fastify, userId, wordId) {
-  const insertStarted = performance.now();
-
-  const { data: created, error } = await supabase
-    .from('word_results')
-    .insert({ user_id: userId, word_id: wordId, status: 'in_progress' })
-    .select()
-    .single();
-
-  fastify.log.info(
-    { ms: Math.round(performance.now() - insertStarted) },
-    'word result insert'
-  );
-
-  if (error) throw error;
-  return { ...created, guesses: [] };
 }
 
 export default async function gameRoutes(fastify) {
