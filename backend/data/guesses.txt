@@ -3949,6 +3949,7 @@ fakir
 falaj
 fales
 falls
+false
 falsy
 famed
 fames
