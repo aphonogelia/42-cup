@@ -3,24 +3,24 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 
 const DEFAULT_WORD_LIST = path.resolve('data/guesses.txt');
-const DEFAULT_REPORT = path.resolve('entropy-bot-report.json');
+const DEFAULT_REPORT = path.resolve('data/bot/entropy-bot-report.json');
 // Where the "first guess" entropy scoring gets cached. The first guess of
 // every target is always scored against the *entire* word list, so this
 // result never changes unless the word list itself changes.
-const DEFAULT_FIRST_GUESS_CACHE = path.resolve('data/first-guess-cache.json');
+const DEFAULT_FIRST_GUESS_CACHE = path.resolve('data/bot/first-guess-cache.json');
 // Full entropy ranking of every word for the opening guess, written as a
 // CSV so it's easy to sort/inspect outside the script (e.g. in a sheet).
-const DEFAULT_FIRST_GUESS_CSV = path.resolve('data/first-guess-scores.csv');
+const DEFAULT_FIRST_GUESS_CSV = path.resolve('data/bot/first-guess-scores.csv');
 // The curated pool of real possible answers (e.g. the ~2,300-ish official
 // Wordle list), as opposed to `guesses.txt`'s much larger set of words that
 // are merely valid to type. Optional — comparison is skipped if missing.
 const DEFAULT_CANDIDATE_LIST = path.resolve('data/competition-words.txt');
 // Side-by-side entropy score for every guess-list word under both
 // distributions, so you can see how much the answer pool actually matters.
-const DEFAULT_FREQUENCY_CSV = path.resolve('data/frequency-comparison.csv');
+const DEFAULT_FREQUENCY_CSV = path.resolve('data/bot/frequency-comparison.csv');
 // Simpler still: raw per-letter, per-position frequency, guess list vs.
 // candidate list — no entropy math, just how often each letter shows up.
-const DEFAULT_LETTER_FREQUENCY_CSV = path.resolve('data/letter-frequency-comparison.csv');
+const DEFAULT_LETTER_FREQUENCY_CSV = path.resolve('data/bot/letter-frequency-comparison.csv');
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
 const TOP_CANDIDATES_TO_PRINT = 10;
 const TOP_CANDIDATES_TO_SAVE = 50;
