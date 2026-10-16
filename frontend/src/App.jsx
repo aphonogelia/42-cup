@@ -15,26 +15,23 @@ const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
     eyebrow: 'Data and access',
-    body: [
-      'Sign-in is handled through 42 OAuth. We only receive what\'s needed to identify your account: your intra ID, login, display name, and avatar if you have one.',
-      'A signed token is stored in your browser to keep you signed in. It\'s used solely to authenticate your requests to this app.',
-      'Your guesses, progress, and leaderboard results are stored in Supabase so the competition can track scores across players and days. We don\'t sell data or use third-party trackers.',
-      'Want your data removed? Contact htharrau.'
+     body: [
+      'You enter through 42 OAuth, and we keep only what is needed to recognise you: your intra ID, login, display name and avatar.',
+      'A signed token stays in your browser so you are not asked twice. It serves no other purpose than to vouch for your requests.',
+      'Your guesses, your progress and your results are kept in Supabase, so the ledger can remember across players and days. Should a result be flagged as suspicious, that mark is kept as well. Nothing is sold, and no third-party trackers watch you play.',
+      'If you wish your data to be removed, write to htharrau.'
     ],
   },
   about: {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      <>
-        wordel // 42 Cup was built by Helene Tharrault (htharrau) for the Wordle Club of 42 Berlin, as a way for students to get a taste of the game and maybe join the{' '}
-        <a href="https://42born2code.slack.com/archives/C057BMKPG9J" target="_blank" rel="noreferrer">
-          Slack channel
-        </a>.
-      </>,
-      'Each day brings a fresh set of words, randomly drawn from the ~2,300 past Wordle answers. Everything resets at midnight.',
-      'For each word, the clock starts with your first guess and stops when you solve it or make your sixth wrong guess. Your times are then added together across all words — so speed matters as much as accuracy.',
-      'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
+      'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau).',
+      'Each day at midnight (Paris time), a new set of words is drawn at random from the ~2,300 past NYT Wordle answers. A word, once drawn, rests for 60 days before it may return.',
+      'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
+      'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
+      'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
+      'Sign in with your 42 account, work through the words, and consult the ledger to see where you stand.'
     ],
   },
 };
