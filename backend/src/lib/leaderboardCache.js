@@ -150,4 +150,5 @@ export function invalidatePeriods() {
 
 export function invalidateAllLeaderboards() {
     invalidateLeaderboard();
+    invalidatePeriods();
 }

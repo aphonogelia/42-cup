@@ -93,16 +93,17 @@
   padding: 24px 0 8px;
 }
 
-/* ---- Rows --------------------------------------------------------------------- */
+/* ---- Rows: everything on one line ---------------------------------------------
+   rank | player | solved | tries | median | score                                  */
 .period-list {
   margin-bottom: 26px;
 }
 
 .period-head,
-.period-row-main {
+.period-row {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto 16px;
-  gap: 10px;
+  grid-template-columns: 26px minmax(0, 1fr) 46px 38px 48px 52px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -110,41 +111,21 @@
   padding: 0 4px 6px;
   border-bottom: 1px solid var(--line-soft);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-faint);
+  white-space: nowrap;
 }
 
-.period-head span:nth-child(3) {
+.period-head span:nth-child(n + 3) {
   text-align: right;
 }
 
 .period-row {
-  border-bottom: 1px dashed var(--line-soft);
-}
-
-.period-row-main {
-  width: 100%;
   padding: 12px 4px;
-  background: transparent;
-  border: 0;
-  font: inherit;
+  border-bottom: 1px dashed var(--line-soft);
   font-size: 13px;
   color: var(--text);
-  text-align: left;
-  cursor: pointer;
-}
-
-.period-row-main:hover:not(.static) {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-body.theme-light .period-row-main:hover:not(.static) {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.period-row-main.static {
-  cursor: default;
 }
 
 .period-row .rank {
@@ -178,28 +159,22 @@ body.theme-light .period-row-main:hover:not(.static) {
   flex-shrink: 0;
 }
 
+.period-num,
 .period-score {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  color: var(--paper);
   text-align: right;
+  white-space: nowrap;
 }
 
-.period-progress {
-  font-size: 11px;
+.period-num {
   color: var(--text-muted);
-  text-align: right;
+  font-size: 12px;
 }
 
-.period-chevron {
-  width: 14px;
-  height: 14px;
-  color: var(--text-faint);
-  transition: transform 120ms ease;
-}
-
-.period-row.expanded .period-chevron {
-  transform: rotate(180deg);
+.period-score {
+  color: var(--paper);
+  font-weight: 700;
 }
 
 .you-tag {
@@ -217,50 +192,31 @@ body.theme-light .period-row-main:hover:not(.static) {
   background: color-mix(in srgb, var(--lila) 10%, transparent);
 }
 
-/* ---- Expanded detail ------------------------------------------------------------ */
-.period-detail {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
-  margin: 0;
-  padding: 2px 4px 16px 42px; /* 42 = rank column + gap, so it lines up under the name */
-}
-
-.period-detail > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.period-detail dt {
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.period-detail dd {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  color: var(--paper);
-}
-
 @media (max-width: 640px) {
   .period-head,
-  .period-row-main {
-    grid-template-columns: 20px minmax(0, 1fr) auto 14px;
-    column-gap: 8px;
+  .period-row {
+    grid-template-columns: 20px minmax(0, 1fr) 38px 28px 38px 42px;
+    column-gap: 6px;
   }
 
-  .period-detail {
-    padding-left: 32px; /* 20 + 8 + 4 */
+  .period-head {
+    font-size: 9px;
+    letter-spacing: 0.03em;
+  }
+
+  .period-num {
+    font-size: 11px;
   }
 
   .ledger-month-label {
     min-width: 0;
     flex: 1;
+  }
+}
+
+/* Very narrow phones: drop the avatar so the name keeps some room */
+@media (max-width: 400px) {
+  .period-row .leaderboard-avatar {
+    display: none;
   }
 }

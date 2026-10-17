@@ -1,386 +1,146 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { formatClock } from '../lib/formatTime.js';
 import AlertModal from './AlertModal.jsx';
-import WordTimesPopup from './WordTimesPopup.jsx';
-import PeriodLeaderboard from './PeriodLeaderboard.jsx';
-import { formatTime } from '../lib/formatTime.js';
+import './PeriodLeaderboard.css';
 
-function formatDateLabel(dateStr) {
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
+const fetchPeriod = (isMonthly, month) =>
+  isMonthly ? api.leaderboardMonthly(month) : api.leaderboardGlobal();
+
+function monthLabel(monthKey) {
+  const [y, m] = monthKey.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
-const STATUS_LABEL = {
-  solved: 'Solved',
-  failed: 'Failed',
-  in_progress: 'In progress',
-  not_started: 'Not started',
-};
+const formatPct = (v) => (v == null ? '—' : `${Math.round(Number(v))}%`);
+const formatTries = (v) => (v == null ? '—' : Number(v).toFixed(1));
+// The score is a plain number (seconds / 60, lower is better), not a clock time.
+const formatScore = (v) => (v == null ? '—' : (Number(v) / 60).toFixed(2));
 
-function getStatusList(statuses, totalWords) {
-  const normalized = Array.isArray(statuses) ? statuses : [];
-  return Array.from(
-    { length: totalWords ?? normalized.length },
-    (_, i) => normalized[i] ?? 'not_started'
+function NavArrow({ direction }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points={direction === 'left' ? '15 18 9 12 15 6' : '9 18 15 12 9 6'} />
+    </svg>
   );
 }
 
-// ---- Calendar helpers ------------------------------------------------------
-
-// Monday-first weekday labels (2024-01-01 was a Monday)
-const WEEKDAY_LABELS = Array.from({ length: 7 }, (_, i) =>
-  new Date(2024, 0, 1 + i).toLocaleDateString(undefined, { weekday: 'short' })
-);
-
-const pad2 = (n) => String(n).padStart(2, '0');
-
-// 'YYYY-MM-DD' -> absolute month number (year * 12 + month0)
-function monthIndex(dateStr) {
-  const [y, m] = dateStr.split('-').map(Number);
-  return y * 12 + (m - 1);
-}
-
-function DateCalendar({ dates, value, onSelect }) {
-  const [open, setOpen] = useState(false);
-  const [viewIdx, setViewIdx] = useState(0);
-  const wrapRef = useRef(null);
-  const triggerRef = useRef(null);
-
-  const available = useMemo(() => new Set(dates), [dates]);
-
-  // Oldest / newest date and month that have data (ISO strings sort lexicographically)
-  const bounds = useMemo(() => {
-    if (dates.length === 0) return null;
-    const sorted = [...dates].sort();
-    const latest = sorted[sorted.length - 1];
-    return {
-      min: monthIndex(sorted[0]),
-      max: monthIndex(latest),
-      latest,
-    };
-  }, [dates]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const closeIfOutside = (e) => {
-      if (!wrapRef.current?.contains(e.target)) setOpen(false);
-    };
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener('pointerdown', closeIfOutside);
-    document.addEventListener('focusin', closeIfOutside); // tabbing away
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', closeIfOutside);
-      document.removeEventListener('focusin', closeIfOutside);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  if (!bounds) return null;
-
-  const clamp = (idx) => Math.min(Math.max(idx, bounds.min), bounds.max);
-
-  const toggle = () => {
-    if (!open && value) setViewIdx(clamp(monthIndex(value)));
-    setOpen((o) => !o);
-  };
-
-  const year = Math.floor(viewIdx / 12);
-  const month = viewIdx % 12;
-  const canPrev = viewIdx > bounds.min;
-  const canNext = viewIdx < bounds.max;
-
-  const leadingBlanks = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-first
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells = [
-    ...Array(leadingBlanks).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-
-  const handleSelect = (dateKey) => {
-    onSelect(dateKey);
-    setOpen(false);
-    triggerRef.current?.focus();
-  };
-
-  // leaderboardDates always includes today, so the newest date is "today"
-  const isOnLatest = value === bounds.latest;
+function Explainer({ thresholds }) {
+  if (!thresholds) return null;
+  const bonusPct = Math.round(thresholds.longevityMax * 100);
+  const bonusAt = thresholds.longevityDays
+    ? `${thresholds.longevityDays} complete days`
+    : 'every day of the month';
 
   return (
-    <div className="ledger-date-popover-wrap" ref={wrapRef}>
-      <button
-        type="button"
-        ref={triggerRef}
-        className={`ledger-date-trigger${open ? ' open' : ''}`}
-        onClick={toggle}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="3" y="5" width="18" height="16" rx="2" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-          <line x1="8" y1="3" x2="8" y2="7" />
-          <line x1="16" y1="3" x2="16" y2="7" />
-        </svg>
-        <span>{value ? formatDateLabel(value) : 'Pick a date'}</span>
-      </button>
-
-      {open && (
-        <div className="ledger-cal" role="dialog" aria-label="Choose a date">
-          <div className="ledger-cal-head">
-            <button
-              type="button"
-              className="ledger-cal-nav"
-              onClick={() => canPrev && setViewIdx((v) => v - 1)}
-              aria-disabled={!canPrev}
-              aria-label="Previous month"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-
-            <div className="ledger-cal-title" aria-live="polite">
-              {new Date(year, month, 1).toLocaleDateString(undefined, {
-                month: 'long',
-                year: 'numeric',
-              })}
-            </div>
-
-            <button
-              type="button"
-              className="ledger-cal-nav"
-              onClick={() => canNext && setViewIdx((v) => v + 1)}
-              aria-disabled={!canNext}
-              aria-label="Next month"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="ledger-cal-grid">
-            {WEEKDAY_LABELS.map((label) => (
-              <span key={label} className="ledger-cal-weekday">{label}</span>
-            ))}
-
-            {cells.map((day, i) => {
-              if (day == null) return <span key={`blank-${i}`} />;
-
-              const dateKey = `${year}-${pad2(month + 1)}-${pad2(day)}`;
-              const isAvailable = available.has(dateKey);
-              const isSelected = dateKey === value;
-
-              return (
-                <button
-                  key={dateKey}
-                  type="button"
-                  className={`ledger-cal-day${isSelected ? ' selected' : ''}`}
-                  disabled={!isAvailable}
-                  aria-pressed={isSelected}
-                  aria-label={formatDateLabel(dateKey)}
-                  onClick={() => handleSelect(dateKey)}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="ledger-cal-footer">
-            {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
-            <button
-              type="button"
-              className="ledger-cal-today"
-              onClick={() => !isOnLatest && handleSelect(bounds.latest)}
-              aria-disabled={isOnLatest}
-            >
-              Today
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    <details className="period-howto">
+      <summary>How is this scored?</summary>
+      <ul>
+        <li>
+          <b>Score</b>: lower is better. Each solved word costs its time plus{' '}
+          {thresholds.tryPenaltySeconds}s per extra try, and we take the median so one slow word
+          doesn&rsquo;t ruin it.
+        </li>
+        <li>
+          <b>Unsolved words</b> add 1% to the score for every 1% of the words you started but
+          didn&rsquo;t solve.
+        </li>
+        <li>
+          <b>Playing often</b> takes up to {bonusPct}% off, reached at {bonusAt}.
+        </li>
+        <li>
+          A day counts once you&rsquo;ve started all its words, and you need{' '}
+          {thresholds.minDays} counted days to be ranked.
+        </li>
+        <li>
+          <b>Median</b> is your typical time per solved word, without the try penalty.
+        </li>
+      </ul>
+    </details>
   );
 }
 
-const TABS = [
-  { id: 'daily', label: 'Daily' },
-  { id: 'monthly', label: 'Monthly' },
-  { id: 'global', label: 'All-time' },
-];
-
-// viewerId is optional: when given, the viewer's own row is highlighted on the
-// monthly and all-time boards.
-export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
-  const [tab, setTab] = useState('daily');
-
-  return (
-    <div>
-      <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
-        {TABS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={`ledger-tab${tab === id ? ' active' : ''}`}
-            aria-pressed={tab === id}
-            onClick={() => setTab(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'daily' ? (
-        <DailyLeaderboard totalWords={totalWords} viewerIsPrivate={viewerIsPrivate} />
-      ) : (
-        <PeriodLeaderboard key={tab} mode={tab} viewerId={viewerId} />
-      )}
-    </div>
-  );
-}
-
-function DailyLeaderboard({ totalWords, viewerIsPrivate }) {
-  const [dates, setDates] = useState([]);
-  const [datesLoaded, setDatesLoaded] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [rows, setRows] = useState(null);
+export default function PeriodLeaderboard({ mode, viewerId }) {
+  const isMonthly = mode === 'monthly';
+  const [months, setMonths] = useState(null); // monthly tab only, newest first
+  const [month, setMonth] = useState(null);
+  const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  // activePlayer shapes:
-  //   { type: 'view', userId, login }   -> show WordTimesPopup
-  //   { type: 'viewer-private' }        -> viewer must go public to see anyone's results
-  const [activePlayer, setActivePlayer] = useState(null);
-  const skipNextFetch = useRef(false);
 
-  const fetchLeaderboard = useCallback((date, { resetRows = false } = {}) => {
+  // Months come from the dates the daily board already knows about.
+  useEffect(() => {
+    if (!isMonthly) return undefined;
     let cancelled = false;
-
-    if (resetRows) {
-      setRows(null);
-    }
-
     api
-      .leaderboard(date)
-      .then((data) => {
+      .leaderboardDates()
+      .then((dates) => {
         if (cancelled) return;
-        setRows(data.rows);
-        if (!date) {
-          skipNextFetch.current = true;
-          setSelectedDate(data.date);
-        }
+        const list = [...new Set(dates.map((d) => d.slice(0, 7)))].sort().reverse();
+        setMonths(list);
+        setMonth((current) => current ?? list[0] ?? null);
       })
-      .catch((err) => !cancelled && setError(err.message));
-
+      .catch((err) => {
+        if (cancelled) return;
+        setMonths([]);
+        setError(err.message);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isMonthly]);
 
+  // Load the board, then refresh it quietly on focus and every 2 minutes.
   useEffect(() => {
+    if (isMonthly && !month) return undefined;
     let cancelled = false;
-    api.leaderboardDates()
-      .then((d) => { if (!cancelled) { setDates(d); setDatesLoaded(true); } })
-      .catch(() => { if (!cancelled) setDatesLoaded(true); });
-    return () => { cancelled = true; };
-  }, []);
 
-  useEffect(() => {
-    if (skipNextFetch.current) {
-      skipNextFetch.current = false;
-      return;
-    }
-    return fetchLeaderboard(selectedDate, { resetRows: true });
-  }, [selectedDate, fetchLeaderboard]);
+    setData(null);
 
-  useEffect(() => {
+    fetchPeriod(isMonthly, month)
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      });
+
     const refresh = () => {
       if (document.visibilityState !== 'visible') return;
-      fetchLeaderboard(selectedDate);
+      fetchPeriod(isMonthly, month)
+        .then((d) => {
+          if (!cancelled) setData(d);
+        })
+        .catch(() => {});
     };
 
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
-    const intervalId = window.setInterval(refresh, 30000);
+    const intervalId = window.setInterval(refresh, 120_000);
 
     return () => {
+      cancelled = true;
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
       window.clearInterval(intervalId);
     };
-  }, [selectedDate, fetchLeaderboard]);
+  }, [isMonthly, month]);
 
-  useEffect(() => {
-  const handlePrivacyChanged = () => {
-    fetchLeaderboard(selectedDate);
-  };
+  const monthIdx = months && month ? months.indexOf(month) : -1;
+  const olderMonth = monthIdx !== -1 ? months[monthIdx + 1] ?? null : null;
+  const newerMonth = monthIdx > 0 ? months[monthIdx - 1] : null;
 
-  window.addEventListener('privacy-changed', handlePrivacyChanged);
-  return () => window.removeEventListener('privacy-changed', handlePrivacyChanged);
-}, [selectedDate, fetchLeaderboard]);
-
-  const handlePlayerClick = (row) => {
-    if (viewerIsPrivate) {
-      setActivePlayer({ type: 'viewer-private' });
-      return;
-    }
-
-    setActivePlayer({ type: 'view', userId: row.user_id, login: row.login });
-  };
-
-  const tiers = [];
-  if (rows) {
-    let current = null;
-    rows.forEach((row, index) => {
-      if (!current || current.words_found !== row.words_found) {
-        current = { words_found: row.words_found, rows: [] };
-        tiers.push(current);
-      }
-      current.rows.push({ ...row, rank: index + 1 });
-    });
-  }
-
-  const effectiveDate = selectedDate ?? (dates.length > 0 ? dates[0] : null);
-
-  // dates is sorted newest -> oldest, so "older" is the next index and "newer" the previous one.
-  // Navigation steps through the dates the API returns, so gaps are skipped automatically.
-  const dateIndex = effectiveDate ? dates.indexOf(effectiveDate) : -1;
-  const olderDate = dateIndex !== -1 ? dates[dateIndex + 1] ?? null : null;
-  const newerDate = dateIndex > 0 ? dates[dateIndex - 1] : null;
+  const rows = data?.rows ?? [];
+  const thresholds = data?.thresholds;
+  // Players below the day threshold come back from the API with rank null; they are not shown.
+  const ranked = rows.filter((r) => r.rank != null);
 
   const loader = (
     <div className="ledger-loading" aria-busy="true">
@@ -388,144 +148,101 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate }) {
     </div>
   );
 
+  let body;
+  if (isMonthly && months === null) {
+    body = loader;
+  } else if (isMonthly && months.length === 0) {
+    body = <div className="empty-state">No entries yet.</div>;
+  } else if (!data) {
+    body = loader;
+  } else if (ranked.length === 0) {
+    body =
+      rows.length === 0 ? (
+        <div className="empty-state">No entries yet. Be the first.</div>
+      ) : (
+        <p className="period-note">
+          Nobody has reached {thresholds?.minDays} complete days yet.
+        </p>
+      );
+  } else {
+    body = (
+      <>
+        <Explainer thresholds={thresholds} />
+
+        <div className="period-list">
+          <div className="period-head" aria-hidden="true">
+            <span />
+            <span>Player</span>
+            <span title="Solve rate">Solved</span>
+            <span title="Average tries">Tries</span>
+            <span title="Median time per solved word">Median</span>
+            <span title="Score, lower is better">Score</span>
+          </div>
+
+          {ranked.map((row) => {
+            const isYou = Boolean(viewerId) && row.user_id === viewerId;
+            const classes = ['period-row'];
+            if (isYou) classes.push('is-you');
+            if (row.rank <= 3) classes.push(`top-${row.rank}`);
+
+            return (
+              <div className={classes.join(' ')} key={row.user_id}>
+                <span className="rank">{row.rank}</span>
+                <span className="login">
+                  {row.avatar_url ? (
+                    <img className="leaderboard-avatar" src={row.avatar_url} alt="" />
+                  ) : null}
+                  <span className="login-name">{row.login}</span>
+                  {isYou ? <span className="you-tag">you</span> : null}
+                </span>
+                <span className="period-num">{formatPct(row.solve_rate)}</span>
+                <span className="period-num">{formatTries(row.avg_tries)}</span>
+                <span className="period-num">{formatClock(row.median_time)}</span>
+                <span className="period-score">{formatScore(row.score)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
+  }
+
   return (
     <div>
       <AlertModal message={error} onClose={() => setError('')} />
 
-      {activePlayer?.type === 'view' && effectiveDate && (
-        <WordTimesPopup
-          userId={activePlayer.userId}
-          login={activePlayer.login}
-          date={effectiveDate}
-          onClose={() => setActivePlayer(null)}
-        />
+      {isMonthly && months && months.length > 0 && month && (
+        <div className="ledger-date-picker">
+          {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
+          <button
+            type="button"
+            className="ledger-date-nav"
+            onClick={() => olderMonth && setMonth(olderMonth)}
+            aria-disabled={!olderMonth}
+            aria-label="Previous month"
+            title="Previous month"
+          >
+            <NavArrow direction="left" />
+          </button>
+
+          <span className="ledger-month-label" aria-live="polite">
+            {monthLabel(month)}
+          </span>
+
+          <button
+            type="button"
+            className="ledger-date-nav"
+            onClick={() => newerMonth && setMonth(newerMonth)}
+            aria-disabled={!newerMonth}
+            aria-label="Next month"
+            title="Next month"
+          >
+            <NavArrow direction="right" />
+          </button>
+        </div>
       )}
 
-      {activePlayer?.type === 'viewer-private' && (
-        <AlertModal
-          message="Your profile is set to private. Make it public to see other players' results."
-          onClose={() => setActivePlayer(null)}
-        />
-      )}
-
-      {!datesLoaded ? (
-        loader
-      ) : (
-        <>
-          {/* Picker lives outside the rows-loading branch so it stays mounted (and keeps focus) while rows reload */}
-          {dates.length > 0 && (
-            <div className="ledger-date-picker">
-              {/* aria-disabled instead of disabled: a disabled button drops keyboard focus */}
-              <button
-                type="button"
-                className="ledger-date-nav"
-                onClick={() => olderDate && setSelectedDate(olderDate)}
-                aria-disabled={!olderDate}
-                aria-label="Previous day"
-                title="Previous day"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-
-              <DateCalendar
-                dates={dates}
-                value={effectiveDate}
-                onSelect={setSelectedDate}
-              />
-
-              <button
-                type="button"
-                className="ledger-date-nav"
-                onClick={() => newerDate && setSelectedDate(newerDate)}
-                aria-disabled={!newerDate}
-                aria-label="Next day"
-                title="Next day"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {!rows ? (
-            loader
-          ) : rows.length === 0 ? (
-            <div className="empty-state">No entries yet. Be the first.</div>
-          ) : (
-            tiers.map((tier) => (
-              <div className="ledger-tier" key={tier.words_found}>
-                <div className="ledger-tier-label">
-                  {tier.words_found}/{totalWords ?? tier.words_found} solved
-                </div>
-                {tier.rows.map((row) => {
-                  const hasPlayed = row.total_tries > 0;
-                  const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
-                  const clickable = hasPlayed && !isPrivate;
-
-                  const nameBlock = (
-                    <>
-                      {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-                      <span className={`login-name ${clickable ? 'login-public' : ''}`}>
-                        {row.login}
-                      </span>
-                      <span
-                        className="leaderboard-statuses"
-                        aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
-                          .map((s) => STATUS_LABEL[s])
-                          .join(', ')}`}
-                      >
-                        {getStatusList(row.word_statuses, totalWords).map((status, i) => (
-                          <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
-                        ))}
-                      </span>
-                    </>
-                  );
-
-                  return (
-                    <div className="ledger-row" key={row.user_id}>
-                      <span className="rank">{row.rank}</span>
-                      {clickable ? (
-                        <button
-                          type="button"
-                          className="login login-clickable"
-                          onClick={() => handlePlayerClick(row)}
-                        >
-                          {nameBlock}
-                        </button>
-                      ) : (
-                        <span className="login">
-                          {nameBlock}
-                        </span>
-                      )}
-                      <span className="tries">{row.total_tries} tries</span>
-                      <span className="time">{formatTime(row.total_time)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </>
-      )}
+      {body}
     </div>
   );
 }

@@ -3,6 +3,13 @@ import { config } from '../config.js';
 import { supabase } from '../supabase.js';
 import { invalidateAllLeaderboards } from '../lib/leaderboardCache.js';
 
+function getAvatarUrl(profile) {
+  return profile.image?.versions?.medium
+    ?? profile.image?.versions?.small
+    ?? profile.image?.link
+    ?? null;
+}
+
 export default async function authRoutes(fastify) {
   console.log('OAuth callback:', config.fortyTwo.callbackUrl);
   await fastify.register(oauthPlugin, {
@@ -63,7 +70,7 @@ export default async function authRoutes(fastify) {
           intra_id: profile.id,
           login: profile.login,
           display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
-          avatar_url: profile.image?.link ?? null,
+          avatar_url: getAvatarUrl(profile),
         },
         { onConflict: 'intra_id' }
       )
@@ -75,6 +82,7 @@ export default async function authRoutes(fastify) {
       return reply.redirect(`${config.frontendUrl}/login?error=db_error`);
     }
 
+    invalidateAllLeaderboards();
     const token = fastify.issueSession(user);
 
     return reply.redirect(`${config.frontendUrl}/auth/callback#token=${token}`);
