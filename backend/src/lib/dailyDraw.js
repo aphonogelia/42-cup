@@ -10,7 +10,6 @@ export const DEFAULT_POOL_PATH = path.resolve('data/competition-words.txt');
 export const SPECIAL_POOLS_PATH = path.resolve('data/special.json');
 
 const log = (...args) => console.log('[draw]', ...args);
-const warn = (...args) => console.warn('[draw]', ...args);
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: BERLIN_TIME_ZONE,
@@ -173,7 +172,6 @@ export function getSpecialPool(drawDate, filePath = SPECIAL_POOLS_PATH) {
 export async function getRecentAnswers(drawDate, days = RECENT_WORD_BUFFER_DAYS) {
     const from = shiftDateKey(drawDate, -days);
     const to = shiftDateKey(drawDate, days);
-    log(`buffer query: answers with draw_date in [${from}, ${to}], excluding ${drawDate}`);
 
     const { data, error } = await supabase
         .from('words')
@@ -182,23 +180,17 @@ export async function getRecentAnswers(drawDate, days = RECENT_WORD_BUFFER_DAYS)
         .lte('draw_date', to)
         .neq('draw_date', drawDate);
 
-    if (error) {
-        console.error('[draw] buffer query failed:', error);
-        throw error;
-    }
+    if (error) throw error;
 
     const rows = data ?? [];
     const set = new Set(rows.map((row) => row.answer.toLowerCase()));
 
     const dates = [...new Set(rows.map((r) => r.draw_date))].sort();
     log(
-        `buffer: ${rows.length} rows, ${set.size} unique answers, ` +
-        `${dates.length} distinct draw dates` +
+        `buffer [${from} -> ${to}]: ${rows.length} rows, ${set.size} unique answers, ` +
+        `${dates.length} draw dates` +
         (dates.length ? ` (${dates[0]} -> ${dates[dates.length - 1]})` : '')
     );
-    if (rows.length >= 1000) {
-        warn('buffer query returned >= 1000 rows, Supabase default limit may be truncating results');
-    }
 
     return set;
 }
@@ -222,74 +214,67 @@ export async function ensureDailyDraw({
     count = DEFAULT_DRAW_COUNT,
     force = false,
 } = {}) {
-    log(`ensureDailyDraw start: date=${drawDate}, count=${count}, force=${force}, buffer=${RECENT_WORD_BUFFER_DAYS}d`);
+    // Context for failure logs, filled in as the draw progresses.
+    const ctx = { drawDate, count, force, pool: null, poolSize: null, available: null };
 
-    const existing = await getDailyWords(drawDate);
-    log(`existing rows for ${drawDate}: ${existing.length}`);
+    try {
+        const existing = await getDailyWords(drawDate);
+        if (existing.length >= count && !force) {
+            return existing.slice(0, count);
+        }
+        if (existing.length > 0 && !force) {
+            throw new Error(
+                `Daily draw already exists for ${drawDate}. Re-run with force to replace it.`
+            );
+        }
 
-    if (existing.length >= count && !force) {
-        log(`draw already exists, returning: ${existing.slice(0, count).map((r) => r.answer).join(', ')}`);
-        return existing.slice(0, count);
-    }
-    if (existing.length > 0 && !force) {
-        throw new Error(
-            `Daily draw already exists for ${drawDate}. Re-run with force to replace it.`
+        log(
+            `creating draw: date=${drawDate}, count=${count}, force=${force}, buffer=${RECENT_WORD_BUFFER_DAYS}d` +
+            (existing.length > 0 ? `, replacing: ${existing.map((r) => r.answer).join(', ')}` : '')
         );
-    }
-    if (existing.length > 0 && force) {
-        warn(`force=true, replacing existing draw: ${existing.map((r) => r.answer).join(', ')}`);
-    }
 
-    const special = getSpecialPool(drawDate);
-    const fullPool = special ? special.words : loadDrawPool(poolPath);
-    log(`using ${special ? `special pool "${special.theme}"` : 'main pool'}: ${fullPool.length} words`);
-    validateDrawPool(fullPool, count);
+        const special = getSpecialPool(drawDate);
+        const fullPool = special ? special.words : loadDrawPool(poolPath);
+        ctx.pool = special ? `special:${special.theme}` : 'main';
+        ctx.poolSize = fullPool.length;
+        validateDrawPool(fullPool, count);
 
-    const recent = await getRecentAnswers(drawDate);
-    const excluded = fullPool.filter((word) => recent.has(word.toLowerCase()));
-    const pool = fullPool.filter((word) => !recent.has(word.toLowerCase()));
-    log(
-        `pool after buffer: ${pool.length} available / ${fullPool.length} total ` +
-        `(${excluded.length} excluded)` +
-        (excluded.length ? `: ${excluded.slice(0, 20).join(', ')}${excluded.length > 20 ? ', ...' : ''}` : '')
-    );
-
-    if (pool.length < count) {
-        throw new Error(
-            `Only ${pool.length} words left for ${drawDate} after excluding ` +
-            `${RECENT_WORD_BUFFER_DAYS}-day buffer, need ${count}. Add words to the pool.`
+        const recent = await getRecentAnswers(drawDate);
+        const pool = fullPool.filter((word) => !recent.has(word.toLowerCase()));
+        ctx.available = pool.length;
+        log(
+            `pool after buffer (${ctx.pool}): ${pool.length} available / ` +
+            `${fullPool.length} total (${fullPool.length - pool.length} excluded)`
         );
+
+        if (pool.length < count) {
+            throw new Error(
+                `Only ${pool.length} words left for ${drawDate} after excluding ` +
+                `${RECENT_WORD_BUFFER_DAYS}-day buffer, need ${count}. Add words to the pool.`
+            );
+        }
+
+        const chosen = secureSample(pool, count);
+        log(`chosen: ${chosen.join(', ')}`);
+
+        const rows = chosen.map((word, index) => ({
+            draw_date: drawDate,
+            order_index: index + 1,
+            answer: word.toLowerCase(),
+            length: word.length,
+        }));
+
+        const { data, error } = await supabase
+            .from('words')
+            .upsert(rows, { onConflict: 'draw_date,order_index' })
+            .select('id, order_index, answer, length, draw_date');
+
+        if (error) throw error;
+
+        log(`upserted ${data?.length ?? 0} rows for ${drawDate}`);
+        return (data ?? []).sort((a, b) => a.order_index - b.order_index);
+    } catch (err) {
+        console.error(`[draw] FAILED ${JSON.stringify(ctx)}:`, err);
+        throw err;
     }
-    if (pool.length < count * 10) {
-        warn(`pool is running low: ${pool.length} available words left after buffer`);
-    }
-
-    const chosen = secureSample(pool, count);
-    log(`chosen: ${chosen.join(', ')}`);
-
-    // sanity check: nothing chosen should be in the buffer
-    const leaked = chosen.filter((word) => recent.has(word.toLowerCase()));
-    if (leaked.length > 0) {
-        console.error(`[draw] BUG: chosen words are in the buffer: ${leaked.join(', ')}`);
-    }
-
-    const rows = chosen.map((word, index) => ({
-        draw_date: drawDate,
-        order_index: index + 1,
-        answer: word.toLowerCase(),
-        length: word.length,
-    }));
-
-    const { data, error } = await supabase
-        .from('words')
-        .upsert(rows, { onConflict: 'draw_date,order_index' })
-        .select('id, order_index, answer, length, draw_date');
-
-    if (error) {
-        console.error('[draw] upsert failed:', error);
-        throw error;
-    }
-
-    log(`upserted ${data?.length ?? 0} rows for ${drawDate}`);
-    return (data ?? []).sort((a, b) => a.order_index - b.order_index);
 }
