@@ -96,6 +96,58 @@ export function setCachedGuesses(wordResultId, guesses) {
     setCacheEntry(guessesCache, wordResultId, guesses, GUESSES_TTL_MS);
 }
 
+/* ---- Period leaderboards (monthly + global aggregates) ----
+ *
+ * Keys look like `monthly:2026-10:9` or `global`. These queries are heavier
+ * than the daily one and a few minutes of staleness is fine for aggregates, so
+ * they are NOT touched by invalidateAllLeaderboards(): flushing them on every
+ * finished word would defeat the cache.
+ *
+ *  - live periods (current month, global): short TTL
+ *  - closed months: effectively immutable, long TTL
+ */
+
+const periodCache = new Map();
+const periodInflight = new Map();
+
+const PERIOD_LIVE_TTL_MS = 2 * 60_000;
+const PERIOD_CLOSED_TTL_MS = 60 * 60_000;
+
+export function getCachedPeriod(key) {
+    return getCacheEntry(periodCache, key);
+}
+
+export function setCachedPeriod(key, value, isLive) {
+    setCacheEntry(periodCache, key, value, isLive ? PERIOD_LIVE_TTL_MS : PERIOD_CLOSED_TTL_MS);
+}
+
+// Cache-aside with request coalescing: concurrent misses for the same key share
+// one loader call instead of each hitting Postgres. Failures are never cached.
+export function loadPeriod(key, isLive, loader) {
+    const cached = getCachedPeriod(key);
+    if (cached) return Promise.resolve(cached);
+
+    const pending = periodInflight.get(key);
+    if (pending) return pending;
+
+    const promise = Promise.resolve()
+        .then(loader)
+        .then((value) => {
+            setCachedPeriod(key, value, isLive);
+            return value;
+        })
+        .finally(() => {
+            periodInflight.delete(key);
+        });
+
+    periodInflight.set(key, promise);
+    return promise;
+}
+
+export function invalidatePeriods() {
+    periodCache.clear();
+}
+
 export function invalidateAllLeaderboards() {
     invalidateLeaderboard();
 }

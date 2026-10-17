@@ -2,14 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api.js';
 import AlertModal from './AlertModal.jsx';
 import WordTimesPopup from './WordTimesPopup.jsx';
-
-function formatTime(seconds) {
-  if (seconds == null) return '—';
-  const total = Math.round(seconds);
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return m > 0 ? `${m}m ${s.toString().padStart(2, '0')}s` : `${s}s`;
-}
+import PeriodLeaderboard from './PeriodLeaderboard.jsx';
+import { formatTime } from '../lib/formatTime.js';
 
 function formatDateLabel(dateStr) {
   return new Date(`${dateStr}T00:00:00`).toLocaleDateString(undefined, {
@@ -245,7 +239,43 @@ function DateCalendar({ dates, value, onSelect }) {
   );
 }
 
-export default function Leaderboard({ totalWords, viewerIsPrivate }) {
+const TABS = [
+  { id: 'daily', label: 'Daily' },
+  { id: 'monthly', label: 'Monthly' },
+  { id: 'global', label: 'All-time' },
+];
+
+// viewerId is optional: when given, the viewer's own row is highlighted on the
+// monthly and all-time boards.
+export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
+  const [tab, setTab] = useState('daily');
+
+  return (
+    <div>
+      <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            className={`ledger-tab${tab === id ? ' active' : ''}`}
+            aria-pressed={tab === id}
+            onClick={() => setTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'daily' ? (
+        <DailyLeaderboard totalWords={totalWords} viewerIsPrivate={viewerIsPrivate} />
+      ) : (
+        <PeriodLeaderboard key={tab} mode={tab} viewerId={viewerId} />
+      )}
+    </div>
+  );
+}
+
+function DailyLeaderboard({ totalWords, viewerIsPrivate }) {
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
