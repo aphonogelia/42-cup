@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { formatTime } from '../lib/formatTime.js';
+import { formatClock } from '../lib/formatTime.js';
 import AlertModal from './AlertModal.jsx';
 import './PeriodLeaderboard.css';
 
@@ -11,6 +11,11 @@ function monthLabel(monthKey) {
   const [y, m] = monthKey.split('-').map(Number);
   return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
+
+const formatPct = (v) => (v == null ? '—' : `${Math.round(Number(v))}%`);
+const formatTries = (v) => (v == null ? '—' : Number(v).toFixed(1));
+// The score is a plain number (seconds / 60, lower is better), not a clock time.
+const formatScore = (v) => (v == null ? '—' : (Number(v) / 60).toFixed(2));
 
 function NavArrow({ direction }) {
   return (
@@ -40,17 +45,24 @@ function Explainer({ thresholds }) {
       <summary>How is this scored?</summary>
       <ul>
         <li>
-          <b>Median word cost.</b> A solved word costs its time plus {thresholds.tryPenaltySeconds}s
-          per extra try. We take the median, so one slow word doesn&rsquo;t ruin your score.
+          <b>Score</b>: lower is better. Each solved word costs its time plus{' '}
+          {thresholds.tryPenaltySeconds}s per extra try, and we take the median so one slow word
+          doesn&rsquo;t ruin it.
         </li>
         <li>
-          <b>Unsolved words</b> add 1% to your score for every 1% of the words you started but
+          <b>Unsolved words</b> add 1% to the score for every 1% of the words you started but
           didn&rsquo;t solve.
         </li>
         <li>
           <b>Playing often</b> takes up to {bonusPct}% off, reached at {bonusAt}.
         </li>
-        <li>A day counts once you&rsquo;ve started all its words. Lower is better.</li>
+        <li>
+          A day counts once you&rsquo;ve started all its words, and you need{' '}
+          {thresholds.minDays} counted days to be ranked.
+        </li>
+        <li>
+          <b>Median</b> is your typical time per solved word, without the try penalty.
+        </li>
       </ul>
     </details>
   );
@@ -62,7 +74,6 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
   const [month, setMonth] = useState(null);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  const [expandedId, setExpandedId] = useState(null);
 
   // Months come from the dates the daily board already knows about.
   useEffect(() => {
@@ -92,7 +103,6 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
     let cancelled = false;
 
     setData(null);
-    setExpandedId(null);
 
     fetchPeriod(isMonthly, month)
       .then((d) => {
@@ -129,34 +139,14 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
 
   const rows = data?.rows ?? [];
   const thresholds = data?.thresholds;
+  // Players below the day threshold come back from the API with rank null; they are not shown.
   const ranked = rows.filter((r) => r.rank != null);
-  const unranked = rows.filter((r) => r.rank == null);
-  // The monthly window always starts on the 1st, so its end date is the day count.
-  const windowDays = isMonthly && data?.to ? Number(data.to.slice(8, 10)) : null;
 
   const loader = (
     <div className="ledger-loading" aria-busy="true">
       <div className="loader" aria-label="Loading" role="status" />
     </div>
   );
-
-  const nameBlock = (row) => {
-    const isYou = Boolean(viewerId) && row.user_id === viewerId;
-    return (
-      <span className="login">
-        {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" /> : null}
-        <span className="login-name">{row.login}</span>
-        {isYou ? <span className="you-tag">you</span> : null}
-      </span>
-    );
-  };
-
-  const detailItems = (row) => [
-    ['Median word', formatTime(row.median_time)],
-    ['Avg tries', row.avg_tries == null ? '—' : Number(row.avg_tries).toFixed(1)],
-    ['Solved', `${row.words_solved}/${row.words_started} · ${row.solve_rate}%`],
-    ['Days played', windowDays ? `${row.days_complete} of ${windowDays}` : String(row.days_complete)],
-  ];
 
   let body;
   if (isMonthly && months === null) {
@@ -165,98 +155,54 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
     body = <div className="empty-state">No entries yet.</div>;
   } else if (!data) {
     body = loader;
-  } else if (rows.length === 0) {
-    body = <div className="empty-state">No entries yet. Be the first.</div>;
+  } else if (ranked.length === 0) {
+    body =
+      rows.length === 0 ? (
+        <div className="empty-state">No entries yet. Be the first.</div>
+      ) : (
+        <p className="period-note">
+          Nobody has reached {thresholds?.minDays} complete days yet.
+        </p>
+      );
   } else {
     body = (
       <>
         <Explainer thresholds={thresholds} />
 
-        {ranked.length > 0 ? (
-          <div className="period-list">
-            <div className="period-head" aria-hidden="true">
-              <span />
-              <span>Player</span>
-              <span>Score</span>
-              <span />
-            </div>
-
-            {ranked.map((row) => {
-              const expanded = expandedId === row.user_id;
-              const isYou = Boolean(viewerId) && row.user_id === viewerId;
-              const classes = ['period-row'];
-              if (expanded) classes.push('expanded');
-              if (isYou) classes.push('is-you');
-              if (row.rank <= 3) classes.push(`top-${row.rank}`);
-
-              return (
-                <div className={classes.join(' ')} key={row.user_id}>
-                  <button
-                    type="button"
-                    className="period-row-main"
-                    aria-expanded={expanded}
-                    onClick={() => setExpandedId(expanded ? null : row.user_id)}
-                  >
-                    <span className="rank">{row.rank}</span>
-                    {nameBlock(row)}
-                    <span className="period-score">{formatTime(row.score)}</span>
-                    <svg
-                      className="period-chevron"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-
-                  {expanded && (
-                    <dl className="period-detail">
-                      {detailItems(row).map(([label, value]) => (
-                        <div key={label}>
-                          <dt>{label}</dt>
-                          <dd>{value}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
-                </div>
-              );
-            })}
+        <div className="period-list">
+          <div className="period-head" aria-hidden="true">
+            <span />
+            <span>Player</span>
+            <span title="Solve rate">Solved</span>
+            <span title="Average tries">Tries</span>
+            <span title="Median time per solved word">Median</span>
+            <span title="Score, lower is better">Score</span>
           </div>
-        ) : (
-          <p className="period-note">
-            Nobody has reached {thresholds?.minDays} complete days yet.
-          </p>
-        )}
 
-        {unranked.length > 0 && (
-          <div className="period-list period-unranked">
-            <div className="ledger-tier-label">
-              Not ranked yet · needs {thresholds?.minDays} complete days
-            </div>
-            {unranked.map((row) => {
-              const isYou = Boolean(viewerId) && row.user_id === viewerId;
-              const reached = row.days_complete >= (thresholds?.minDays ?? Infinity);
-              return (
-                <div className={`period-row${isYou ? ' is-you' : ''}`} key={row.user_id}>
-                  <div className="period-row-main static">
-                    <span className="rank">–</span>
-                    {nameBlock(row)}
-                    <span className="period-progress">
-                      {reached ? 'no solved words' : `${row.days_complete}/${thresholds?.minDays} days`}
-                    </span>
-                    <span />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          {ranked.map((row) => {
+            const isYou = Boolean(viewerId) && row.user_id === viewerId;
+            const classes = ['period-row'];
+            if (isYou) classes.push('is-you');
+            if (row.rank <= 3) classes.push(`top-${row.rank}`);
+
+            return (
+              <div className={classes.join(' ')} key={row.user_id}>
+                <span className="rank">{row.rank}</span>
+                <span className="login">
+                  {row.avatar_url ? (
+                    <img className="leaderboard-avatar" src={row.avatar_url} alt="" />
+                  ) : null}
+                  <span className="login-name">{row.login}</span>
+                  {isYou ? <span className="you-tag">you</span> : null}
+                </span>
+                <span className="period-num">{formatPct(row.solve_rate)}</span>
+                <span className="period-num">{formatTries(row.avg_tries)}</span>
+                <span className="period-num">{formatClock(row.median_time)}</span>
+                <span className="period-score">{formatScore(row.score)}</span>
+              </div>
+            );
+          })}
+        </div>
       </>
     );
   }
