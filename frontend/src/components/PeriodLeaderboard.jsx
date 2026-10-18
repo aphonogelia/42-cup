@@ -153,7 +153,6 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
           const isYou = Boolean(viewerId) && row.user_id === viewerId;
           const classes = ['period-row'];
           if (isYou) classes.push('is-you');
-          if (row.rank <= 3) classes.push(`top-${row.rank}`);
 
           return (
             <div className={classes.join(' ')} key={row.user_id}>
@@ -163,7 +162,6 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
                   <img className="leaderboard-avatar" src={row.avatar_url} alt="" />
                 ) : null}
                 <span className="login-name">{row.login}</span>
-                {isYou ? <span className="you-tag">you</span> : null}
               </span>
               <span className="period-num">{formatPct(row.solve_rate)}</span>
               <span className="period-num">{formatTries(row.avg_tries)}</span>

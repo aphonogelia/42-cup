@@ -502,7 +502,6 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
                           <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
                         ))}
                       </span>
-                      {isYou ? <span className="you-tag">you</span> : null}
                     </>
                   );
 

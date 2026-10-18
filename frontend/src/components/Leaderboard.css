@@ -44,8 +44,8 @@
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 
 .ledger-date-trigger,
@@ -53,14 +53,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 150px;
-  padding: 8px 12px;
+  min-width: 128px;
+  min-height: 32px;
+  padding: 6px 10px;
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* Wrapper around the daily trigger so it sits in the picker row like the month label */
@@ -85,8 +86,9 @@
   background: var(--surface);
   color: var(--text-muted);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0 10px;
+  border-radius: 6px;
+  min-width: 32px;
+  padding: 0 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -116,11 +118,11 @@
   top: calc(100% + 6px);
   right: 0;
   z-index: 10;
-  width: min(300px, calc(100vw - 32px));
+  width: min(280px, calc(100vw - 32px));
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
   animation: toast-in 120ms ease-out;
 }
@@ -145,9 +147,9 @@
   background: transparent;
   color: var(--text-muted);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -263,17 +265,6 @@
   vertical-align: -3px;
 }
 
-.you-tag {
-  flex-shrink: 0;
-  padding: 1px 6px;
-  border: 1px solid var(--lila);
-  border-radius: 999px;
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lila);
-}
-
 /* Current player highlight — same for daily (.ledger-row) and period (.period-row) */
 .ledger-row.is-you,
 .period-row.is-you {
@@ -299,8 +290,8 @@
 /* Row height: 7px 4px padding + 13px text. .period-row below uses the same. */
 .ledger-row {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto auto;
-  gap: 10px;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  gap: 6px;
   align-items: center;
   padding: 7px 4px;
   border-bottom: 1px dashed var(--line-soft);
@@ -393,8 +384,8 @@ body.theme-light .status-dot.not_started {
 .period-head,
 .period-row {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) 46px 38px 48px 52px;
-  gap: 8px;
+  grid-template-columns: 24px minmax(0, 1fr) 46px 38px 48px 52px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -422,13 +413,6 @@ body.theme-light .status-dot.not_started {
 .period-row .rank {
   font-family: var(--font-display);
   color: var(--text-faint);
-}
-
-.period-row.top-1 .rank,
-.period-row.top-2 .rank,
-.period-row.top-3 .rank {
-  color: var(--lila);
-  font-weight: 700;
 }
 
 .period-row .login {
@@ -592,7 +576,7 @@ body.theme-light .status-dot.not_started {
 @media (max-width: 640px) {
   .ledger-row {
     grid-template-columns: 20px minmax(0, 1fr) auto auto;
-    column-gap: 8px;
+    column-gap: 5px;
   }
 
   .leaderboard-statuses {
@@ -607,7 +591,7 @@ body.theme-light .status-dot.not_started {
   .period-head,
   .period-row {
     grid-template-columns: 20px minmax(0, 1fr) 38px 28px 38px 42px;
-    column-gap: 6px;
+    column-gap: 5px;
   }
 
   .period-head {
@@ -634,9 +618,3 @@ body.theme-light .status-dot.not_started {
   }
 }
 
-/* Very narrow phones: drop the avatar so the name keeps some room */
-@media (max-width: 400px) {
-  .period-row .leaderboard-avatar {
-    display: none;
-  }
-}

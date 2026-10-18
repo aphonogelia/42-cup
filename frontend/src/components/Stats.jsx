@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { formatTime } from '../lib/formatTime.js';
+import './Stats.css';
 
 const PODIUM_HEIGHTS = { left: 58, middle: 84, right: 38 };
 
