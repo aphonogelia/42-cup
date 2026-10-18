@@ -4,7 +4,7 @@ import { supabase } from '../supabase.js';
 const BUCKET = 'avatars';
 let cached = null;
 
-async function getAppToken(log) {
+export async function getAppToken(log = console) {
   if (cached && cached.exp > Date.now() + 60_000) {
     log.info('avatar: app token cache hit');
     return cached.token;
