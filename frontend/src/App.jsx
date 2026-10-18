@@ -27,10 +27,13 @@ function scoringParagraphs(rules) {
   const monthlyMin = monthly ? `${monthly.minDays} counted days` : 'a minimum number of counted days';
   const globalMin = global ? `${global.minDays} counted days` : 'a minimum number of counted days';
   const monthlyListed = monthly ? `${monthly.minDays} days` : 'enough days';
+  const failText = monthly?.failWeight
+    ? `add ${monthly.failWeight}% to the score for every percent of your words left unsolved`
+    : 'make the score worse';
 
   return [
     `Monthly and all-time rankings use a score where lower is better. Each solved word costs its time plus ${penalty} for every extra try, and the median of these costs is taken so one slow word doesn’t ruin your score.`,
-    `Words you started but didn’t solve add 1% to the score for every 1% left unsolved. Playing often takes ${bonus} off, reached when you have played every day of the month on the monthly board, and after ${globalBonusAt}.`,
+    `Words you started but didn’t solve ${failText}. Playing often takes ${bonus} off, reached when you have played every day of the month on the monthly board, and after ${globalBonusAt}.`,
     `A day counts once you’ve started all its words. You need ${monthlyMin} to be ranked on a month, which is listed once it has ${monthlyListed}, and ${globalMin} to be ranked all-time. The median shown in the table is your typical time per solved word, without the try penalty.`,
   ];
 }

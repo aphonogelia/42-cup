@@ -19,12 +19,15 @@ function lastDayOfMonth(year, month1to12) {
 }
 
 // Thresholds returned to the frontend (and used for the RPC) per board.
-function monthlyThresholds() {
+// longevityDays = number of days of the month when known (monthly board),
+// null in /meta where no month is selected ("every day of the month").
+function monthlyThresholds(daysInMonth = null) {
   return {
     minDays: LEADERBOARD_RULES.monthlyMinDays,
     tryPenaltySeconds: LEADERBOARD_RULES.tryPenaltySeconds,
+    failWeight: LEADERBOARD_RULES.failPenaltyWeight,
     longevityMax: LEADERBOARD_RULES.longevityMax,
-    longevityDays: null, // null = every day of the window
+    longevityDays: daysInMonth,
   };
 }
 
@@ -32,6 +35,7 @@ function globalThresholds() {
   return {
     minDays: LEADERBOARD_RULES.globalMinDays,
     tryPenaltySeconds: LEADERBOARD_RULES.tryPenaltySeconds,
+    failWeight: LEADERBOARD_RULES.failPenaltyWeight,
     longevityMax: LEADERBOARD_RULES.longevityMax,
     longevityDays: LEADERBOARD_RULES.allTimeLongevityDays,
   };
@@ -158,6 +162,8 @@ export default async function leaderboardRoutes(fastify) {
     // Never count days that have not happened yet.
     const to = isCurrent ? today : monthEnd;
     const minDays = LEADERBOARD_RULES.monthlyMinDays;
+    // The longevity bonus is measured against the whole month, even while it is running.
+    const daysInMonth = lastDayOfMonth(Number(match[1]), Number(match[2]));
 
     try {
       const payload = await loadPeriod(`monthly:${month}:${minDays}`, isCurrent, async () => ({
@@ -165,13 +171,15 @@ export default async function leaderboardRoutes(fastify) {
         from,
         to,
         isCurrent,
-        thresholds: monthlyThresholds(),
+        thresholds: monthlyThresholds(daysInMonth),
         rows: await fetchPeriodRows({
           p_from: from,
           p_to: to,
           p_min_days: minDays,
           p_try_penalty: LEADERBOARD_RULES.tryPenaltySeconds,
           p_longevity_max: LEADERBOARD_RULES.longevityMax,
+          p_longevity_days: daysInMonth,
+          p_fail_weight: LEADERBOARD_RULES.failPenaltyWeight,
           p_today: today,
         }),
       }));
@@ -197,6 +205,7 @@ export default async function leaderboardRoutes(fastify) {
           p_try_penalty: LEADERBOARD_RULES.tryPenaltySeconds,
           p_longevity_max: LEADERBOARD_RULES.longevityMax,
           p_longevity_days: LEADERBOARD_RULES.allTimeLongevityDays,
+          p_fail_weight: LEADERBOARD_RULES.failPenaltyWeight,
           p_today: today,
         }),
       }));
