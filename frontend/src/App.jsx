@@ -59,7 +59,6 @@ const INFO_PAGES = {
       SCORING_PLACEHOLDER,
       'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
       'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
-      'Sign in with your 42 account, work through the words, and consult the ledger to see where you stand.'
     ],
   },
 };
