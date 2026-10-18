@@ -75,10 +75,13 @@ export default async function authRoutes(fastify) {
       login: profile.login,
       display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
     };
-    const avatarUrl = getAvatarUrl(profile);
+
     if (avatarUrl) {
       const stored = await mirrorAvatar(profile.id, avatarUrl, request.log);
       if (stored) userProfile.avatar_url = stored;
+      request.log.info({ mirrored: Boolean(stored), final: userProfile.avatar_url ?? '(kept existing)' }, 'avatar: upsert value');
+    } else {
+      request.log.info('avatar: no avatar url in 42 profile');
     }
 
     const { data: user, error } = await supabase
