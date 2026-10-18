@@ -18,6 +18,25 @@ function lastDayOfMonth(year, month1to12) {
   return new Date(Date.UTC(year, month1to12, 0)).getUTCDate();
 }
 
+// Thresholds returned to the frontend (and used for the RPC) per board.
+function monthlyThresholds() {
+  return {
+    minDays: LEADERBOARD_RULES.monthlyMinDays,
+    tryPenaltySeconds: LEADERBOARD_RULES.tryPenaltySeconds,
+    longevityMax: LEADERBOARD_RULES.longevityMax,
+    longevityDays: null, // null = every day of the window
+  };
+}
+
+function globalThresholds() {
+  return {
+    minDays: LEADERBOARD_RULES.globalMinDays,
+    tryPenaltySeconds: LEADERBOARD_RULES.tryPenaltySeconds,
+    longevityMax: LEADERBOARD_RULES.longevityMax,
+    longevityDays: LEADERBOARD_RULES.allTimeLongevityDays,
+  };
+}
+
 // Qualified players first, then by score asc (lower = better), then median time
 // asc, then more complete days. Unqualified players keep their data but get no
 // rank, so the UI can show them under "not ranked yet" with their progress.
@@ -44,6 +63,23 @@ async function fetchPeriodRows(params) {
   return rankRows(data ?? []);
 }
 
+// Distinct draw dates, newest first (cached). Shared by /dates and /meta.
+async function loadDates() {
+  const cached = getCachedLeaderboardDates();
+  if (cached) return cached;
+
+  const { data, error } = await supabase
+    .from('words')
+    .select('draw_date')
+    .order('draw_date', { ascending: false });
+
+  if (error) throw error;
+  const dates = [...new Set((data ?? []).map((d) => d.draw_date))];
+
+  setCachedLeaderboardDates(dates);
+  return dates;
+}
+
 export default async function leaderboardRoutes(fastify) {
   fastify.get('/api/leaderboard', async (request, reply) => {
     const date = request.query.date || getBerlinDateKey();
@@ -67,27 +103,46 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   fastify.get('/api/leaderboard/dates', async (request, reply) => {
-    const cached = getCachedLeaderboardDates();
-    if (cached) {
-      return cached;
+    try {
+      return await loadDates();
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Failed to load dates' });
     }
+  });
 
-    const { data, error } = await supabase
-      .from('words')
-      .select('draw_date')
-      .order('draw_date', { ascending: false });
+  // Everything the UI needs before a board is loaded:
+  //  - months: months that have at least monthlyMinDays days (newest first).
+  //    A month with fewer days is not listed at all.
+  //  - thresholds: the rules of each board, for the pickers and the About page.
+  fastify.get('/api/leaderboard/meta', async (request, reply) => {
+    try {
+      const dates = await loadDates();
 
-    if (error) return reply.code(500).send({ error: 'Failed to load dates' });
-    const dates = [...new Set((data ?? []).map((d) => d.draw_date))];
+      const perMonth = {};
+      for (const d of dates) {
+        const key = d.slice(0, 7);
+        perMonth[key] = (perMonth[key] ?? 0) + 1;
+      }
 
-    setCachedLeaderboardDates(dates);
-    return dates;
+      const months = Object.keys(perMonth)
+        .filter((key) => perMonth[key] >= LEADERBOARD_RULES.monthlyMinDays)
+        .sort()
+        .reverse();
+
+      return {
+        months,
+        thresholds: { monthly: monthlyThresholds(), global: globalThresholds() },
+      };
+    } catch (err) {
+      request.log.error(err);
+      return reply.code(500).send({ error: 'Failed to load leaderboard info' });
+    }
   });
 
   // Monthly board. ?month=YYYY-MM (defaults to the current Berlin month).
   // The month is its own window: complete days, longevity and the min-days
-  // threshold are all measured inside it. In the running month the threshold
-  // scales up during the month so the board is not empty in the first weeks.
+  // threshold are all measured inside it.
   fastify.get('/api/leaderboard/monthly', async (request, reply) => {
     const today = getBerlinDateKey();
     const currentMonth = today.slice(0, 7);
@@ -100,11 +155,9 @@ export default async function leaderboardRoutes(fastify) {
     const isCurrent = month === currentMonth;
     const from = `${month}-01`;
     const monthEnd = `${month}-${String(lastDayOfMonth(Number(match[1]), Number(match[2]))).padStart(2, '0')}`;
-    // Never count days that have not happened yet (words may be pre-generated).
+    // Never count days that have not happened yet.
     const to = isCurrent ? today : monthEnd;
-    const minDays = isCurrent
-      ? Math.min(LEADERBOARD_RULES.minDays, Math.ceil(Number(today.slice(8, 10)) / 2))
-      : LEADERBOARD_RULES.minDays;
+    const minDays = LEADERBOARD_RULES.monthlyMinDays;
 
     try {
       const payload = await loadPeriod(`monthly:${month}:${minDays}`, isCurrent, async () => ({
@@ -112,12 +165,7 @@ export default async function leaderboardRoutes(fastify) {
         from,
         to,
         isCurrent,
-        thresholds: {
-          minDays,
-          tryPenaltySeconds: LEADERBOARD_RULES.tryPenaltySeconds,
-          longevityMax: LEADERBOARD_RULES.longevityMax,
-          longevityDays: null, // null = every day of the window
-        },
+        thresholds: monthlyThresholds(),
         rows: await fetchPeriodRows({
           p_from: from,
           p_to: to,
@@ -137,19 +185,15 @@ export default async function leaderboardRoutes(fastify) {
   // All-time board. Longevity saturates at allTimeLongevityDays complete days.
   fastify.get('/api/leaderboard/global', async (request, reply) => {
     const today = getBerlinDateKey();
+    const minDays = LEADERBOARD_RULES.globalMinDays;
 
     try {
-      const payload = await loadPeriod('global', true, async () => ({
+      const payload = await loadPeriod(`global:${minDays}`, true, async () => ({
         to: today,
-        thresholds: {
-          minDays: LEADERBOARD_RULES.minDays,
-          tryPenaltySeconds: LEADERBOARD_RULES.tryPenaltySeconds,
-          longevityMax: LEADERBOARD_RULES.longevityMax,
-          longevityDays: LEADERBOARD_RULES.allTimeLongevityDays,
-        },
+        thresholds: globalThresholds(),
         rows: await fetchPeriodRows({
           p_to: today,
-          p_min_days: LEADERBOARD_RULES.minDays,
+          p_min_days: minDays,
           p_try_penalty: LEADERBOARD_RULES.tryPenaltySeconds,
           p_longevity_max: LEADERBOARD_RULES.longevityMax,
           p_longevity_days: LEADERBOARD_RULES.allTimeLongevityDays,

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { formatClock } from '../lib/formatTime.js';
 import AlertModal from './AlertModal.jsx';
-import './PeriodLeaderboard.css';
+import './Leaderboard.css';
 
 const fetchPeriod = (isMonthly, month) =>
   isMonthly ? api.leaderboardMonthly(month) : api.leaderboardGlobal();
@@ -33,58 +33,25 @@ function NavArrow({ direction }) {
   );
 }
 
-function Explainer({ thresholds }) {
-  if (!thresholds) return null;
-  const bonusPct = Math.round(thresholds.longevityMax * 100);
-  const bonusAt = thresholds.longevityDays
-    ? `${thresholds.longevityDays} complete days`
-    : 'every day of the month';
-
-  return (
-    <details className="period-howto">
-      <summary>How is this scored?</summary>
-      <ul>
-        <li>
-          <b>Score</b>: lower is better. Each solved word costs its time plus{' '}
-          {thresholds.tryPenaltySeconds}s per extra try, and we take the median so one slow word
-          doesn&rsquo;t ruin it.
-        </li>
-        <li>
-          <b>Unsolved words</b> add 1% to the score for every 1% of the words you started but
-          didn&rsquo;t solve.
-        </li>
-        <li>
-          <b>Playing often</b> takes up to {bonusPct}% off, reached at {bonusAt}.
-        </li>
-        <li>
-          A day counts once you&rsquo;ve started all its words, and you need{' '}
-          {thresholds.minDays} counted days to be ranked.
-        </li>
-        <li>
-          <b>Median</b> is your typical time per solved word, without the try penalty.
-        </li>
-      </ul>
-    </details>
-  );
-}
-
 export default function PeriodLeaderboard({ mode, viewerId }) {
   const isMonthly = mode === 'monthly';
   const [months, setMonths] = useState(null); // monthly tab only, newest first
+  const [monthlyMinDays, setMonthlyMinDays] = useState(null);
   const [month, setMonth] = useState(null);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
-  // Months come from the dates the daily board already knows about.
+  // The server lists only the months that have enough days (see /api/leaderboard/meta).
   useEffect(() => {
     if (!isMonthly) return undefined;
     let cancelled = false;
     api
-      .leaderboardDates()
-      .then((dates) => {
+      .leaderboardMeta()
+      .then((meta) => {
         if (cancelled) return;
-        const list = [...new Set(dates.map((d) => d.slice(0, 7)))].sort().reverse();
+        const list = meta.months ?? [];
         setMonths(list);
+        setMonthlyMinDays(meta.thresholds?.monthly?.minDays ?? null);
         setMonth((current) => current ?? list[0] ?? null);
       })
       .catch((err) => {
@@ -152,7 +119,13 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
   if (isMonthly && months === null) {
     body = loader;
   } else if (isMonthly && months.length === 0) {
-    body = <div className="empty-state">No entries yet.</div>;
+    body = (
+      <div className="empty-state">
+        {monthlyMinDays
+          ? `The monthly ledger opens once a month has ${monthlyMinDays} days.`
+          : 'The monthly ledger is not open yet.'}
+      </div>
+    );
   } else if (!data) {
     body = loader;
   } else if (ranked.length === 0) {
@@ -166,44 +139,40 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
       );
   } else {
     body = (
-      <>
-        <Explainer thresholds={thresholds} />
-
-        <div className="period-list">
-          <div className="period-head" aria-hidden="true">
-            <span />
-            <span>Player</span>
-            <span title="Solve rate">Solved</span>
-            <span title="Average tries">Tries</span>
-            <span title="Median time per solved word">Median</span>
-            <span title="Score, lower is better">Score</span>
-          </div>
-
-          {ranked.map((row) => {
-            const isYou = Boolean(viewerId) && row.user_id === viewerId;
-            const classes = ['period-row'];
-            if (isYou) classes.push('is-you');
-            if (row.rank <= 3) classes.push(`top-${row.rank}`);
-
-            return (
-              <div className={classes.join(' ')} key={row.user_id}>
-                <span className="rank">{row.rank}</span>
-                <span className="login">
-                  {row.avatar_url ? (
-                    <img className="leaderboard-avatar" src={row.avatar_url} alt="" />
-                  ) : null}
-                  <span className="login-name">{row.login}</span>
-                  {isYou ? <span className="you-tag">you</span> : null}
-                </span>
-                <span className="period-num">{formatPct(row.solve_rate)}</span>
-                <span className="period-num">{formatTries(row.avg_tries)}</span>
-                <span className="period-num">{formatClock(row.median_time)}</span>
-                <span className="period-score">{formatScore(row.score)}</span>
-              </div>
-            );
-          })}
+      <div className="period-list">
+        <div className="period-head" aria-hidden="true">
+          <span />
+          <span>Player</span>
+          <span title="Solve rate">Solved</span>
+          <span title="Average tries">Tries</span>
+          <span title="Median time per solved word">Median</span>
+          <span title="Score, lower is better">Score</span>
         </div>
-      </>
+
+        {ranked.map((row) => {
+          const isYou = Boolean(viewerId) && row.user_id === viewerId;
+          const classes = ['period-row'];
+          if (isYou) classes.push('is-you');
+          if (row.rank <= 3) classes.push(`top-${row.rank}`);
+
+          return (
+            <div className={classes.join(' ')} key={row.user_id}>
+              <span className="rank">{row.rank}</span>
+              <span className="login">
+                {row.avatar_url ? (
+                  <img className="leaderboard-avatar" src={row.avatar_url} alt="" />
+                ) : null}
+                <span className="login-name">{row.login}</span>
+                {isYou ? <span className="you-tag">you</span> : null}
+              </span>
+              <span className="period-num">{formatPct(row.solve_rate)}</span>
+              <span className="period-num">{formatTries(row.avg_tries)}</span>
+              <span className="period-num">{formatClock(row.median_time)}</span>
+              <span className="period-score">{formatScore(row.score)}</span>
+            </div>
+          );
+        })}
+      </div>
     );
   }
 

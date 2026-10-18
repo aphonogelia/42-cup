@@ -56,6 +56,8 @@ export const api = {
   shareData: () => request('/api/game/share'),
   leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
   leaderboardDates: () => request('/api/leaderboard/dates'),
+  // { months: ['2026-10', ...], thresholds: { monthly, global } }
+  leaderboardMeta: () => request('/api/leaderboard/meta'),
   leaderboardMonthly: (month) =>
     request(`/api/leaderboard/monthly${month ? `?month=${encodeURIComponent(month)}` : ''}`),
   leaderboardGlobal: () => request('/api/leaderboard/global'),

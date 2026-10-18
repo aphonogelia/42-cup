@@ -267,7 +267,11 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
       </div>
 
       {tab === 'daily' ? (
-        <DailyLeaderboard totalWords={totalWords} viewerIsPrivate={viewerIsPrivate} />
+        <DailyLeaderboard
+          totalWords={totalWords}
+          viewerIsPrivate={viewerIsPrivate}
+          viewerId={viewerId}
+        />
       ) : (
         <PeriodLeaderboard key={tab} mode={tab} viewerId={viewerId} />
       )}
@@ -275,7 +279,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
   );
 }
 
-function DailyLeaderboard({ totalWords, viewerIsPrivate }) {
+function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -480,6 +484,7 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate }) {
                   const hasPlayed = row.total_tries > 0;
                   const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
                   const clickable = hasPlayed && !isPrivate;
+                  const isYou = Boolean(viewerId) && row.user_id === viewerId;
 
                   const nameBlock = (
                     <>
@@ -497,11 +502,12 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate }) {
                           <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
                         ))}
                       </span>
+                      {isYou ? <span className="you-tag">you</span> : null}
                     </>
                   );
 
                   return (
-                    <div className="ledger-row" key={row.user_id}>
+                    <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={row.user_id}>
                       <span className="rank">{row.rank}</span>
                       {clickable ? (
                         <button
