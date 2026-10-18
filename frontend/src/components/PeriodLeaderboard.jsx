@@ -158,9 +158,9 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
             <div className={classes.join(' ')} key={row.user_id}>
               <span className="rank">{row.rank}</span>
               <span className="login">
-                {row.avatar_url ? (
+                {/* {row.avatar_url ? (
                   <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" />
-                ) : null}
+                ) : null} */}
                 <span className="login-name">{row.login}</span>
               </span>
               <span className="period-num">{formatPct(row.solve_rate)}</span>

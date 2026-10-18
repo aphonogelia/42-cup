@@ -9,6 +9,7 @@ import leaderboardRoutes from './routes/leaderboard.js';
 import { ensureDailyDraw, getBerlinDateKey, getNextBerlinMidnightDelayMs } from './lib/dailyDraw.js';
 import wordResultsRoutes from './routes/wordResults.js';
 import statsRoutes from './routes/stats.js';
+import avatarProbe from './routes/avatarProbe.js';
 
 const fastify = Fastify({ logger: true, trustProxy: true });
 
@@ -44,6 +45,9 @@ await fastify.register(gameRoutes);
 await fastify.register(leaderboardRoutes);
 await fastify.register(wordResultsRoutes);
 await fastify.register(statsRoutes);
+
+await fastify.register(avatarProbe);
+
 
 async function refreshDailyDraw() {
   await ensureDailyDraw({ drawDate: getBerlinDateKey() });
