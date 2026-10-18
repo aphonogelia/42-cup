@@ -75,11 +75,6 @@ export default async function authRoutes(fastify) {
       display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
     };
     const avatarUrl = getAvatarUrl(profile);
-    console.log('42 avatar URL:', {
-      intra_id: profile.id,
-      login: profile.login,
-      avatarUrl,
-    });
     if (avatarUrl) userProfile.avatar_url = avatarUrl;
 
     const { data: user, error } = await supabase

@@ -159,7 +159,7 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
               <span className="rank">{row.rank}</span>
               <span className="login">
                 {row.avatar_url ? (
-                  <img className="leaderboard-avatar" src={row.avatar_url} alt="" />
+                  <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" />
                 ) : null}
                 <span className="login-name">{row.login}</span>
               </span>
