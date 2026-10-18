@@ -1,6 +1,8 @@
 import { supabase } from '../src/supabase.js';
 import { mirrorAvatar, getAppToken } from '../src/lib/avatarStore.js';
 
+console.log('storage base:', supabase.storage.from('avatars').getPublicUrl('x').data.publicUrl);
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const DRY = process.argv.includes('--dry');
 
