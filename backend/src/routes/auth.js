@@ -69,6 +69,7 @@ export default async function authRoutes(fastify) {
       return reply.redirect(`${config.frontendUrl}/login?error=profile_fetch_failed`);
     }
     const profile = await meRes.json();
+    const avatarUrl = getAvatarUrl(profile);
 
     const userProfile = {
       intra_id: profile.id,
