@@ -9,7 +9,6 @@ import leaderboardRoutes from './routes/leaderboard.js';
 import { ensureDailyDraw, getBerlinDateKey, getNextBerlinMidnightDelayMs } from './lib/dailyDraw.js';
 import wordResultsRoutes from './routes/wordResults.js';
 import statsRoutes from './routes/stats.js';
-import avatarProbe from './routes/avatarProbe.js';
 
 const fastify = Fastify({ logger: true, trustProxy: true });
 
@@ -27,12 +26,6 @@ await fastify.register(cors, {
   credentials: true,
 });
 
-
-console.log('SUPABASE URL:', config.supabase.url);
-console.log(
-  'SUPABASE PROJECT:',
-  config.supabase.url.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]
-);
 
 await fastify.register(rateLimit, {
   max: 100,
