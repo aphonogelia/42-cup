@@ -10,7 +10,7 @@
 export const LEADERBOARD_RULES = {
     monthlyMinDays: 7,        // complete days needed to be ranked on a month (a month is also only listed once it has this many days)
     globalMinDays: 15,        // complete days needed to be ranked on the all-time board
-    tryPenaltySeconds: 30,    // cost of each extra try
+    tryPenaltySeconds: 20,    // cost of each extra try
     longevityMax: 0.10,       // max score reduction for participation
     allTimeLongevityDays: 60, // complete days needed for the full bonus on the global board
 };
