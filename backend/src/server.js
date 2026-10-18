@@ -27,12 +27,6 @@ await fastify.register(cors, {
 });
 
 
-console.log('SUPABASE URL:', config.supabase.url);
-console.log(
-  'SUPABASE PROJECT:',
-  config.supabase.url.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]
-);
-
 await fastify.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',
@@ -44,6 +38,7 @@ await fastify.register(gameRoutes);
 await fastify.register(leaderboardRoutes);
 await fastify.register(wordResultsRoutes);
 await fastify.register(statsRoutes);
+
 
 async function refreshDailyDraw() {
   await ensureDailyDraw({ drawDate: getBerlinDateKey() });

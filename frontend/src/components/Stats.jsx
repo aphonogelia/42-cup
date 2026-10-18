@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { formatTime } from '../lib/formatTime.js';
+import './Stats.css';
 
 const PODIUM_HEIGHTS = { left: 58, middle: 84, right: 38 };
-
-function formatTime(seconds) {
-  if (seconds == null) return '—';
-  const total = Math.round(seconds);
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return m > 0 ? `${m}m ${s.toString().padStart(2, '0')}s` : `${s}s`;
-}
 
 function formatDateLabel(dateStr) {
   return new Date(`${dateStr}T00:00:00`).toLocaleDateString(undefined, {

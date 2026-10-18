@@ -11,30 +11,54 @@ import Stats from './components/Stats.jsx';
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 
+// Marks where the scoring paragraphs go in the About page. They are built from
+// the thresholds the API returns, so the numbers are never hardcoded here.
+const SCORING_PLACEHOLDER = '__scoring__';
+
+function scoringParagraphs(rules) {
+  const monthly = rules?.monthly;
+  const global = rules?.global;
+
+  const penalty = monthly ? `${monthly.tryPenaltySeconds} seconds` : 'a penalty';
+  const bonus = monthly ? `up to ${Math.round(monthly.longevityMax * 100)}%` : 'a bonus';
+  const globalBonusAt = global?.longevityDays
+    ? `${global.longevityDays} complete days on the all-time board`
+    : 'a set number of complete days on the all-time board';
+  const monthlyMin = monthly ? `${monthly.minDays} counted days` : 'a minimum number of counted days';
+  const globalMin = global ? `${global.minDays} counted days` : 'a minimum number of counted days';
+  const monthlyListed = monthly ? `${monthly.minDays} days` : 'enough days';
+  const failText = monthly?.failWeight
+    ? `add ${monthly.failWeight}% to the score for every percent of your words left unsolved`
+    : 'make the score worse';
+
+  return [
+    `Monthly and all-time rankings use a score where lower is better. Each solved word costs its time plus ${penalty} for every extra try, and the median of these costs is taken so one slow word doesn’t ruin your score.`,
+    `Words you started but didn’t solve ${failText}. Playing often takes ${bonus} off, reached when you have played every day of the month on the monthly board, and after ${globalBonusAt}.`,
+    `A day counts once you’ve started all its words. You need ${monthlyMin} to be ranked on a month, which is listed once it has ${monthlyListed}, and ${globalMin} to be ranked all-time. The median shown in the table is your typical time per solved word, without the try penalty.`,
+  ];
+}
+
 const INFO_PAGES = {
   privacy: {
     title: 'Privacy',
     eyebrow: 'Data and access',
     body: [
-      'Sign-in is handled through 42 OAuth. We only receive what\'s needed to identify your account: your intra ID, login, display name, and avatar if you have one.',
-      'A signed token is stored in your browser to keep you signed in. It\'s used solely to authenticate your requests to this app.',
-      'Your guesses, progress, and leaderboard results are stored in Supabase so the competition can track scores across players and days. We don\'t sell data or use third-party trackers.',
-      'Want your data removed? Contact htharrau.'
+      'You enter through 42 OAuth, and we keep only what is needed to recognise you: your intra ID, login, display name and avatar.',
+      'A signed token stays in your browser so you are not asked twice. It serves no other purpose than to vouch for your requests.',
+      'Your guesses, your progress and your results are kept in Supabase, so the ledger can remember across players and days. Should a result be flagged as suspicious, that mark is kept as well. Nothing is sold, and no third-party trackers watch you play.',
+      'If you wish your data to be removed, write to htharrau.'
     ],
   },
   about: {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      <>
-        wordel // 42 Cup was built by Helene Tharrault (htharrau) for the Wordle Club of 42 Berlin, as a way for students to get a taste of the game and maybe join the{' '}
-        <a href="https://42born2code.slack.com/archives/C057BMKPG9J" target="_blank" rel="noreferrer">
-          Slack channel
-        </a>.
-      </>,
-      'Each day brings a fresh set of words, randomly drawn from the ~2,300 past Wordle answers. Everything resets at midnight.',
-      'For each word, the clock starts with your first guess and stops when you solve it or make your sixth wrong guess. Your times are then added together across all words — so speed matters as much as accuracy.',
-      'Sign in with your 42 account, work through the words, and check the ledger to see how you stack up.'
+      'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau).',
+      'Each day at midnight (Paris time), a new set of words is drawn at random from the ~2,300 past NYT Wordle answers. A word, once drawn, rests for 60 days before it may return.',
+      'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
+      SCORING_PLACEHOLDER,
+      'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
+      'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
     ],
   },
 };
@@ -50,10 +74,14 @@ function formatTimeShort(seconds) {
 }
 
 
-function InfoModal({ page, onClose }) {
+function InfoModal({ page, rules, onClose }) {
   const content = INFO_PAGES[page];
 
   if (!content) return null;
+
+  const body = content.body.flatMap((paragraph) =>
+    paragraph === SCORING_PLACEHOLDER ? scoringParagraphs(rules) : [paragraph]
+  );
 
   return (
     <div className="info-overlay" role="presentation" onClick={onClose}>
@@ -73,7 +101,7 @@ function InfoModal({ page, onClose }) {
         </div>
         <h2 id="info-title">{content.title}</h2>
         <div id="info-body" className="info-copy">
-          {content.body.map((paragraph, index) => (
+          {body.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
         </div>
@@ -221,6 +249,7 @@ export default function App() {
   const [shareCopied, setShareCopied] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
+  const [rules, setRules] = useState(null); // leaderboard thresholds, loaded when About opens
   const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
@@ -319,6 +348,20 @@ export default function App() {
     };
   }, [user, theme]);
 
+  useEffect(() => {
+    if (infoPage !== 'about' || rules) return undefined;
+    let cancelled = false;
+    api
+      .leaderboardMeta()
+      .then((meta) => {
+        if (!cancelled) setRules(meta.thresholds ?? null);
+      })
+      .catch(() => {}); // About still renders, without the numbers
+    return () => {
+      cancelled = true;
+    };
+  }, [infoPage, rules]);
+
   if (window.location.pathname === '/auth/callback') {
     return <AuthCallback />;
   }
@@ -330,17 +373,17 @@ export default function App() {
     setSelectedOrderIndex(null);
   };
 
-const handleTogglePrivacy = async () => {
-  const next = !user.privacy_enabled;
-  setUser((u) => ({ ...u, privacy_enabled: next })); // optimistic
-  try {
-    await api.updatePrivacy(next);
-    window.dispatchEvent(new CustomEvent('privacy-changed', { detail: { privacy_enabled: next } }));
-  } catch (err) {
-    console.error('privacy update failed:', err);
-    setUser((u) => ({ ...u, privacy_enabled: !next })); // revert on failure
-  }
-};
+  const handleTogglePrivacy = async () => {
+    const next = !user.privacy_enabled;
+    setUser((u) => ({ ...u, privacy_enabled: next })); // optimistic
+    try {
+      await api.updatePrivacy(next);
+      window.dispatchEvent(new CustomEvent('privacy-changed', { detail: { privacy_enabled: next } }));
+    } catch (err) {
+      console.error('privacy update failed:', err);
+      setUser((u) => ({ ...u, privacy_enabled: !next })); // revert on failure
+    }
+  };
 
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
   const handleShare = async () => {
@@ -445,64 +488,68 @@ const handleTogglePrivacy = async () => {
             </button>
           </nav>
 
-<div className="masthead-icons">
-  <button
-    className="icon-btn theme-toggle"
-    onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-    aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-    title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-  >
-    {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-  </button>
+          <div className="masthead-icons">
+            <button
+              className="icon-btn theme-toggle"
+              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </button>
 
-  <button
-    className="icon-btn theme-toggle"
-    onClick={handleTogglePrivacy}
-    aria-label={user.privacy_enabled ? 'Make profile private': 'Make profile public' }
-    title={user.privacy_enabled ? 'Public' : 'Private'}
-  >
-    {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
-  </button>
+            <button
+              className="icon-btn theme-toggle"
+              onClick={handleTogglePrivacy}
+              aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
+              title={user.privacy_enabled ? 'Public' : 'Private'}
+            >
+              {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
 
-  <button
-    className="icon-btn theme-toggle"
-    onClick={handleLogout}
-    aria-label="Log out"
-    title="Log out"
-  >
-       <LogoutIcon />
+            <button
+              className="icon-btn theme-toggle"
+              onClick={handleLogout}
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogoutIcon />
             </button>
           </div>
         </div>
       </header>
 
       <main className="app-content">
-{view === "play" ? (
-  <>
-    {words.length > 0 && (
-      <WordTabs
-        words={words}
-        selectedOrderIndex={selectedOrderIndex}
-        onSelect={setSelectedOrderIndex}
-      />
-    )}
+        {view === 'play' ? (
+          <>
+            {words.length > 0 && (
+              <WordTabs
+                words={words}
+                selectedOrderIndex={selectedOrderIndex}
+                onSelect={setSelectedOrderIndex}
+              />
+            )}
 
-    {selectedOrderIndex && (
-      <Game
-      userLogin={user.login}
-      orderIndex={selectedOrderIndex}
-      onWordFinished={() => refreshProgress({ checkCompletion: true })}
-      onWordStarted={() => refreshProgress()}
-      nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
-      onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
-    />
-    )}
-  </>
-) : view === "leaderboard" ? (
-  <Leaderboard totalWords={words.length} viewerIsPrivate={!!user.privacy_enabled} />
-) : (
-  <Stats />
-)}
+            {selectedOrderIndex && (
+              <Game
+                userLogin={user.login}
+                orderIndex={selectedOrderIndex}
+                onWordFinished={() => refreshProgress({ checkCompletion: true })}
+                onWordStarted={() => refreshProgress()}
+                nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
+                onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
+              />
+            )}
+          </>
+        ) : view === 'leaderboard' ? (
+          <Leaderboard
+            totalWords={words.length}
+            viewerIsPrivate={!!user.privacy_enabled}
+            viewerId={user.id}
+          />
+        ) : (
+          <Stats />
+        )}
       </main>
 
       <footer className="app-footer">
@@ -531,7 +578,7 @@ const handleTogglePrivacy = async () => {
           setView('leaderboard');
         }}
       />
-      <InfoModal page={infoPage} onClose={() => setInfoPage(null)} />
+      <InfoModal page={infoPage} rules={rules} onClose={() => setInfoPage(null)} />
     </div >
   );
 }

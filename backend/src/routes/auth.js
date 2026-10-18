@@ -2,6 +2,20 @@ import oauthPlugin from '@fastify/oauth2';
 import { config } from '../config.js';
 import { supabase } from '../supabase.js';
 import { invalidateAllLeaderboards } from '../lib/leaderboardCache.js';
+import { mirrorAvatar } from '../lib/avatarStore.js';
+
+function getAvatarUrl(profile) {
+  const candidates = [
+    profile.image?.versions?.medium,
+    profile.image?.versions?.small,
+    profile.image?.link,
+    profile.image_url,
+    profile.image?.url,
+    typeof profile.image === 'string' ? profile.image : null,
+  ];
+
+  return candidates.find((value) => typeof value === 'string' && value.trim()) ?? null;
+}
 
 export default async function authRoutes(fastify) {
   console.log('OAuth callback:', config.fortyTwo.callbackUrl);
@@ -55,16 +69,26 @@ export default async function authRoutes(fastify) {
       return reply.redirect(`${config.frontendUrl}/login?error=profile_fetch_failed`);
     }
     const profile = await meRes.json();
+    const avatarUrl = getAvatarUrl(profile);
+
+    const userProfile = {
+      intra_id: profile.id,
+      login: profile.login,
+      display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
+    };
+
+    if (avatarUrl) {
+      const stored = await mirrorAvatar(profile.id, avatarUrl, request.log);
+      if (stored) userProfile.avatar_url = stored;
+      request.log.info({ mirrored: Boolean(stored), final: userProfile.avatar_url ?? '(kept existing)' }, 'avatar: upsert value');
+    } else {
+      request.log.info('avatar: no avatar url in 42 profile');
+    }
 
     const { data: user, error } = await supabase
       .from('users')
       .upsert(
-        {
-          intra_id: profile.id,
-          login: profile.login,
-          display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
-          avatar_url: profile.image?.link ?? null,
-        },
+        userProfile,
         { onConflict: 'intra_id' }
       )
       .select()
@@ -75,6 +99,7 @@ export default async function authRoutes(fastify) {
       return reply.redirect(`${config.frontendUrl}/login?error=db_error`);
     }
 
+    invalidateAllLeaderboards();
     const token = fastify.issueSession(user);
 
     return reply.redirect(`${config.frontendUrl}/auth/callback#token=${token}`);

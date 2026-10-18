@@ -1,0 +1,620 @@
+/* ==========================================================================
+   Leaderboard — all styling (daily, monthly, all-time, pickers, popups)
+   ========================================================================== */
+
+/* ---- Period tabs (Daily | Monthly | All-time) ------------------------------ */
+.ledger-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ledger-tab {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  padding: 9px 8px;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ledger-tab:hover:not(.active) {
+  color: var(--paper);
+}
+
+.ledger-tab.active {
+  background: var(--lila);
+  color: #1a1305;
+}
+
+/* ---- Date / month picker ----------------------------------------------------
+   Both pickers share the same look: [<]  label  [>]                           */
+.ledger-date-picker {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.ledger-date-trigger,
+.ledger-month-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 128px;
+  min-height: 32px;
+  padding: 6px 10px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 12px;
+}
+
+/* Wrapper around the daily trigger so it sits in the picker row like the month label */
+.ledger-date-popover-wrap {
+  display: flex;
+}
+
+.ledger-date-trigger {
+  cursor: pointer;
+}
+
+.ledger-date-trigger svg {
+  display: none;
+}
+
+.ledger-date-trigger:hover,
+.ledger-date-trigger.open {
+  border-color: var(--amber-dim);
+}
+
+.ledger-date-nav {
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-width: 32px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ledger-date-nav svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.ledger-date-nav:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-date-nav:disabled,
+.ledger-date-nav[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---- Calendar popover (daily) ---------------------------------------------- */
+.ledger-cal {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: min(280px, calc(100vw - 32px));
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  animation: toast-in 120ms ease-out;
+}
+
+.ledger-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ledger-cal-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paper);
+  text-align: center;
+}
+
+.ledger-cal-nav {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ledger-cal-nav svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.ledger-cal-nav:hover:not([aria-disabled='true']) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-cal-nav[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ledger-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.ledger-cal-weekday {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-faint);
+  padding-bottom: 4px;
+}
+
+.ledger-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ledger-cal-day:hover:not(:disabled):not(.selected) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-cal-day:disabled {
+  border-color: transparent;
+  color: var(--text-faint);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ledger-cal-day.selected {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1a1305;
+  font-weight: 700;
+}
+
+.ledger-cal-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line-soft);
+}
+
+.ledger-cal-today {
+  background: transparent;
+  color: var(--amber);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ledger-cal-today:hover:not([aria-disabled='true']) {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-cal-today[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---- Shared bits: avatar, "you" tag, highlight ------------------------------ */
+.leaderboard-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  margin-right: 8px;
+  vertical-align: -3px;
+}
+
+/* Current player highlight — same for daily (.ledger-row) and period (.period-row) */
+.ledger-row.is-you,
+.period-row.is-you {
+  background: color-mix(in srgb, var(--lila) 10%, transparent);
+}
+
+/* ---- Daily ledger ------------------------------------------------------------ */
+.ledger-tier {
+  margin-bottom: 26px;
+}
+
+.ledger-tier-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+/* Row height: 7px 4px padding + 13px text. .period-row below uses the same. */
+.ledger-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 4px;
+  border-bottom: 1px dashed var(--line-soft);
+  font-size: 13px;
+}
+
+.ledger-row .rank {
+  color: var(--text-faint);
+  font-family: var(--font-display);
+}
+
+.ledger-row .login {
+  color: var(--text);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ledger-row .login-name {
+  min-width: 0;
+}
+
+.ledger-row .time {
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-row .tries {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* ---- Per-word status dots (daily) ----------------------------------------- */
+.leaderboard-statuses {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  transform: translateY(2px);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+}
+
+.status-dot.solved {
+  background: var(--bg1);
+  opacity: 0.85;
+}
+
+.status-dot.failed {
+  background: transparent;
+  border: 1px solid var(--crimson);
+}
+
+.status-dot.in_progress,
+.status-dot.not_started {
+  background: var(--text-faint);
+  opacity: 0.35;
+}
+
+body.theme-light .status-dot.solved {
+  background: var(--lila);
+}
+
+body.theme-light .status-dot.in_progress,
+body.theme-light .status-dot.not_started {
+  background: var(--line);
+}
+
+/* ---- Monthly / all-time ------------------------------------------------------
+   rank | player | solved | tries | median | score                              */
+.period-note {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 24px 0 8px;
+}
+
+.period-list {
+  margin-bottom: 26px;
+}
+
+.period-head,
+.period-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 46px 38px 48px 52px;
+  gap: 6px;
+  align-items: center;
+}
+
+.period-head {
+  padding: 0 4px 6px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.period-head span:nth-child(n + 3) {
+  text-align: right;
+}
+
+.period-row {
+  padding: 7px 4px; /* matches .ledger-row */
+  border-bottom: 1px dashed var(--line-soft);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.period-row .rank {
+  font-family: var(--font-display);
+  color: var(--text-faint);
+}
+
+.period-row .login {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.period-row .login-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.period-row .leaderboard-avatar {
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+.period-num,
+.period-score {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.period-num {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.period-score {
+  color: var(--paper);
+  font-weight: 700;
+}
+
+/* ---- Player popup: word times + guess history ------------------------------- */
+.login-clickable {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.login-name.login-public {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-faint, var(--line));
+  text-underline-offset: 0.3em;
+}
+
+.word-times-card {
+  width: min(100%, 760px);
+  padding: 16px;
+}
+
+.word-times-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px clamp(14px, 4vw, 40px);
+  justify-content: center;
+}
+
+.word-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-width: 90px;
+  max-width: 130px;
+}
+
+.word-time-header {
+  display: flex;
+  gap: 6px;
+  font-family: var(--font-mono);
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.word-time-index {
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 11px;
+}
+
+.word-time-value {
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+.guess-history {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 10px;
+}
+
+.guess-history-row {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.guess-tile-mini {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid var(--tile-empty-border);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.guess-tile-mini.correct {
+  background: var(--tile-correct);
+  border-color: var(--tile-correct);
+  color: #0d1a12;
+}
+
+.guess-tile-mini.present {
+  background: var(--tile-present);
+  border-color: var(--tile-present);
+  color: #211705;
+}
+
+.guess-tile-mini.absent {
+  background: var(--tile-absent);
+  border-color: var(--tile-absent);
+  color: var(--text-faint);
+}
+
+.guess-history-status {
+  padding: 4px 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.guess-history-status.error {
+  color: var(--crimson);
+}
+
+/* ---- Responsive --------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .ledger-row {
+    grid-template-columns: 20px minmax(0, 1fr) auto auto;
+    column-gap: 5px;
+  }
+
+  .leaderboard-statuses {
+    gap: 2px;
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .period-head,
+  .period-row {
+    grid-template-columns: 20px minmax(0, 1fr) 38px 28px 38px 42px;
+    column-gap: 5px;
+  }
+
+  .period-head {
+    font-size: 9px;
+    letter-spacing: 0.03em;
+  }
+
+  .period-num {
+    font-size: 11px;
+  }
+
+  .ledger-date-popover-wrap {
+    flex: 1;
+  }
+
+  .ledger-date-trigger,
+  .ledger-month-label {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .word-times-list {
+    gap: 14px 28px;
+  }
+}
+
