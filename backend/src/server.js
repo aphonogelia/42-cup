@@ -46,8 +46,6 @@ await fastify.register(leaderboardRoutes);
 await fastify.register(wordResultsRoutes);
 await fastify.register(statsRoutes);
 
-await fastify.register(avatarProbe);
-
 
 async function refreshDailyDraw() {
   await ensureDailyDraw({ drawDate: getBerlinDateKey() });

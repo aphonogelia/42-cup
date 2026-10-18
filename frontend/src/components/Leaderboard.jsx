@@ -488,7 +488,7 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
 
                   const nameBlock = (
                     <>
-                      {/* {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null} */}
+                      {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
                       <span className={`login-name ${clickable ? 'login-public' : ''}`}>
                         {row.login}
                       </span>

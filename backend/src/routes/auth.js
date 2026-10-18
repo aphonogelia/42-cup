@@ -2,12 +2,13 @@ import oauthPlugin from '@fastify/oauth2';
 import { config } from '../config.js';
 import { supabase } from '../supabase.js';
 import { invalidateAllLeaderboards } from '../lib/leaderboardCache.js';
+import { mirrorAvatar } from '../lib/avatarStore.js';
 
 function getAvatarUrl(profile) {
   const candidates = [
-    profile.image?.link,
     profile.image?.versions?.medium,
     profile.image?.versions?.small,
+    profile.image?.link,
     profile.image_url,
     profile.image?.url,
     typeof profile.image === 'string' ? profile.image : null,
@@ -75,7 +76,10 @@ export default async function authRoutes(fastify) {
       display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
     };
     const avatarUrl = getAvatarUrl(profile);
-    if (avatarUrl) userProfile.avatar_url = avatarUrl;
+    if (avatarUrl) {
+      const stored = await mirrorAvatar(profile.id, avatarUrl, request.log);
+      if (stored) userProfile.avatar_url = stored;
+    }
 
     const { data: user, error } = await supabase
       .from('users')
