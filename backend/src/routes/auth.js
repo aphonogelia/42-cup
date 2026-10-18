@@ -4,10 +4,16 @@ import { supabase } from '../supabase.js';
 import { invalidateAllLeaderboards } from '../lib/leaderboardCache.js';
 
 function getAvatarUrl(profile) {
-  return profile.image?.versions?.medium
-    ?? profile.image?.versions?.small
-    ?? profile.image?.link
-    ?? null;
+  const candidates = [
+    profile.image?.link,
+    profile.image?.versions?.medium,
+    profile.image?.versions?.small,
+    profile.image_url,
+    profile.image?.url,
+    typeof profile.image === 'string' ? profile.image : null,
+  ];
+
+  return candidates.find((value) => typeof value === 'string' && value.trim()) ?? null;
 }
 
 export default async function authRoutes(fastify) {
@@ -63,15 +69,23 @@ export default async function authRoutes(fastify) {
     }
     const profile = await meRes.json();
 
+    const userProfile = {
+      intra_id: profile.id,
+      login: profile.login,
+      display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
+    };
+    const avatarUrl = getAvatarUrl(profile);
+    console.log('42 avatar URL:', {
+      intra_id: profile.id,
+      login: profile.login,
+      avatarUrl,
+    });
+    if (avatarUrl) userProfile.avatar_url = avatarUrl;
+
     const { data: user, error } = await supabase
       .from('users')
       .upsert(
-        {
-          intra_id: profile.id,
-          login: profile.login,
-          display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
-          avatar_url: getAvatarUrl(profile),
-        },
+        userProfile,
         { onConflict: 'intra_id' }
       )
       .select()
