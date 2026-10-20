@@ -112,7 +112,7 @@ export default async function authRoutes(fastify) {
   fastify.get('/api/auth/me', { preHandler: [fastify.requireAuth] }, async (request, reply) => {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, login, display_name, avatar_url, privacy_enabled')
+      .select('id, login, display_name, avatar_url, privacy_enabled, is_guest')
       .eq('id', request.user.id)
       .single();
     if (error) return reply.code(404).send({ error: 'User not found' });

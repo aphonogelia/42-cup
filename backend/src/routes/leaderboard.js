@@ -11,6 +11,8 @@ import {
 } from '../lib/leaderboardCache.js';
 import { LEADERBOARD_RULES } from '../lib/leaderboardConfig.js';
 
+
+
 const MONTH_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
 
 function lastDayOfMonth(year, month1to12) {
@@ -85,7 +87,11 @@ async function loadDates() {
 }
 
 export default async function leaderboardRoutes(fastify) {
-  fastify.get('/api/leaderboard', async (request, reply) => {
+  
+  const authOnly = { preHandler: [fastify.requireAuth] };
+  const realUsersOnly = { preHandler: [fastify.requireAuth, fastify.requireRealUser] };
+
+  fastify.get('/api/leaderboard', realUsersOnly, async (request, reply) => {
     const date = request.query.date || getBerlinDateKey();
 
     const cached = getCachedLeaderboard(date);
@@ -106,7 +112,7 @@ export default async function leaderboardRoutes(fastify) {
     return { date, rows: data };
   });
 
-  fastify.get('/api/leaderboard/dates', async (request, reply) => {
+  fastify.get('/api/leaderboard/dates', authOnly, async (request, reply) => {
     try {
       return await loadDates();
     } catch (err) {
@@ -119,7 +125,7 @@ export default async function leaderboardRoutes(fastify) {
   //  - months: months that have at least monthlyMinDays days (newest first).
   //    A month with fewer days is not listed at all.
   //  - thresholds: the rules of each board, for the pickers and the About page.
-  fastify.get('/api/leaderboard/meta', async (request, reply) => {
+  fastify.get('/api/leaderboard/meta', authOnly, async (request, reply) => {
     try {
       const dates = await loadDates();
 
@@ -147,7 +153,7 @@ export default async function leaderboardRoutes(fastify) {
   // Monthly board. ?month=YYYY-MM (defaults to the current Berlin month).
   // The month is its own window: complete days, longevity and the min-days
   // threshold are all measured inside it.
-  fastify.get('/api/leaderboard/monthly', async (request, reply) => {
+  fastify.get('/api/leaderboard/monthly', realUsersOnly, async (request, reply) => {
     const today = getBerlinDateKey();
     const currentMonth = today.slice(0, 7);
     const month = request.query.month || currentMonth;
@@ -191,7 +197,7 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   // All-time board. Longevity saturates at allTimeLongevityDays complete days.
-  fastify.get('/api/leaderboard/global', async (request, reply) => {
+  fastify.get('/api/leaderboard/global', realUsersOnly, async (request, reply) => {
     const today = getBerlinDateKey();
     const minDays = LEADERBOARD_RULES.globalMinDays;
 
@@ -219,7 +225,7 @@ export default async function leaderboardRoutes(fastify) {
   // Per-word breakdown (times + tries) for one player on one day, for the
   // leaderboard popup. Blocked server-side if the target has privacy on —
   // this is the enforcement point, not just the frontend grey-out.
-  fastify.get('/api/leaderboard/word-times', async (request, reply) => {
+  fastify.get('/api/leaderboard/word-times', realUsersOnly, async (request, reply) => {
     const { userId, date } = request.query;
     if (!userId || !date) {
       return reply.code(400).send({ error: 'userId and date required' });

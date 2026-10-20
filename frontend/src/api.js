@@ -41,6 +41,7 @@ async function request(path, options = {}) {
 
 export const api = {
   me: () => request('/api/auth/me'),
+  guest: () => request('/api/auth/guest', { method: 'POST', body: '{}' }),
   logout: () => {
   localStorage.removeItem(TOKEN_KEY);
   return request('/api/auth/logout', { method: 'POST', body: '{}' });
