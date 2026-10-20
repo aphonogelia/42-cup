@@ -3,27 +3,23 @@
    ========================================================================== */
 
 /* ---- Period tabs (Daily | Monthly | All-time) ------------------------------ */
-.ledger-tabs {
+..ledger-tabs {
   display: flex;
-  gap: 4px;
-  padding: 3px;
-  margin-bottom: 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 0;
+  margin-bottom: 12px;
 }
 
 .ledger-tab {
-  flex: 1;
   background: transparent;
   border: 0;
-  border-radius: 7px;
-  padding: 9px 8px;
+  padding: 8px 12px;
   color: var(--text-muted);
   font-family: var(--font-display);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -33,9 +29,21 @@
 }
 
 .ledger-tab.active {
-  background: var(--lila);
-  color: #1a1305;
+  color: var(--amber);
 }
+
+.ledger-tab:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.ledger-tab-sep {
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 
 /* ---- Date / month picker ----------------------------------------------------
    Both pickers share the same look: [<]  label  [>]                           */
