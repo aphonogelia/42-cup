@@ -448,7 +448,9 @@ export default function App() {
       <header className="masthead">
         <div className="masthead-title-row">
           <h1 className="masthead-title">
-            wordel <span>{'// 42 CUP'}</span>
+            <button type="button" onClick={() => setView('play')} aria-label="Play">
+              wordel <span>{'// 42 CUP'}</span>
+            </button>
           </h1>
 
           {isDayComplete && (

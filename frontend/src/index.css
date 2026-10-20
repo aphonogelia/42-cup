@@ -206,6 +206,18 @@ button {
   margin: 0;
 }
 
+.masthead-title button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+
 .masthead-title span {
   color: var(--amber);
 }
