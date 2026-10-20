@@ -7,6 +7,8 @@ export default async function statsRoutes(fastify) {
   fastify.addHook('preHandler', fastify.requireAuth);
 
   fastify.get('/api/stats/me', async (request, reply) => {
+    const isGuest = request.user.guest;
+
     const [
       { data: dateRows, error: datesErr },
       { data: results, error: resultsErr },
@@ -17,7 +19,9 @@ export default async function statsRoutes(fastify) {
         .from('word_results')
         .select('status, nb_tries, time_seconds, words(draw_date, order_index, answer)')
         .eq('user_id', request.user.id),
-      supabase.from('leaderboard').select('user_id, draw_date, words_found, total_time'),
+      isGuest
+        ? Promise.resolve({ data: [], error: null })
+        : supabase.from('leaderboard').select('user_id, draw_date, words_found, total_time'),
     ]);
 
     if (datesErr) return reply.code(500).send({ error: 'Failed to load draw dates' });
@@ -42,7 +46,7 @@ export default async function statsRoutes(fastify) {
     }));
 
     const stats = computeStats(flatResults, dateCounts, getBerlinDateKey());
-    const rankCounts = computeRankCounts(leaderboardRows, request.user.id);
+    const rankCounts = isGuest ? {} : computeRankCounts(leaderboardRows, request.user.id);
 
     return { ...stats, ...rankCounts };
   });
