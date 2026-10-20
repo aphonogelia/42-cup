@@ -3,7 +3,7 @@
    ========================================================================== */
 
 /* ---- Period tabs (Daily | Monthly | All-time) ------------------------------ */
-..ledger-tabs {
+.ledger-tabs {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -276,7 +276,7 @@
 /* Current player highlight — same for daily (.ledger-row) and period (.period-row) */
 .ledger-row.is-you,
 .period-row.is-you {
-  background: color-mix(in srgb, var(--lila) 10%, transparent);
+  background: color-mix(in srgb, var(--paper) 5%, transparent);
 }
 
 /* ---- Daily ledger ------------------------------------------------------------ */
