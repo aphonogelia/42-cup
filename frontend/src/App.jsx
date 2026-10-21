@@ -55,13 +55,14 @@ const INFO_PAGES = {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau).',
-      'Each day at midnight (Paris time), a new set of words is drawn at random from the ~2,300 past NYT Wordle answers. A word, once drawn, rests for 60 days before it may return.',
-      'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
-      SCORING_PLACEHOLDER,
-      'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
-      'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
-    ],
+    'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau).',
+    'Each day at midnight (Paris time), a new set of words is drawn at random from the ~2,300 past NYT Wordle answers. A word, once drawn, rests for 60 days before it may return.',
+    'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
+    SCORING_PLACEHOLDER,
+    'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
+    'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
+    'The server is hosted on free tiers (Render), so it may take a little while to wake up on your first visit. Thanks for your patience!',
+  ],
   },
 };
 
