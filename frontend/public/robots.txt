@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wd42.xyz/sitemap.xml
