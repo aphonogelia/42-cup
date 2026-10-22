@@ -9,6 +9,8 @@ function quantile(sortedValues, q) {
   return sortedValues[base];
 }
 
+// `results` come from the valid_results view: flagged days are already gone and
+// a past-day in_progress word already has status 'failed'. Nothing to re-derive here.
 export function computeStats(results, dateCounts, todayKey) {
   const byDate = new Map();
   for (const r of results) {
@@ -56,7 +58,9 @@ export function computeStats(results, dateCounts, todayKey) {
     }
 
     for (const r of dayResults) {
-      if (r.nb_tries > 0) wordsStarted++;
+      // Same definition as the period boards: only finished words count
+      // (today's in_progress word is not started yet for the ranking).
+      if (r.status === 'solved' || r.status === 'failed') wordsStarted++;
 
       if (r.status !== 'solved') continue;
 
@@ -148,32 +152,4 @@ function computeStreak(dayStatus, key, todayKey) {
   }
 
   return { current, longest };
-}
-
-export function computeRankCounts(leaderboardRows, userId) {
-  const byDate = new Map();
-  for (const row of leaderboardRows) {
-    if (!byDate.has(row.draw_date)) byDate.set(row.draw_date, []);
-    byDate.get(row.draw_date).push(row);
-  }
-
-  let top1 = 0;
-  let top3 = 0;
-  let top5 = 0;
-
-  for (const rows of byDate.values()) {
-    const sorted = rows.slice().sort((a, b) => {
-      if (b.words_found !== a.words_found) return b.words_found - a.words_found;
-      return a.total_time - b.total_time;
-    });
-
-    const rank = sorted.findIndex((r) => r.user_id === userId) + 1;
-    if (rank === 0) continue;
-
-    if (rank <= 1) top1++;
-    if (rank <= 3) top3++;
-    if (rank <= 5) top5++;
-  }
-
-  return { top1, top3, top5 };
 }
