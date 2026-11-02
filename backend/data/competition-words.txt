@@ -3,17 +3,14 @@ abase
 abate
 abbey
 abbot
-abeam
 abhor
 abide
-abled
 abode
 abort
 about
 above
 abuse
 abyss
-accra
 achoo
 acorn
 acrid
@@ -31,7 +28,6 @@ adopt
 adore
 adorn
 adult
-aerie
 affix
 afire
 afoot
@@ -134,7 +130,6 @@ ashen
 aside
 askew
 aspic
-assay
 asset
 aster
 atlas
@@ -157,7 +152,6 @@ award
 aware
 awash
 awful
-awing
 awoke
 axial
 axiom
@@ -237,7 +231,6 @@ bitty
 black
 blade
 blame
-blanc
 bland
 blank
 blare
@@ -263,7 +256,6 @@ blond
 blood
 bloom
 blown
-blowy
 bluer
 bluet
 bluff
@@ -342,7 +334,6 @@ bugle
 build
 built
 bulge
-bulgy
 bulky
 bully
 bumpy
@@ -383,7 +374,6 @@ caper
 capon
 carat
 cargo
-carne
 carob
 carol
 carom
@@ -398,7 +388,6 @@ cause
 cavil
 cease
 cedar
-ceder
 cello
 chafe
 chaff
@@ -422,7 +411,6 @@ chemo
 chess
 chest
 chewy
-chica
 chick
 chide
 chief
@@ -508,7 +496,6 @@ conic
 convo
 copse
 coral
-corer
 corgi
 corny
 couch
@@ -561,10 +548,7 @@ crowd
 crown
 crude
 cruel
-cruet
 crumb
-crump
-cruse
 crush
 crust
 crypt
@@ -611,10 +595,8 @@ deism
 deist
 deity
 delay
-delft
 delta
 delve
-demob
 demon
 demur
 denim
@@ -629,8 +611,6 @@ devil
 diary
 dicey
 digit
-dildo
-dilly
 dimly
 diner
 dingo
@@ -639,7 +619,6 @@ diode
 dirge
 dirty
 disco
-dishy
 ditch
 ditto
 ditty
@@ -690,16 +669,13 @@ drunk
 dryer
 dryly
 duchy
-dulce
 dully
-dumbo
 dummy
 dumpy
 dunce
 durum
 dusky
 dusty
-dutch
 duvet
 dwarf
 dweeb
@@ -729,7 +705,6 @@ elder
 elect
 elegy
 elfin
-elide
 elite
 elope
 elude
@@ -742,7 +717,6 @@ emote
 empty
 enact
 endow
-enema
 enemy
 enjoy
 ennui
@@ -781,7 +755,6 @@ extol
 extra
 exude
 exult
-eying
 fable
 facet
 faint
@@ -790,13 +763,11 @@ faith
 fakir
 false
 fancy
-fanny
 farad
 farce
 fatal
 fault
 fauna
-faute
 favor
 feast
 feign
@@ -807,9 +778,7 @@ femme
 femur
 fence
 feral
-ferny
 ferry
-fesse
 fetal
 fetch
 fetid
@@ -834,7 +803,6 @@ filth
 final
 finch
 finer
-fiord
 first
 fishy
 fitly
@@ -930,7 +898,6 @@ fuzzy
 gaffe
 gaily
 gamer
-gamin
 gamma
 gamut
 ganja
@@ -943,7 +910,6 @@ gaunt
 gauze
 gavel
 gawky
-gayly
 gazer
 gecko
 geeky
@@ -955,7 +921,6 @@ ghost
 ghoul
 giant
 giddy
-gipsy
 girly
 girth
 given
@@ -1073,7 +1038,6 @@ hasty
 hatch
 hater
 haunt
-haute
 haven
 havoc
 hazel
@@ -1101,16 +1065,12 @@ hitch
 hoard
 hobby
 hoist
-holey
 holly
 homer
-homme
 honey
-honky
 honor
 hooky
 horde
-horny
 horse
 hotel
 hotly
@@ -1124,7 +1084,6 @@ human
 humid
 humor
 humph
-humus
 hunch
 hunky
 hurry
@@ -1132,7 +1091,6 @@ husky
 hutch
 hydra
 hyena
-hymen
 hyper
 icily
 icing
@@ -1208,7 +1166,6 @@ kitty
 knack
 knave
 knead
-kneed
 kneel
 knell
 knelt
@@ -1219,10 +1176,8 @@ known
 knurl
 koala
 korma
-kraut
 krill
 label
-labia
 labor
 laden
 ladle
@@ -1231,7 +1186,6 @@ laity
 lance
 lanky
 lapel
-lapin
 lapse
 larch
 large
@@ -1265,13 +1219,11 @@ legal
 leggy
 legit
 lemma
-lemme
 lemon
 lemur
 levee
 level
 lever
-liane
 libel
 libra
 licit
@@ -1281,7 +1233,6 @@ light
 liken
 lilac
 limbo
-limey
 limit
 linen
 liner
@@ -1309,7 +1260,6 @@ loose
 loris
 lorry
 loser
-lough
 louse
 lousy
 lover
@@ -1318,7 +1268,6 @@ lowly
 loyal
 lucid
 lucky
-luffa
 lumen
 lumpy
 lunar
@@ -1331,7 +1280,6 @@ lusty
 lycra
 lying
 lymph
-lynch
 lyric
 macaw
 macho
@@ -1347,7 +1295,6 @@ maker
 mamba
 mambo
 mamma
-mammy
 manga
 mange
 mango
@@ -1405,7 +1352,6 @@ mocha
 modal
 model
 modem
-moggy
 mogul
 moist
 molar
@@ -1448,7 +1394,6 @@ mushy
 music
 musky
 musty
-muter
 myrrh
 nacho
 nacre
@@ -1481,7 +1426,6 @@ nobly
 noise
 noisy
 nomad
-nonce
 north
 nosey
 notch
@@ -1495,11 +1439,9 @@ oasis
 obese
 occur
 ocean
-ocker
 octal
 octet
 oddly
-offal
 offer
 often
 okapi
@@ -1551,9 +1493,7 @@ pansy
 panto
 papal
 paper
-pappy
 parch
-parer
 parka
 parry
 parse
@@ -1602,7 +1542,6 @@ pinky
 pinto
 pious
 piper
-pipit
 pique
 piste
 pitch
@@ -1622,7 +1561,6 @@ plate
 plaza
 plead
 pleat
-plebe
 plier
 plonk
 pluck
@@ -1640,8 +1578,6 @@ polar
 polio
 polka
 polyp
-pommy
-poncy
 ponzu
 pooch
 poppy
@@ -1683,9 +1619,7 @@ proxy
 prude
 prune
 psalm
-pshaw
 psych
-pubic
 puffy
 pulpy
 pulse
@@ -1719,7 +1653,6 @@ quest
 queue
 quick
 quiet
-quiff
 quill
 quilt
 quint
@@ -1748,7 +1681,6 @@ ratty
 ravel
 raven
 raver
-ravin
 rayon
 razor
 reach
@@ -1871,7 +1803,6 @@ sauna
 saute
 saver
 savor
-savoy
 savvy
 scald
 scale
@@ -1908,9 +1839,7 @@ sedan
 seedy
 segue
 seize
-semen
 sense
-sepal
 sepia
 serif
 serum
@@ -1980,7 +1909,6 @@ silly
 since
 singe
 siren
-sisal
 sissy
 sitar
 sixth
@@ -2064,7 +1992,6 @@ sonar
 sonic
 sooth
 sorry
-sough
 sound
 soupy
 south
@@ -2085,7 +2012,6 @@ spell
 spelt
 spend
 spent
-sperm
 spice
 spicy
 spiel
@@ -2111,7 +2037,6 @@ spray
 spree
 sprig
 spume
-spunk
 spurt
 squab
 squad
@@ -2122,7 +2047,6 @@ stack
 stade
 staff
 stage
-stagy
 staid
 stain
 stair
@@ -2171,7 +2095,6 @@ store
 stork
 storm
 story
-stoup
 stout
 stove
 strap
@@ -2250,7 +2173,6 @@ taper
 tapir
 tardy
 tarot
-tarty
 taser
 taste
 tasty
@@ -2274,7 +2196,6 @@ tenor
 tense
 tenth
 tepid
-terra
 terse
 testy
 tetra
@@ -2299,7 +2220,6 @@ three
 threw
 throb
 throw
-thrum
 thumb
 thump
 thyme
@@ -2314,7 +2234,6 @@ timid
 tinge
 tipsy
 titan
-titch
 tithe
 title
 tizzy
@@ -2324,7 +2243,6 @@ today
 toddy
 token
 tonal
-tonga
 tonic
 tonka
 tonne
@@ -2391,7 +2309,6 @@ tunic
 tuple
 turbo
 tutor
-tutti
 twang
 tweak
 tweed
@@ -2401,11 +2318,9 @@ twerk
 twice
 twill
 twine
-twink
 twirl
 twist
 tying
-typic
 udder
 ulcer
 ulnar
@@ -2433,7 +2348,6 @@ until
 unwed
 unzip
 upend
-upped
 upper
 upset
 urban
@@ -2460,7 +2374,6 @@ vapor
 vault
 vaunt
 vegan
-velum
 venal
 venom
 venue
@@ -2468,7 +2381,6 @@ verge
 verse
 verso
 verve
-vetch
 vicar
 video
 vigil
@@ -2480,7 +2392,6 @@ viper
 viral
 virus
 visit
-vison
 visor
 vital
 vivid
@@ -2496,7 +2407,6 @@ voter
 vouch
 vowel
 vroom
-vulva
 vying
 wacko
 wacky
@@ -2507,8 +2417,6 @@ waist
 waive
 waken
 waltz
-wanky
-wanly
 warty
 waste
 watch
@@ -2522,9 +2430,6 @@ weedy
 weeny
 weigh
 weird
-welsh
-wench
-wetly
 whack
 whale
 wharf
@@ -2549,8 +2454,6 @@ wider
 widow
 width
 wield
-wight
-willy
 wimpy
 wince
 windy
@@ -2563,8 +2466,6 @@ woman
 women
 wonky
 woody
-wooer
-woosh
 woozy
 wordy
 world
@@ -2596,5 +2497,4 @@ youth
 zebra
 zesty
 zingy
-zombi
 zonal

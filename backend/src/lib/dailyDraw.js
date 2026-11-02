@@ -5,7 +5,7 @@ import { supabase } from '../supabase.js';
 
 export const BERLIN_TIME_ZONE = 'Europe/Berlin';
 export const DEFAULT_DRAW_COUNT = 5;
-export const RECENT_WORD_BUFFER_DAYS = 60;
+export const RECENT_WORD_BUFFER_DAYS = 90;
 export const DEFAULT_POOL_PATH = path.resolve('data/competition-words.txt');
 export const SPECIAL_POOLS_PATH = path.resolve('data/special.json');
 
@@ -105,11 +105,12 @@ export function validateDrawPool(pool, count = DEFAULT_DRAW_COUNT) {
 
 export function secureSample(pool, count = DEFAULT_DRAW_COUNT) {
     const arr = [...pool];
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = randomInt(i + 1);
+    const sampleCount = Math.min(count, arr.length);
+    for (let i = 0; i < sampleCount; i++) {
+        const j = i + randomInt(arr.length - i);
         [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    return arr.slice(0, count);
+    return arr.slice(0, sampleCount);
 }
 
 // --- Special-day pools ---------------------------------------------------
