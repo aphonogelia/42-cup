@@ -255,7 +255,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
       <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
         {TABS.map(({ id, label }, i) => (
           <Fragment key={id}>
-            {i > 0 && <span className="ledger-tab-sep" aria-hidden="true">//</span>}
+            {i > 0 && <span className="ledger-tab-sep" aria-hidden="true">{'//'}</span>}
             <button
               type="button"
               className={`ledger-tab${tab === id ? ' active' : ''}`}
