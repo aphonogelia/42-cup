@@ -1,0 +1,307 @@
+/* ---- Game grid ------------------------------------------------------ */
+.game-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.board-wrap {
+  width: 100%;
+  display: grid;
+  gap: 0;
+  justify-items: center;
+  position: relative;
+}
+
+.status-line {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-height: 0;
+  line-height: 1.2;
+}
+
+.status-line.error {
+  color: var(--crimson);
+}
+
+.grid {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+  margin-inline: auto;
+}
+
+.grid-row {
+  display: grid;
+  gap: 8px;
+}
+
+.tile {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1.5px solid var(--tile-empty-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(18px, 5vw, 24px);
+  text-transform: uppercase;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.tile.filled {
+  border-color: var(--text-faint);
+}
+
+.tile.correct {
+  background: var(--tile-correct);
+  border-color: var(--tile-correct);
+  color: #0d1a12;
+}
+
+.tile.present {
+  background: var(--tile-present);
+  border-color: var(--tile-present);
+  color: #211705;
+}
+
+.tile.absent {
+  background: var(--tile-absent);
+  border-color: var(--tile-absent);
+  color: var(--text-faint);
+}
+
+.tile.tile-reveal {
+  animation: tile-reveal 550ms ease-in-out forwards;
+  transform-origin: center;
+  will-change: transform, background-color, color;
+}
+
+.tile-skeleton {
+  border-color: var(--line-soft);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    var(--surface);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.15s ease-in-out infinite;
+}
+
+.result-banner {
+  font-family: var(--font-display);
+  font-size: 13px;
+  margin-top: 0;
+  padding: 12px 16px;
+  border: none;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.game-footer-action {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  min-height: 152px;
+  gap: 10px;
+}
+
+.finished-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.answer-reveal {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.answer-reveal span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: reveal-letter 260ms ease-out forwards;
+}
+
+.next-word-btn {
+  width: auto;
+  margin-top: 0;
+  background: var(--surface-raised);
+  border: 1px solid rgba(153, 154, 130, 0.28);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.next-word-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* ---- Keyboard -------------------------------------------------------- */
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 0;
+}
+
+.kb-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.key {
+  flex: 1;
+  max-width: 34px;
+  height: 44px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.key:hover {
+  border-color: var(--text-muted);
+}
+
+.key.wide {
+  max-width: 56px;
+  font-size: 10px;
+}
+
+.key.correct {
+  background: var(--tile-correct);
+  border-color: var(--tile-correct);
+  color: #0d1a12;
+}
+
+.key.present {
+  background: var(--tile-present);
+  border-color: var(--tile-present);
+  color: #211705;
+}
+
+.key.absent {
+  background: var(--tile-absent);
+  border-color: var(--tile-absent);
+  color: var(--text-faint);
+}
+
+@keyframes reveal-letter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tile-reveal {
+  0% {
+    transform: scaleY(1);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  45% {
+    transform: scaleY(0.12);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  55% {
+    transform: scaleY(0.12);
+    background: var(--reveal-bg);
+    color: var(--reveal-color);
+  }
+
+  100% {
+    transform: scaleY(1);
+    background: var(--reveal-bg);
+    color: var(--reveal-color);
+  }
+}
+
+@keyframes tile-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+.tile.tile-shake {
+  animation: tile-shake 500ms cubic-bezier(.36, .07, .19, .97);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    max-width: 100%;
+  }
+
+  .tile {
+    font-size: clamp(16px, 7vw, 22px);
+  }
+}

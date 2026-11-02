@@ -4,6 +4,7 @@ import GameGrid, { getRevealDurationMs, getShakeDurationMs } from './GameGrid.js
 import { computeLetterStates } from '../lib/keyboardState.js';
 import Keyboard from './Keyboard.jsx';
 import AlertModal from './AlertModal.jsx';
+import './Game.css';
 
 const LOADING_ROWS = 6;
 const LOADING_LENGTH = 5;

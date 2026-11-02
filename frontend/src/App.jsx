@@ -7,6 +7,7 @@ import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
 import AlertModal from './components/AlertModal.jsx';
 import Stats from './components/Stats.jsx';
+import LoginRequired from './components/LoginRequired.jsx';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
@@ -44,22 +45,24 @@ const INFO_PAGES = {
     eyebrow: 'Data and access',
     body: [
       'You enter through 42 OAuth, and we keep only what is needed to recognise you: your intra ID, login, display name and avatar.',
+      'You can also play as a guest. A guest profile has a random name and your results, stored the same way, and never appears in the ledger. It is deleted after 90 days without playing.',
       'A signed token stays in your browser so you are not asked twice. It serves no other purpose than to vouch for your requests.',
       'Your guesses, your progress and your results are kept in Supabase, so the ledger can remember across players and days. Should a result be flagged as suspicious, that mark is kept as well. Nothing is sold, and no third-party trackers watch you play.',
-      'If you wish your data to be removed, write to htharrau.'
+      'If you wish your data to be removed, write to htharrau.',
     ],
   },
   about: {
     title: 'About',
     eyebrow: 'The 42 Cup',
     body: [
-      'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau).',
-      'Each day at midnight (Paris time), a new set of words is drawn at random from the ~2,300 past NYT Wordle answers. A word, once drawn, rests for 60 days before it may return.',
-      'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
-      SCORING_PLACEHOLDER,
-      'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
-      'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
-    ],
+    'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau).',
+    'Each day at midnight (Paris time), a new set of words is drawn at random from a pool of about 2,000 past NYT Wordle answers plus 600 curated words. A word, once drawn, rests for 60 days before it may return. Guesses are checked against the same 14,855 words as the official Wordle.',
+    'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
+    'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
+    SCORING_PLACEHOLDER,
+    'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
+    'The server is hosted on free tiers (Render), so it may take a little while to wake up on your first visit. Thanks for your patience!',
+  ],
   },
 };
 
@@ -308,11 +311,11 @@ export default function App() {
       !showCompletionToast &&
       words.length > 0 &&
       words.every((word) => word.status === 'solved' || word.status === 'failed')
-
     ) {
-      setView('leaderboard');
+      setView(user?.is_guest ? 'stats' : 'leaderboard');
     }
-  }, [words, showCompletionToast]);
+  }, [words, showCompletionToast, user]);
+
 
   useEffect(() => {
     window.localStorage.setItem('wordel-theme', theme);
@@ -446,7 +449,9 @@ export default function App() {
       <header className="masthead">
         <div className="masthead-title-row">
           <h1 className="masthead-title">
-            wordel <span>{'// 42 CUP'}</span>
+            <button type="button" onClick={() => setView('play')} aria-label="Play">
+              wordel <span>{'// 42 CUP'}</span>
+            </button>
           </h1>
 
           {isDayComplete && (
@@ -498,23 +503,26 @@ export default function App() {
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
             </button>
 
-            <button
-              className="icon-btn theme-toggle"
-              onClick={handleTogglePrivacy}
-              aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
-              title={user.privacy_enabled ? 'Public' : 'Private'}
-            >
-              {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
+            {!user.is_guest && (
+              <button
+                className="icon-btn theme-toggle"
+                onClick={handleTogglePrivacy}
+                aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
+                title={user.privacy_enabled ? 'Public' : 'Private'}
+              >
+                {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            )}
 
             <button
               className="icon-btn theme-toggle"
-              onClick={handleLogout}
-              aria-label="Log out"
-              title="Log out"
+              onClick={user.is_guest ? () => window.location.assign(api.loginUrl()) : handleLogout}
+              aria-label={user.is_guest ? 'Sign in with 42' : 'Log out'}
+              title={user.is_guest ? 'Sign in with 42 (guest stats do not carry over)' : 'Log out'}
             >
               <LogoutIcon />
             </button>
+
           </div>
         </div>
       </header>
@@ -541,16 +549,23 @@ export default function App() {
               />
             )}
           </>
-        ) : view === 'leaderboard' ? (
-          <Leaderboard
-            totalWords={words.length}
-            viewerIsPrivate={!!user.privacy_enabled}
-            viewerId={user.id}
-          />
-        ) : (
-          <Stats />
-        )}
+              ) : view === 'leaderboard' ? (
+      user.is_guest ? (
+        <LoginRequired />
+      ) : (
+        <Leaderboard
+          totalWords={words.length}
+          viewerIsPrivate={!!user.privacy_enabled}
+          viewerId={user.id}
+        />
+      )
+    ) : (
+      <Stats isGuest={!!user.is_guest} />
+    )}
       </main>
+
+
+
 
       <footer className="app-footer">
         <button type="button" onClick={() => setInfoPage('privacy')}>Privacy</button>
@@ -575,7 +590,7 @@ export default function App() {
         duration={2200}
         onClose={() => {
           setShowCompletionToast(false);
-          setView('leaderboard');
+          setView(user.is_guest ? 'stats' : 'leaderboard');
         }}
       />
       <InfoModal page={infoPage} rules={rules} onClose={() => setInfoPage(null)} />

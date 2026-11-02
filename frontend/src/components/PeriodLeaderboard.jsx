@@ -12,7 +12,7 @@ function monthLabel(monthKey) {
   return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
-const formatPct = (v) => (v == null ? '—' : `${Math.round(Number(v))}%`);
+const formatPct = (v) => (v == null ? '—' : `${Number(v).toFixed(1)}%`);
 const formatTries = (v) => (v == null ? '—' : Number(v).toFixed(1));
 // The score is a plain number (seconds / 60, lower is better), not a clock time.
 const formatScore = (v) => (v == null ? '—' : (Number(v) / 60).toFixed(2));

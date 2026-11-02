@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { formatTime } from '../lib/formatTime.js';
 import './Stats.css';
 
+
 const PODIUM_HEIGHTS = { left: 58, middle: 84, right: 38 };
 
 function formatDateLabel(dateStr) {
@@ -118,7 +119,7 @@ function Podium({ top1, top3, top5, total }) {
   );
 }
 
-export default function Stats() {
+export default function Stats({ isGuest = false }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
@@ -147,6 +148,7 @@ export default function Stats() {
 
   return (
     <div className="stats-page">
+
       <StatGroup title="General">
         <StatBlock
           compact
@@ -191,9 +193,11 @@ export default function Stats() {
         <StatBlock compact value={formatTime(data.wordTimeQuartiles.q3)} label="Q3" />
       </StatGroup>
 
-      <StatGroup title="Podium finishes" bare>
-        <Podium top1={data.top1} top3={data.top3} top5={data.top5} total={data.daysStarted} />
-      </StatGroup>
+      {!isGuest && (
+        <StatGroup title="Podium finishes" bare>
+          <Podium top1={data.top1} top3={data.top3} top5={data.top5} total={data.daysStarted} />
+        </StatGroup>
+      )}
 
       <StatGroup title="Perfect days">
         <StatBlock value={data.daysAllSolved} label="All solved" />

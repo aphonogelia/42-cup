@@ -20,6 +20,8 @@ async function hasCompletedToday(userId, drawDate) {
 
 export default async function wordResultsRoutes(fastify) {
   fastify.addHook('preHandler', fastify.requireAuth);
+  fastify.addHook('preHandler', fastify.requireRealUser);
+  
 
   fastify.get('/api/word-results/:id/guesses', async (request, reply) => {
     const { id } = request.params;

@@ -7,3 +7,5 @@
 .env.local
 .env.*.local
 .supref
+
+.envsupa

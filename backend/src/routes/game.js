@@ -208,7 +208,7 @@ export default async function gameRoutes(fastify) {
       // simply returns the already-finalized row unchanged)
     }
 
-    if (updated.status === 'solved' || updated.status === 'failed') {
+    if (!request.user.guest && (updated.status === 'solved' || updated.status === 'failed')){
       const { count: completedCount, error: completedError } = await supabase
         .from('word_results')
         .select('id', { count: 'exact', head: true })
