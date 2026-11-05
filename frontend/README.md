@@ -18,10 +18,13 @@ Requires the backend running (see the `wordel-backend` README) with
 ## Structure
 
 ```
+public/
+└── guesses.txt          # client-side copy of the server guess dictionary
+
 src/
 ├── App.jsx              # auth check, view switching (play / leaderboard)
 ├── api.js               # fetch wrapper, always sends the session cookie
-├── index.css             # design tokens + all styles
+├── index.css            # design tokens + all styles
 └── components/
     ├── Login.jsx         # "Sign in with 42" screen
     ├── WordTabs.jsx       # the 7 words as punch-card ticket stubs
@@ -30,6 +33,9 @@ src/
     ├── Keyboard.jsx       # on-screen keyboard
     └── Leaderboard.jsx    # tiered ledger (7/7 first, then 6/7, ...)
 ```
+
+The frontend uses `public/guesses.txt` for immediate local guess feedback. The
+backend remains authoritative and validates every submitted guess.
 
 ## Design
 

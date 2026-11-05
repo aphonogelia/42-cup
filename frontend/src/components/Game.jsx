@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../api.js';
 import GameGrid, { getRevealDurationMs, getShakeDurationMs } from './GameGrid.jsx';
 import { computeLetterStates } from '../lib/keyboardState.js';
+import { isAllowedGuess } from '../lib/guessDictionary.js';
 import Keyboard from './Keyboard.jsx';
 import AlertModal from './AlertModal.jsx';
 import './Game.css';
@@ -153,6 +154,13 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
 
     submittingRef.current = true;
     try {
+      const locallyAllowed = await isAllowedGuess(currentGuess);
+      if (locallyAllowed === false) {
+        setErrorMessage('Not a recognized word');
+        triggerShake();
+        return;
+      }
+
       const result = await api.guess(wordState.word_id, currentGuess);
       const rowIndex = wordState.guesses.length;
       const guessedWord = currentGuess;
