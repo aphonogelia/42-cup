@@ -3,3 +3,4 @@
 **/.env.localsupabase/.envsupa
 .vercel
 .env*
+.vscode/

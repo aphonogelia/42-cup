@@ -136,14 +136,13 @@ export async function checkPlayerForCheating(userId, drawDate, login) {
         (word) => word.firstGuessIsAnswer
     );
 
-    const allFiveFirstGuessesAreAnswers =
-        words.length === 5 &&
-        firstGuessAnswerWords.length === 5;
+    const multipleFirstGuessesAreAnswers =
+        firstGuessAnswerWords.length >= 2;
 
     const flagged =
         fastGapWords.length > 0 ||
         lowVarianceWords.length >= 3 ||
-        allFiveFirstGuessesAreAnswers;
+        multipleFirstGuessesAreAnswers;
 
     if (!flagged) {
         return false;
@@ -161,8 +160,10 @@ export async function checkPlayerForCheating(userId, drawDate, login) {
         );
     }
 
-    if (allFiveFirstGuessesAreAnswers) {
-        reasons.push('all 5 answers as first guesses');
+    if (multipleFirstGuessesAreAnswers) {
+        reasons.push(
+            `${firstGuessAnswerWords.length} answers as first guesses`
+        );
     }
 
     const reason = reasons.join(', ');
@@ -205,7 +206,7 @@ export async function checkPlayerForCheating(userId, drawDate, login) {
         `First guess = answer: ${firstGuessAnswerWords.length}/5`,
     ].join('\n');
 
-    await sendTelegram(message);
+       await sendTelegram(message);
 
     return true;
 }
