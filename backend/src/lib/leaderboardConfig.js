@@ -1,6 +1,6 @@
-// Tunable rules for the monthly + global leaderboards. They are sent to the
-// leaderboard_period() RPC and returned to the frontend as `thresholds`, so the
-// UI never hardcodes them.
+// Single source of truth for the monthly + global leaderboard rules. Every
+// value is passed explicitly to leaderboard_period() and returned to the
+// frontend as `thresholds`, so neither SQL nor the UI hardcodes them.
 //
 // score (seconds, lower is better) =
 //     median word cost

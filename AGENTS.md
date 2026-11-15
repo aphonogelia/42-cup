@@ -54,8 +54,8 @@ the two frontends.
 
 ## Game/data invariants
 
-- **5 words per day** (`DEFAULT_DRAW_COUNT`; cheat detection also assumes 5).
-  Day boundary is `Europe/Berlin`.
+- **5 words per day** (`DEFAULT_DRAW_COUNT`); cheat detection compares against
+  that same constant. Day boundary is `Europe/Berlin`.
 - Draw: `crypto.randomInt` sample from `data/competition-words.txt`, excluding
   answers within ±90 days. `data/special.json` overrides the pool per date;
   `oneOff` beats `recurring`. Rows are upserted on `(draw_date, order_index)`.
@@ -66,9 +66,10 @@ the two frontends.
   `backend/data/guesses.txt`. There is no sync script; copy it manually.
 - The winning/submitting path is the SQL `submit_guess` RPC: tries, timing and
   status are computed there. Don't reimplement them in JS around it.
-- Leaderboard rules live in `backend/src/lib/leaderboardConfig.js` and are passed
-  as parameters to the `leaderboard_period` SQL function. Change both together;
-  the same thresholds are returned to the UI, which never hardcodes them.
+- Leaderboard rules live only in `backend/src/lib/leaderboardConfig.js`. They are
+  passed as explicit parameters to `leaderboard_period`; the SQL function has no
+  defaults. The same thresholds are returned to the UI, which never hardcodes
+  them.
 - Eligibility is the `valid_results` view: flagged user-days removed, past
   `in_progress` counts as failed. Leaderboards, personal stats and public stats
   all read it.

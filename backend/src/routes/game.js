@@ -3,7 +3,7 @@ import { computeFeedback, isWin } from '../lib/wordel.js';
 import { isAllowedGuess } from '../lib/dictionary.js';
 import { validateHardMode } from '../lib/hardMode.js';
 import { config } from '../config.js';
-import { ensureDailyDraw, getBerlinDateKey } from '../lib/dailyDraw.js';
+import { ensureDailyDraw, getBerlinDateKey, DEFAULT_DRAW_COUNT } from '../lib/dailyDraw.js';
 import { invalidateLeaderboard, invalidateWordTimes } from '../lib/leaderboardCache.js';
 import { checkPlayerForCheating } from '../lib/cheatDetection.js';
 
@@ -84,7 +84,7 @@ export default async function gameRoutes(fastify) {
     }));
   });
 
-  // Starts (or resumes) a specific word by its order_index (1..5).
+  // Starts (or resumes) a specific word by its order_index (1..draw size).
   // Timer starts on first guess; started_at stays hidden before that.
   fastify.post('/api/game/start', async (request, reply) => {
     const { order_index } = request.body ?? {};
@@ -166,7 +166,7 @@ export default async function gameRoutes(fastify) {
     const { word_id, guess } = request.body ?? {};
     if (!word_id || !guess) return reply.code(400).send({ error: 'word_id and guess required' });
 
-    const { words } = await getActiveDraw();
+    const { drawDate, words } = await getActiveDraw();
     const word = words.find((item) => item.id === word_id);
     if (!word) return reply.code(404).send({ error: 'Word not found' });
 
@@ -209,23 +209,32 @@ export default async function gameRoutes(fastify) {
     }
 
     if (!request.user.guest && (updated.status === 'solved' || updated.status === 'failed')){
+      // Count only today's words; a lifetime count would fire the check on
+      // every guess after the first day.
+      const wordIds = words.map((item) => item.id);
       const { count: completedCount, error: completedError } = await supabase
         .from('word_results')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', request.user.id)
+        .in('word_id', wordIds)
         .in('status', ['solved', 'failed']);
 
-      if (!completedError && completedCount >= 5) {
+      if (!completedError && completedCount >= DEFAULT_DRAW_COUNT) {
         try {
-          await checkPlayerForCheating(request.user.id, getBerlinDateKey(), request.user.login);
+          await checkPlayerForCheating(
+            request.user.id,
+            drawDate,
+            request.user.login,
+            DEFAULT_DRAW_COUNT
+          );
         } catch (error) {
           fastify.log.error(error, 'Failed to check player for cheating');
         }
       }
     }
 
-    invalidateLeaderboard(getBerlinDateKey());
-    invalidateWordTimes(request.user.id, getBerlinDateKey());
+    invalidateLeaderboard(drawDate);
+    invalidateWordTimes(request.user.id, drawDate);
 
     fastify.log.info({ ms: Math.round(performance.now() - requestStarted) }, 'guess request');
 
