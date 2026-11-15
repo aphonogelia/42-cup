@@ -201,13 +201,6 @@ export default async function gameRoutes(fastify) {
 
     if (rpcErr) return reply.code(500).send({ error: 'Failed to save guess' });
 
-    // If the row wasn't in_progress by the time we got the lock, this was a duplicate
-    // request racing an already-completed one — don't award a second guess result.
-    if (updated.status !== 'in_progress' && updated.nb_tries === (updated.nb_tries)) {
-      // (status flips to solved/failed on the winning request; a true duplicate
-      // simply returns the already-finalized row unchanged)
-    }
-
     if (!request.user.guest && (updated.status === 'solved' || updated.status === 'failed')){
       // Count only today's words; a lifetime count would fire the check on
       // every guess after the first day.
