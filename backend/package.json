@@ -6,6 +6,8 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "analyze:entropy": "node scripts/entropy-bot.js",
+    "sync:guesses": "node scripts/sync-guesses.js",
+    "check:guesses": "node scripts/sync-guesses.js --check",
     "lint": "eslint ."
   },
   "dependencies": {

@@ -206,6 +206,7 @@ export default async function leaderboardRoutes(fastify) {
         to: today,
         thresholds: globalThresholds(),
         rows: await fetchPeriodRows({
+          p_from: null,
           p_to: today,
           p_min_days: minDays,
           p_try_penalty: LEADERBOARD_RULES.tryPenaltySeconds,

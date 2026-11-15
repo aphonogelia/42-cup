@@ -11,12 +11,12 @@
  *   node scripts/seed-words.js --force                # overwrite that day
  *   node scripts/seed-words.js path/to/other-pool.txt # custom pool file
  */
-import { ensureDailyDraw, getBerlinDateKey } from '../src/lib/dailyDraw.js';
+import { ensureDailyDraw, getBerlinDateKey, DEFAULT_DRAW_COUNT } from '../src/lib/dailyDraw.js';
 
 const args = process.argv.slice(2);
 const force = args.includes('--force');
 const countFlagIndex = args.indexOf('--count');
-const count = countFlagIndex !== -1 ? Number(args[countFlagIndex + 1]) : 5;
+const count = countFlagIndex !== -1 ? Number(args[countFlagIndex + 1]) : DEFAULT_DRAW_COUNT;
 const dateFlagIndex = args.indexOf('--date');
 const drawDate = dateFlagIndex !== -1 ? args[dateFlagIndex + 1] : getBerlinDateKey();
 const positional = args.filter(

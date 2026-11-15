@@ -1,7 +1,9 @@
 # wordel competition frontend (React + Vite)
 
-Talks to the Fastify backend via cookie-based sessions (`credentials: 'include'`
-on every request — see `src/api.js`).
+Talks to the Fastify backend with a bearer JWT stored in `localStorage` (see
+`TOKEN_KEY` in `src/api.js`). The 42 OAuth callback lands on
+`/auth/callback#token=<jwt>`, where `AuthCallback.jsx` stores it and redirects
+home. The backend sends no session cookie.
 
 ## Setup
 
@@ -19,29 +21,34 @@ Requires the backend running (see the `wordel-backend` README) with
 
 ```
 public/
-└── guesses.txt          # client-side copy of the server guess dictionary
+└── guesses.txt          # client-side copy of backend/data/guesses.txt
 
 src/
-├── App.jsx              # auth check, view switching (play / leaderboard)
-├── api.js               # fetch wrapper, always sends the session cookie
+├── App.jsx              # auth check, manual pathname handling, view switching
+├── api.js               # fetch wrapper, adds the bearer token from localStorage
 ├── index.css            # design tokens + all styles
+├── lib/                 # time formatting, guess dictionary, keyboard state
 └── components/
-    ├── Login.jsx         # "Sign in with 42" screen
-    ├── WordTabs.jsx       # the 7 words as punch-card ticket stubs
+    ├── Login.jsx / AuthCallback.jsx / LoginRequired.jsx
+    ├── WordTabs.jsx       # the 5 words as punch-card ticket stubs
     ├── Game.jsx           # per-word state, guess submission, keyboard input
     ├── GameGrid.jsx       # the tile grid
     ├── Keyboard.jsx       # on-screen keyboard
-    └── Leaderboard.jsx    # tiered ledger (7/7 first, then 6/7, ...)
+    ├── Stats.jsx          # personal statistics
+    ├── Leaderboard.jsx    # tiered daily ledger (5/5 first, then 4/5, ...)
+    └── PeriodLeaderboard.jsx  # monthly and all-time boards
 ```
 
 The frontend uses `public/guesses.txt` for immediate local guess feedback. The
-backend remains authoritative and validates every submitted guess.
+backend remains authoritative and validates every submitted guess. The public
+copy is generated from `backend/data/guesses.txt`; run `npm run sync:guesses`
+in `backend/` after changing the dictionary.
 
 ## Design
 
 Ink-ledger / punch-card aesthetic — monospace throughout (JetBrains Mono for
 display, IBM Plex Mono for body/data), dark navy background, amber/crimson
-ink accents. The 7 competition words are shown as ticket-stub tabs that get
+ink accents. The 5 competition words are shown as ticket-stub tabs that get
 rubber-stamped SOLVED or FAILED as you finish them — that's the one signature
 element; everything else stays quiet on purpose.
 

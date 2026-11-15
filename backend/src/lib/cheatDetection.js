@@ -87,7 +87,7 @@ async function sendTelegram(message) {
     }
 }
 
-export async function checkPlayerForCheating(userId, drawDate, login) {
+export async function checkPlayerForCheating(userId, drawDate, login, wordCount) {
     const { data: results, error } = await supabase
         .from('word_results')
         .select(`
@@ -203,7 +203,7 @@ export async function checkPlayerForCheating(userId, drawDate, login) {
         `Reason: ${reason}`,
         `Fast-gap words: ${fastGapWords.length}`,
         `Low-variance words: ${lowVarianceWords.length}`,
-        `First guess = answer: ${firstGuessAnswerWords.length}/5`,
+        `First guess = answer: ${firstGuessAnswerWords.length}/${wordCount}`,
     ].join('\n');
 
        await sendTelegram(message);
