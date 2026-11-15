@@ -8,6 +8,7 @@
     "analyze:entropy": "node scripts/entropy-bot.js",
     "sync:guesses": "node scripts/sync-guesses.js",
     "check:guesses": "node scripts/sync-guesses.js --check",
+    "test": "node --test",
     "lint": "eslint ."
   },
   "dependencies": {
