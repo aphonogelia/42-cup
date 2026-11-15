@@ -14,10 +14,16 @@ is authoritative — answers never reach the browser until a word is finished.
 No npm workspaces. Each package has its own `node_modules`; run commands from
 that directory. Root `npm install` only installs the Supabase CLI.
 
+## Do not touch
+
+- Bot/entropy code is work in progress: `backend/scripts/bot/`,
+  `backend/scripts/entropy-bot.js`, `backend/scripts/test_guesses/`. Leave it
+  alone unless the task is specifically about it.
+
 ## Commands
 
 ```bash
-# backend (must run from backend/ — see CWD note below)
+# backend
 cd backend && npm install && cp .env.example .env
 npm run dev            # node --watch src/server.js
 npm run lint
@@ -36,14 +42,15 @@ the two frontends.
 
 ## Runtime and env gotchas
 
-- `config.js` defaults `PORT` to **3001**, but `.env.example`/READMEs use 3000.
-  Set `PORT` explicitly and point `VITE_API_URL` at the same port.
+- `config.js` defaults `PORT` to **3000**; `.env.example`, the READMEs and
+  `VITE_API_URL` use the same value.
 - Boot fails fast if `JWT_SECRET`, `FORTYTWO_CLIENT_ID/SECRET/CALLBACK_URL`,
   `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` are missing.
 - CORS allowlist comes from `FRONTEND_URL` (comma-separated) plus
   `LEGACY_FRONTEND_URL`.
-- `backend/src/lib/dailyDraw.js` resolves `data/*.txt` against the process CWD.
-  Starting the API from the repo root breaks the draw.
+- Backend data paths are resolved from `import.meta.url`, so the API can start
+  from any CWD. Scripts under `backend/scripts/` still resolve the paths they
+  write from CWD.
 - Boot immediately calls `ensureDailyDraw`; the DB must be migrated and the pool
   populated or startup fails.
 - Auth is a **Bearer JWT in `localStorage`**, not a cookie. 42 OAuth redirects

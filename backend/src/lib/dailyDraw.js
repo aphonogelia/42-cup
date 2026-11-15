@@ -1,13 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { randomInt } from 'node:crypto';
-import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { supabase } from '../supabase.js';
 
 export const BERLIN_TIME_ZONE = 'Europe/Berlin';
 export const DEFAULT_DRAW_COUNT = 5;
 export const RECENT_WORD_BUFFER_DAYS = 90;
-export const DEFAULT_POOL_PATH = path.resolve('data/competition-words.txt');
-export const SPECIAL_POOLS_PATH = path.resolve('data/special.json');
+export const DEFAULT_POOL_PATH = fileURLToPath(
+    new URL('../../data/competition-words.txt', import.meta.url)
+);
+export const SPECIAL_POOLS_PATH = fileURLToPath(
+    new URL('../../data/special.json', import.meta.url)
+);
 
 const log = (...args) => console.log('[draw]', ...args);
 

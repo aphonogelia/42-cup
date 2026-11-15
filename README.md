@@ -100,13 +100,13 @@ npm install
 Create `backend/.env` with the variables below:
 
 ```dotenv
-PORT=3001
+PORT=3000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
 JWT_SECRET=replace-with-a-long-random-secret
 FORTYTWO_CLIENT_ID=your-42-client-id
 FORTYTWO_CLIENT_SECRET=your-42-client-secret
-FORTYTWO_CALLBACK_URL=http://localhost:3001/api/auth/42/callback
+FORTYTWO_CALLBACK_URL=http://localhost:3000/api/auth/42/callback
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
@@ -130,7 +130,7 @@ npm install
 Create `frontend/.env`:
 
 ```dotenv
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:3000
 ```
 
 Start the Vite development server:

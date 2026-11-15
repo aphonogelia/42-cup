@@ -11,7 +11,7 @@ function required(name) {
 
 export const config = {
 
-  port: Number(process.env.PORT || 3001),
+  port: Number(process.env.PORT || 3000),
   isProd: process.env.NODE_ENV === 'production',
   frontendUrl: process.env.FRONTEND_URL?.split(',')[0].trim(),
   frontendUrls: [process.env.FRONTEND_URL, process.env.LEGACY_FRONTEND_URL]
