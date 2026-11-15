@@ -152,6 +152,7 @@ deployment notes:
 cd backend
 npm run dev
 npm run lint
+npm test
 
 # Frontend
 cd frontend

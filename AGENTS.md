@@ -27,6 +27,7 @@ that directory. Root `npm install` only installs the Supabase CLI.
 cd backend && npm install && cp .env.example .env
 npm run dev            # node --watch src/server.js
 npm run lint
+npm test               # node --test
 npm run analyze:entropy -- --targets 3 --report /tmp/entropy.json
 
 # frontends
@@ -37,8 +38,10 @@ cd stat && npm install && npm run dev
 npm run lint && npm run build
 ```
 
-No test suite, no CI. Verification is `npm run lint` plus `npm run build` for
-the two frontends.
+`npm test` uses the Node built-in runner. Tests cover pure draw/pool helpers
+only; leaderboard eligibility is SQL and has no unit test. CI
+(`.github/workflows/ci.yml`) runs backend lint, `check:guesses` and tests, plus
+lint/build for both frontends.
 
 ## Runtime and env gotchas
 

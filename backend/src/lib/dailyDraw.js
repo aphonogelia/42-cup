@@ -202,6 +202,18 @@ export async function getRecentAnswers(drawDate, days = RECENT_WORD_BUFFER_DAYS)
 
 // --- Daily draw ------------------------------------------------------------
 
+/**
+ * Drops answers already used inside the recent-answer buffer.
+ * Pure: neither the pool nor the set is mutated.
+ *
+ * @param {string[]} pool
+ * @param {Set<string>} recentAnswers - lowercase words
+ * @returns {string[]}
+ */
+export function filterRecentAnswers(pool, recentAnswers) {
+    return pool.filter((word) => !recentAnswers.has(word.toLowerCase()));
+}
+
 export async function getDailyWords(drawDate = getBerlinDateKey()) {
     const { data, error } = await supabase
         .from('words')
@@ -245,7 +257,7 @@ export async function ensureDailyDraw({
         validateDrawPool(fullPool, count);
 
         const recent = await getRecentAnswers(drawDate);
-        const pool = fullPool.filter((word) => !recent.has(word.toLowerCase()));
+        const pool = filterRecentAnswers(fullPool, recent);
         ctx.available = pool.length;
         log(
             `pool after buffer (${ctx.pool}): ${pool.length} available / ` +
