@@ -22,17 +22,16 @@ Register at https://profile.intra.42.fr/oauth/applications
   to any frontend code — it bypasses RLS entirely, which is exactly why only this
   backend should hold it.
 
-### 3. Database change for daily draws
+### 3. Database for daily draws
 
-Apply [supabase/migrations/20260729_daily_draw.sql](supabase/migrations/20260729_daily_draw.sql) in Supabase.
-It adds `words.draw_date`, backfills existing rows, and replaces the old global
-`order_index` uniqueness with a per-day unique key on `(draw_date, order_index)`.
-That is what lets the competition store a new tirage every day while keeping past
-draws in the database.
+Apply all migrations in [`../supabase/migrations`](../supabase/migrations) with
+the Supabase CLI (`npx supabase db push` from the repo root). They add
+`words.draw_date` and the per-day unique key on `(draw_date, order_index)`,
+which lets the backend store a new draw every day while keeping past draws.
 
 ### 4. Seed the daily draw
 `data/competition-words.txt` is your full word **pool** (one word per line;
-blank lines and `#` comments ignored) — not the 7 answers directly. Put as
+blank lines and `#` comments ignored) — not the 5 answers directly. Put as
 many words in there as you like.
 
 The backend draws 5 words from the pool (via Node's `crypto.randomInt`, not
@@ -41,9 +40,9 @@ date. The backend selects the current draw by `Europe/Berlin` calendar day,
 so a new set becomes active at midnight Berlin time while older draws stay
 stored in the database.
 
-The same `competition-words.txt` pool also doubles as the guess-validation
-dictionary (see `src/lib/dictionary.js`) — one file, one source of truth,
-guesses of the right length are accepted if they're in your pool.
+Guess validation is a separate file: `data/guesses.txt`, loaded by
+`src/lib/dictionary.js`. A guess is accepted only if it appears there, not if it
+appears in the answer pool.
 
 ### Entropy bot experiment
 
@@ -58,27 +57,6 @@ npm run analyze:entropy -- --targets 3 --report /tmp/entropy-report.json
 For each step, the report includes global letter entropy, entropy for every
 letter position, the top candidate guesses with their score contributions,
 feedback, and the remaining possible answers.
-
-### Database change required
-
-The `words` table now needs a `draw_date` column so each day’s tirage can be
-stored separately. Add it once in Supabase with a unique constraint on
-`(draw_date, order_index)`.
-
-```sql
-alter table words
-  add column if not exists draw_date date;
-
-create unique index if not exists words_draw_date_order_index_key
-  on words (draw_date, order_index);
-
--- After backfilling existing rows, enforce the constraint:
-alter table words
-  alter column draw_date set not null;
-```
-
-If your existing table already has rows, backfill their `draw_date` first before
-making the column `not null` in production.
 
 ## Run
 
@@ -95,19 +73,20 @@ npm start       # production
 - Add all `.env` vars in the Render dashboard
 - Set `FORTYTWO_CALLBACK_URL` to `https://<your-render-domain>/api/auth/42/callback`
   and update the same redirect URI on the 42 OAuth app
-- Set `FRONTEND_URL` to your deployed Vercel frontend URL, and `NODE_ENV=production`
-  (this switches the session cookie to `Secure; SameSite=None`, required for the
-  cross-domain Vercel <-> Render cookie to work)
+- Set `FRONTEND_URL` to your deployed Vercel frontend URL (comma-separated
+  values are allowed, e.g. the main app and the stats site). `NODE_ENV` does not
+  change auth behavior; the frontend stores the JWT itself.
 
 ## API summary
 
 | Route | Auth | Description |
 |---|---|---|
 | `GET /api/auth/42` | - | Redirects to 42 login |
-| `GET /api/auth/42/callback` | - | OAuth callback, sets session cookie |
-| `POST /api/auth/logout` | - | Clears session |
+| `GET /api/auth/42/callback` | - | OAuth callback, redirects with a JWT in the URL fragment |
+| `POST /api/auth/logout` | - | No-op; the frontend drops the stored token |
+| `POST /api/auth/guest` | - | Creates a guest user and returns a JWT |
 | `GET /api/auth/me` | required | Current user profile |
 | `GET /api/game/progress` | required | Status of all words for this user |
 | `POST /api/game/start` | required | `{ order_index }` -> resumes/starts a word |
 | `POST /api/game/guess` | required | `{ word_id, guess }` -> feedback + status |
-| `GET /api/leaderboard` | - | Public leaderboard, ranked per tier |
+| `GET /api/leaderboard` | real user | Daily leaderboard, ranked per tier |
