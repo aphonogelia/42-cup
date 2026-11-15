@@ -40,9 +40,9 @@ src/
 ```
 
 The frontend uses `public/guesses.txt` for immediate local guess feedback. The
-backend remains authoritative and validates every submitted guess. Keep the
-public copy byte-identical to `backend/data/guesses.txt`; there is no sync
-script.
+backend remains authoritative and validates every submitted guess. The public
+copy is generated from `backend/data/guesses.txt`; run `npm run sync:guesses`
+in `backend/` after changing the dictionary.
 
 ## Design
 

@@ -67,10 +67,10 @@ the two frontends.
   answers within ±90 days. `data/special.json` overrides the pool per date;
   `oneOff` beats `recurring`. Rows are upserted on `(draw_date, order_index)`.
 - Guess dictionary is **only** `backend/data/guesses.txt` — not the competition
-  pool (backend README is wrong about this). Max 6 tries; hard mode is always on
-  via `config.game.hardMode`.
-- `frontend/public/guesses.txt` must stay byte-identical to
-  `backend/data/guesses.txt`. There is no sync script; copy it manually.
+  pool. Max 6 tries; hard mode is always on via `config.game.hardMode`.
+- `frontend/public/guesses.txt` is generated from `backend/data/guesses.txt`.
+  Run `npm run sync:guesses` in `backend/`; `npm run check:guesses` fails if the
+  two files differ.
 - The winning/submitting path is the SQL `submit_guess` RPC: tries, timing and
   status are computed there. Don't reimplement them in JS around it.
 - Leaderboard rules live only in `backend/src/lib/leaderboardConfig.js`. They are
