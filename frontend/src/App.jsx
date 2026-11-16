@@ -265,9 +265,6 @@ export default function App() {
       .progress()
       .then((data) => {
         setWords(data);
-        if (user?.login) {
-          writeCachedProgress(user.login, data);
-        }
         setSelectedOrderIndex((prev) => {
           if (prev) return prev;
           const firstOpen = data.find((w) => w.status === 'not_started' || w.status === 'in_progress');
@@ -279,7 +276,22 @@ export default function App() {
         }
       })
       .catch(() => { });
-  }, [user]);
+  }, []);
+
+  // Applies one word's server-confirmed result to the tab strip immediately,
+  // from the same guess response the grid uses. No extra request.
+  const applyWordUpdate = useCallback((orderIndex, patch) => {
+    setWords((prev) =>
+      prev.map((w) => (w.order_index === orderIndex ? { ...w, ...patch } : w))
+    );
+  }, []);
+
+  // Keep the localStorage snapshot in step with whatever the tabs show.
+  useEffect(() => {
+    if (user?.login && words.length > 0) {
+      writeCachedProgress(user.login, words);
+    }
+  }, [user, words]);
 
   useEffect(() => {
     api
@@ -542,8 +554,8 @@ export default function App() {
               <Game
                 userLogin={user.login}
                 orderIndex={selectedOrderIndex}
-                onWordFinished={() => refreshProgress({ checkCompletion: true })}
-                onWordStarted={() => refreshProgress()}
+                onWordUpdate={applyWordUpdate}
+                onProgressChanged={refreshProgress}
                 nextOrderIndex={getNextOpenWord(words, selectedOrderIndex)}
                 onNext={() => setSelectedOrderIndex(getNextOpenWord(words, selectedOrderIndex))}
               />
