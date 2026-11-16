@@ -93,7 +93,7 @@ export default async function gameRoutes(fastify) {
     const drawDate = getBerlinDateKey();
     const { data: word, error: wordErr } = await supabase
       .from('words')
-      .select('id, order_index, length, draw_date')
+      .select('id, order_index, length, draw_date, answer')
       .eq('draw_date', drawDate)
       .eq('order_index', order_index)
       .single();
@@ -112,15 +112,19 @@ export default async function gameRoutes(fastify) {
     }
 
     const result = await getWordResult(fastify, request.user.id, currentWord.id);
+    const status = result?.status ?? 'not_started';
 
     return {
       word_id: currentWord.id,
       length: currentWord.length,
       nb_tries: result?.nb_tries ?? 0,
       max_tries: config.game.maxTries,
-      status: result?.status ?? 'not_started',
+      status,
       started_at: visibleStartedAt(result),
       guesses: result?.guesses ?? [],
+      // Same rule as the guess endpoint: the answer is only revealed once the
+      // word is over, so a resumed finished word can show its result panel.
+      answer: status === 'solved' || status === 'failed' ? currentWord.answer : undefined,
     };
   });
 

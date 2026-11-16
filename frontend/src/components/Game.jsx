@@ -25,6 +25,10 @@ function getWordStateCacheKey(userLogin, orderIndex, dateKey = getBerlinDateKey(
   return `${WORD_STATE_CACHE_PREFIX}-${userLogin}-${dateKey}-${orderIndex}`;
 }
 
+function isFinishedStatus(status) {
+  return status === 'solved' || status === 'failed';
+}
+
 function readCachedWordState(userLogin, orderIndex) {
   if (!userLogin || typeof window === 'undefined') return null;
 
@@ -81,7 +85,7 @@ function AnimatedAnswer({ answer }) {
   );
 }
 
-export default function Game({ userLogin, orderIndex, onWordFinished, onWordStarted, nextOrderIndex, onNext }) {
+export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressChanged, nextOrderIndex, onNext }) {
   const [wordState, setWordState] = useState(null);
   const [currentGuess, setCurrentGuess] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -93,16 +97,63 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
   const revealTimeout = useRef(null);
   const shakeTimeout = useRef(null);
   const submittingRef = useRef(false);
+  const revealingRef = useRef(false);
   const nextWordBtnRef = useRef(null);
+  // Bumped whenever the board is reset, so late responses from the previous
+  // word are dropped instead of leaking into the new one.
+  const syncGeneration = useRef(0);
+  const syncInFlight = useRef(-1);
+  const onProgressChangedRef = useRef(onProgressChanged);
+
+  useEffect(() => {
+    onProgressChangedRef.current = onProgressChanged;
+  }, [onProgressChanged]);
+
+  // Loads the authoritative state for the current word. Used on mount and
+  // whenever the tab comes back into focus, so a word played (or finished) on
+  // another device shows up here without a manual page reload.
+  const loadWordState = useCallback(async ({ notifyParent = false, silent = false } = {}) => {
+    const generation = syncGeneration.current;
+    // `focus` and `visibilitychange` usually fire together; collapse them into
+    // a single request.
+    if (syncInFlight.current === generation) return;
+    syncInFlight.current = generation;
+
+    try {
+      const data = await api.start(orderIndex);
+      if (generation !== syncGeneration.current) return;
+      // A local guess is being revealed: the local state is ahead of the
+      // server snapshot we just read, so keep it.
+      if (submittingRef.current || revealingRef.current) return;
+
+      setWordState(data);
+      writeCachedWordState(userLogin, orderIndex, data);
+      // A finished word must restore its result panel (and next word button),
+      // even when it was finished somewhere else.
+      if (isFinishedStatus(data.status)) {
+        setFinished(data);
+        setCurrentGuess('');
+      }
+
+      // Refresh the tab timers with the same data the board just showed.
+      if (notifyParent) onProgressChangedRef.current?.();
+    } catch (err) {
+      if (generation === syncGeneration.current && !silent) setErrorMessage(err.message);
+    } finally {
+      if (syncInFlight.current === generation) syncInFlight.current = -1;
+      if (generation === syncGeneration.current) setLoading(false);
+    }
+  }, [orderIndex, userLogin]);
 
   // Reset everything (including shake) when switching to a different word.
   useEffect(() => {
-    let cancelled = false;
+    syncGeneration.current += 1;
     const cachedState = readCachedWordState(userLogin, orderIndex);
     if (cachedState) {
       setWordState(cachedState);
       setLoading(false);
     } else {
+      setWordState(null);
       setLoading(true);
     }
     setErrorMessage('');
@@ -111,24 +162,27 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
     setRevealRowIndex(null);
     setPendingGuess(null);
     setShakeRowIndex(null);
+    revealingRef.current = false;
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
     if (shakeTimeout.current) clearTimeout(shakeTimeout.current);
 
-    api
-      .start(orderIndex)
-      .then((data) => {
-        if (cancelled) return;
+    loadWordState();
+  }, [orderIndex, userLogin, loadWordState]);
 
-        setWordState(data);
-        writeCachedWordState(userLogin, orderIndex, data);
-      })
-      .catch((err) => !cancelled && setErrorMessage(err.message))
-      .finally(() => !cancelled && setLoading(false));
-
-    return () => {
-      cancelled = true;
+  // Pick up progress made elsewhere as soon as the tab regains focus.
+  useEffect(() => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState === 'hidden') return;
+      loadWordState({ notifyParent: true, silent: true });
     };
-  }, [orderIndex, userLogin]);
+
+    window.addEventListener('focus', refreshOnReturn);
+    document.addEventListener('visibilitychange', refreshOnReturn);
+    return () => {
+      window.removeEventListener('focus', refreshOnReturn);
+      document.removeEventListener('visibilitychange', refreshOnReturn);
+    };
+  }, [loadWordState]);
 
   // Cleanup on unmount only — declared once.
   useEffect(() => () => {
@@ -164,7 +218,6 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
       const result = await api.guess(wordState.word_id, currentGuess);
       const rowIndex = wordState.guesses.length;
       const guessedWord = currentGuess;
-      const isFirstGuess = wordState.nb_tries === 0;
 
       setPendingGuess({
         guess: guessedWord,
@@ -172,10 +225,15 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
       });
       setCurrentGuess('');
       setRevealRowIndex(rowIndex);
+      revealingRef.current = true;
 
       const duration = getRevealDurationMs(wordState.length);
 
       revealTimeout.current = setTimeout(() => {
+        revealingRef.current = false;
+
+        // Mirror the guess response into the board and the tab square at the
+        // same time, so the timer can never disagree with the grid.
         setWordState((prev) => {
           const nextState = {
             ...prev,
@@ -198,13 +256,21 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
         setPendingGuess(null);
         setRevealRowIndex(null);
 
-        if (result.status !== 'in_progress') {
-          setFinished(result);
-          onWordFinished?.();
-        } else if (isFirstGuess) {
-          // Timer just started server-side (started_at stamped) — let the
-          // parent refetch progress so the WordTabs timer can pick it up.
-          onWordStarted?.();
+        const nextStatus = result.status ?? wordState.status;
+        if (nextStatus !== 'in_progress') setFinished(result);
+
+        // Update the tab square from the exact response the grid just used, so
+        // its timer/status can never lag behind the board.
+        onWordUpdate?.(orderIndex, {
+          status: nextStatus,
+          time_seconds: result.time_seconds ?? wordState.time_seconds,
+          started_at: wordState.started_at ?? new Date().toISOString(),
+        });
+
+        // A finished word still needs the server pass for the completion
+        // toast and the final ordering of the tabs.
+        if (nextStatus !== 'in_progress') {
+          onProgressChangedRef.current?.({ checkCompletion: true });
         }
       }, duration);
 
@@ -214,7 +280,7 @@ export default function Game({ userLogin, orderIndex, onWordFinished, onWordStar
     } finally {
       submittingRef.current = false;
     }
-  }, [wordState, currentGuess, finished, revealRowIndex, onWordFinished, onWordStarted, userLogin, orderIndex, triggerShake]);
+  }, [wordState, currentGuess, finished, revealRowIndex, onWordUpdate, userLogin, orderIndex, triggerShake]);
 
   const handleKey = useCallback(
     (key) => {
