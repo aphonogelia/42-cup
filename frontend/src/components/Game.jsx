@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import GameGrid, { getRevealDurationMs, getShakeDurationMs } from './GameGrid.jsx';
 import { computeLetterStates } from '../lib/keyboardState.js';
 import { isAllowedGuess } from '../lib/guessDictionary.js';
+import { createSubmissionId } from '../lib/submissionId.js';
 import Keyboard from './Keyboard.jsx';
 import AlertModal from './AlertModal.jsx';
 import './Game.css';
@@ -98,6 +99,9 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
   const shakeTimeout = useRef(null);
   const submittingRef = useRef(false);
   const revealingRef = useRef(false);
+  // Idempotency key for the in-flight/last failed submission. Reused only when
+  // the same guess for the same word is retried.
+  const pendingSubmissionRef = useRef(null);
   const nextWordBtnRef = useRef(null);
   // Bumped whenever the board is reset, so late responses from the previous
   // word are dropped instead of leaking into the new one.
@@ -163,6 +167,7 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
     setPendingGuess(null);
     setShakeRowIndex(null);
     revealingRef.current = false;
+    pendingSubmissionRef.current = null;
     if (revealTimeout.current) clearTimeout(revealTimeout.current);
     if (shakeTimeout.current) clearTimeout(shakeTimeout.current);
 
@@ -197,6 +202,25 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
     shakeTimeout.current = setTimeout(() => setShakeRowIndex(null), getShakeDurationMs());
   }, [wordState]);
 
+  // Mirrors the server's canonical board. Used for every outcome that did not
+  // consume a try: a rejected duplicate, a finished word, or a replayed retry.
+  const applyServerGuessState = useCallback((result) => {
+    setWordState((prev) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        nb_tries: result.nb_tries,
+        status: result.status ?? prev.status,
+        time_seconds: result.time_seconds ?? prev.time_seconds,
+        started_at: result.started_at ?? prev.started_at,
+        guesses: result.guesses ?? prev.guesses,
+        ...(result.answer ? { answer: result.answer } : {}),
+      };
+      writeCachedWordState(userLogin, orderIndex, next);
+      return next;
+    });
+  }, [orderIndex, userLogin]);
+
   const submitGuess = useCallback(async () => {
     if (!wordState || finished || (wordState.status !== 'not_started' && wordState.status !== 'in_progress') || revealRowIndex !== null) return;
     if (submittingRef.current) return;
@@ -215,7 +239,30 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
         return;
       }
 
-      const result = await api.guess(wordState.word_id, currentGuess);
+      const guessKey = currentGuess.toLowerCase();
+      const pending = pendingSubmissionRef.current;
+      const submissionId =
+        pending && pending.wordId === wordState.word_id && pending.guess === guessKey
+          ? pending.id
+          : createSubmissionId();
+      pendingSubmissionRef.current = { wordId: wordState.word_id, guess: guessKey, id: submissionId };
+
+      const result = await api.guess(wordState.word_id, currentGuess, submissionId);
+      pendingSubmissionRef.current = null;
+
+      if (result.outcome !== 'accepted') {
+        // Duplicate rule or a word that is already over. Never paint a row or
+        // run the reveal; mirror what the server already has.
+        applyServerGuessState(result);
+        setCurrentGuess('');
+        if (result.outcome === 'duplicate_guess') {
+          setErrorMessage('Already guessed that word');
+          triggerShake();
+        }
+        if (isFinishedStatus(result.status)) setFinished(result);
+        return;
+      }
+
       const rowIndex = wordState.guesses.length;
       const guessedWord = currentGuess;
 
@@ -240,8 +287,8 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
             nb_tries: result.nb_tries,
             status: result.status ?? prev.status,
             time_seconds: result.time_seconds ?? prev.time_seconds,
-            started_at: prev.started_at ?? new Date().toISOString(),
-            guesses: [
+            started_at: result.started_at ?? prev.started_at ?? new Date().toISOString(),
+            guesses: result.guesses ?? [
               ...prev.guesses,
               {
                 guess: guessedWord,
@@ -264,7 +311,7 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
         onWordUpdate?.(orderIndex, {
           status: nextStatus,
           time_seconds: result.time_seconds ?? wordState.time_seconds,
-          started_at: wordState.started_at ?? new Date().toISOString(),
+          started_at: result.started_at ?? wordState.started_at ?? new Date().toISOString(),
         });
 
         // A finished word still needs the server pass for the completion
@@ -275,12 +322,16 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
       }, duration);
 
     } catch (err) {
+      // Keep the id across network and server failures: if the request actually
+      // landed, the retry replays it instead of being rejected as a duplicate.
+      // A 409 means the id was reused for another guess; a fresh one is needed.
+      if (err.status === 409) pendingSubmissionRef.current = null;
       setErrorMessage(err.message);
       triggerShake();
     } finally {
       submittingRef.current = false;
     }
-  }, [wordState, currentGuess, finished, revealRowIndex, onWordUpdate, userLogin, orderIndex, triggerShake]);
+  }, [wordState, currentGuess, finished, revealRowIndex, onWordUpdate, userLogin, orderIndex, triggerShake, applyServerGuessState]);
 
   const handleKey = useCallback(
     (key) => {

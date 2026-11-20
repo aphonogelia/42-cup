@@ -88,5 +88,11 @@ npm start       # production
 | `GET /api/auth/me` | required | Current user profile |
 | `GET /api/game/progress` | required | Status of all words for this user |
 | `POST /api/game/start` | required | `{ order_index }` -> resumes/starts a word |
-| `POST /api/game/guess` | required | `{ word_id, guess }` -> feedback + status |
+| `POST /api/game/guess` | required | `{ word_id, guess, submission_id? }` -> `outcome` + feedback/status/guesses |
 | `GET /api/leaderboard` | real user | Daily leaderboard, ranked per tier |
+
+`submission_id` is a client-generated UUID (the same one reused when a request
+is retried). `outcome` is `accepted`, `duplicate_guess` or `word_finished`;
+only `accepted` consumes a try. A reused id with a different guess or word is
+`409 submission_conflict`. Clients that omit the id still work, but without
+retry idempotency.
