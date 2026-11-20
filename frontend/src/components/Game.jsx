@@ -254,10 +254,13 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
         // Duplicate rule or a word that is already over. Never paint a row or
         // run the reveal; mirror what the server already has.
         applyServerGuessState(result);
-        setCurrentGuess('');
-        if (result.outcome === 'duplicate_guess') {
+        if (result.outcome === 'duplicate_guess' && !isFinishedStatus(result.status)) {
+          // Same rejection style as a dictionary miss: keep the typed word so
+          // the player can edit it.
           setErrorMessage('Already guessed that word');
           triggerShake();
+        } else {
+          setCurrentGuess('');
         }
         if (isFinishedStatus(result.status)) setFinished(result);
         return;
