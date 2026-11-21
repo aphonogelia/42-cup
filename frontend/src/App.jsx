@@ -9,10 +9,11 @@ import AlertModal from './components/AlertModal.jsx';
 import Stats from './components/Stats.jsx';
 import LoginRequired from './components/LoginRequired.jsx';
 import LegalFooter from './components/LegalFooter.jsx';
-import { CONTACT_EMAIL, IMPRESSUM, PRIVACY, PRIVACY_EN } from './legal.js';
+import { CONTACT_EMAIL, IMPRESSUM, PRIVACY } from './legal.js';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
+const GITHUB_URL = 'https://github.com/aphonogelia/42-cup';
 
 // Marks where the scoring paragraphs go in the About page. They are built from
 // the thresholds the API returns, so the numbers are never hardcoded here.
@@ -53,6 +54,7 @@ const INFO_PAGES = {
     SCORING_PLACEHOLDER,
     'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
     'The server is hosted on free tiers (Render), so it may take a little while to wake up on your first visit. Thanks for your patience!',
+    `The source code lives on GitHub: ${GITHUB_URL}`,
   ],
   },
 };
@@ -68,21 +70,33 @@ function formatTimeShort(seconds) {
 }
 
 
-// Turns the contact address inside a paragraph into a mailto link. Plain
-// markup, no obfuscation: the Impressum has to stay readable.
+// Turns the contact address and the repository URL inside a paragraph into
+// links. Plain markup, no obfuscation: the Impressum has to stay readable.
+const LINK_PATTERN = new RegExp(
+  `(${[CONTACT_EMAIL, GITHUB_URL]
+    .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|')})`,
+  'g'
+);
+
 function linkify(text) {
-  if (!text.includes(CONTACT_EMAIL)) return text;
+  const parts = text.split(LINK_PATTERN);
 
-  const parts = text.split(CONTACT_EMAIL);
+  if (parts.length === 1) return text;
 
-  return parts.map((part, index) => (
-    <Fragment key={index}>
-      {part}
-      {index < parts.length - 1 && (
-        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-      )}
-    </Fragment>
-  ));
+  return parts.map((part, index) => {
+    if (part === CONTACT_EMAIL) {
+      return <a key={index} href={`mailto:${CONTACT_EMAIL}`}>{part}</a>;
+    }
+
+    if (part === GITHUB_URL) {
+      return (
+        <a key={index} href={GITHUB_URL} target="_blank" rel="noreferrer">{part}</a>
+      );
+    }
+
+    return part;
+  });
 }
 
 function InfoBlock({ block }) {
@@ -172,12 +186,9 @@ function InfoModal({
 
   if (!content) return null;
 
-  const body =
-    page === 'privacy'
-      ? [...PRIVACY.blocks, { rule: true }, ...PRIVACY_EN.blocks]
-      : (content.blocks ?? content.body).flatMap((block) =>
-        block === SCORING_PLACEHOLDER ? scoringParagraphs(rules) : [block]
-      );
+  const body = content.blocks ?? content.body.flatMap((block) =>
+    block === SCORING_PLACEHOLDER ? scoringParagraphs(rules) : [block]
+  );
 
   return (
     <div className="info-overlay" role="presentation" onClick={onClose}>
@@ -606,7 +617,7 @@ export default function App() {
   if (!user) {
     return (
       <div className="app-shell login-shell">
-        <Login onOpenLegal={setInfoPage} />
+        <Login />
 
         <LegalFooter onOpen={setInfoPage} />
 

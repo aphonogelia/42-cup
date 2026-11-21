@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api, TOKEN_KEY } from '../api.js';
 
-export default function Login({ onOpenLegal = () => {} }) {
+export default function Login() {
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestError, setGuestError] = useState('');
 
@@ -50,24 +50,6 @@ export default function Login({ onOpenLegal = () => {} }) {
           </button>
         </p>
         {guestError && <p className="login-guest-error" role="alert">{guestError}</p>}
-
-        {/*
-          Art. 13 GDPR: the notice must be reachable at the moment the data is
-          collected, which is before the 42 redirect or guest creation.
-          Not a consent prompt — the processing is Art. 6(1)(b).
-        */}
-        <p className="login-legal">
-          How your data is handled:{' '}
-          <span className="login-legal-links">
-            <button type="button" onClick={() => onOpenLegal('privacy')}>
-              Datenschutzerklärung
-            </button>
-            {' · '}
-            <button type="button" onClick={() => onOpenLegal('impressum')}>
-              Impressum
-            </button>
-          </span>
-        </p>
       </div>
     </div>
   );

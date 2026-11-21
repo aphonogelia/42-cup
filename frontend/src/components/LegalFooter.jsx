@@ -6,19 +6,11 @@
 export default function LegalFooter({ onOpen }) {
   return (
     <footer className="app-footer">
+      <button type="button" onClick={() => onOpen('about')}>About</button>
+
       <button type="button" onClick={() => onOpen('impressum')}>Impressum</button>
 
       <button type="button" onClick={() => onOpen('privacy')}>Datenschutz</button>
-
-      <button type="button" onClick={() => onOpen('about')}>About</button>
-
-      <a
-        href="https://github.com/aphonogelia/42-cup"
-        target="_blank"
-        rel="noreferrer"
-      >
-        GitHub
-      </a>
     </footer>
   );
 }

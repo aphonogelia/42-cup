@@ -12,10 +12,7 @@ export const CONTACT_EMAIL = 'htharrau@student.42berlin.de';
 
 const ADDRESS = ['Helene Tharrault c/o 42', 'Harzer Straße 39', '12043 Berlin', 'Deutschland'];
 
-export const IMPRESSUM = {
-  eyebrow: 'Rechtliche Angaben',
-  title: 'Impressum',
-  blocks: [
+const IMPRESSUM_DE = [
     {
       heading: 'Angaben gemäß § 5 DDG',
       lines: [...ADDRESS, `E-Mail: ${CONTACT_EMAIL}`],
@@ -56,13 +53,64 @@ export const IMPRESSUM = {
       heading: 'Stand',
       paragraphs: ['21. November 2026'],
     },
-  ],
+];
+
+const IMPRESSUM_EN = [
+  {
+    heading: 'Information pursuant to § 5 DDG',
+    lines: [
+      'Helene Tharrault c/o 42',
+      'Harzer Straße 39',
+      '12043 Berlin',
+      'Germany',
+      `Email: ${CONTACT_EMAIL}`,
+    ],
+  },
+  {
+    heading: 'Nature of the service',
+    paragraphs: [
+      'wordel // 42 Cup is a private, non-commercial hobby project. There is no business, no entry in the commercial register and no VAT identification number.',
+      'No fees are charged, no advertising is shown, no donations are accepted and no data is sold.',
+    ],
+  },
+  {
+    heading: 'Not affiliated with 42 or The New York Times',
+    paragraphs: [
+      'This service is not affiliated with, sponsored by or endorsed by 42, 42 Berlin, the 42 Network or The New York Times. Signing in with a 42 account uses the user’s own credentials and creates no further relationship.',
+      '“Wordle” is a trademark of The New York Times Company. The name is used here in a descriptive sense only.',
+    ],
+  },
+  {
+    heading: 'Consumer dispute resolution',
+    paragraphs: [
+      'There is no willingness and no obligation to take part in dispute resolution proceedings before a consumer arbitration board (§ 36 VSBG).',
+    ],
+  },
+  {
+    heading: 'Liability for content and links',
+    paragraphs: [
+      'The content of this service is created with care but without any guarantee of accuracy, completeness or timeliness. The operators of external links are solely responsible for their content. No legal violations were apparent at the time of linking.',
+    ],
+  },
+  {
+    heading: 'Copyright',
+    paragraphs: [
+      'The source code is released under the MIT licence. The word lists come from publicly available sources named in the repository. Any further use of the content of this service requires prior consent.',
+    ],
+  },
+  {
+    heading: 'Last updated',
+    paragraphs: ['21 November 2026'],
+  },
+];
+
+export const IMPRESSUM = {
+  eyebrow: 'Rechtliche Angaben',
+  title: 'Impressum',
+  blocks: [...IMPRESSUM_DE, { rule: true }, ...IMPRESSUM_EN],
 };
 
-export const PRIVACY = {
-  eyebrow: 'Datenschutz',
-  title: 'Datenschutzerklärung',
-  blocks: [
+const PRIVACY_DE = [
     {
       heading: '1. Verantwortlicher',
       paragraphs: [
@@ -150,13 +198,9 @@ export const PRIVACY = {
       heading: '11. Stand',
       paragraphs: ['21. November 2026'],
     },
-  ],
-};
+];
 
-export const PRIVACY_EN = {
-  eyebrow: 'Data protection',
-  title: 'Privacy notice',
-  blocks: [
+const PRIVACY_EN = [
     {
       heading: '1. Controller',
       paragraphs: [
@@ -244,5 +288,12 @@ export const PRIVACY_EN = {
       heading: '11. Last updated',
       paragraphs: ['21 November 2026'],
     },
-  ],
+];
+
+// English first: the app is English, the German text follows as the legally
+// authoritative version.
+export const PRIVACY = {
+  eyebrow: 'Datenschutz',
+  title: 'Datenschutzerklärung',
+  blocks: [...PRIVACY_EN, { rule: true }, ...PRIVACY_DE],
 };

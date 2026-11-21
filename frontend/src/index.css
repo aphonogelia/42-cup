@@ -664,39 +664,18 @@ body.theme-light .info-copy a:hover {
   max-width: none;
 }
 
-/* The legal footer now sits under the login screen, so the screen may no
-   longer claim a full viewport height on its own. */
+/* The legal footer sits under the login screen, so the screen may no longer
+   claim a full viewport height on its own. The footer is pushed to the bottom
+   of the shell when there is room, and follows the content when there is not. */
 .login-shell .login-screen {
   min-height: auto;
 }
 
 .login-shell .app-footer {
+  margin-top: auto;
+  padding-top: 0;
   padding-bottom: 18px;
-}
-
-.login-screen .login-legal {
-  margin-top: 6px;
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-.login-screen .login-legal-links {
-  white-space: nowrap;
-}
-
-.login-screen .login-legal button {
-  border: 0;
-  background: transparent;
-  font: inherit;
-  padding: 0;
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.login-screen .login-legal button:hover {
-  opacity: 0.7;
+  border-top: 0;
 }
 
 .login-screen {
