@@ -4,20 +4,40 @@ import SolvingGrids from './SolvingGrids.jsx';
 import Scrolly from './Scrolly.jsx';
 import { WordsPlayedChart, FirstWordsChart } from './Charts.jsx';
 import { heroLine, intro, wordsPlayedSteps, firstWordsSteps } from './copy.js';
+import LegalDialog from './LegalDialog.jsx';
+import { IMPRESSUM, PRIVACY } from './legal.js';
+
+const LEGAL_PAGES = { impressum: IMPRESSUM, privacy: PRIVACY };
 
 export default function App() {
   const [data, setData] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [legalPage, setLegalPage] = useState(null);
 
   useEffect(() => {
     fetchStats().then(setData).catch(() => setFailed(true));
   }, []);
 
-  if (failed) return <p className="status">Stats are unavailable right now.</p>;
-  if (!data) return <p className="status">Loading…</p>;
+  const footer = (
+    <footer className="legal-footer">
+      <button type="button" onClick={() => setLegalPage('impressum')}>Impressum</button>
+      <button type="button" onClick={() => setLegalPage('privacy')}>Datenschutz</button>
+      <a href="https://wd42.xyz">Spielen</a>
+      <a href="https://github.com/aphonogelia/42-cup" target="_blank" rel="noreferrer">GitHub</a>
+    </footer>
+  );
+
+  const legal = legalPage ? (
+    <LegalDialog page={LEGAL_PAGES[legalPage]} onClose={() => setLegalPage(null)} />
+  ) : null;
+
+  if (failed) return <><p className="status">Stats are unavailable right now.</p>{footer}{legal}</>;
+  if (!data) return <><p className="status">Loading…</p>{footer}{legal}</>;
 
   const o = data.overview;
-  if (!o || !o.daily?.length) return <p className="status">Stats are not ready yet.</p>;
+  if (!o || !o.daily?.length) {
+    return <><p className="status">Stats are not ready yet.</p>{footer}{legal}</>;
+  }
 
   const fw = data.first_words;
   const wpSteps = wordsPlayedSteps(o);
@@ -55,6 +75,10 @@ export default function App() {
         <p>An opener appears only if at least 3 different players used it. The games at the top are real, from past days, without names.</p>
         <p>Rebuilt every night. Last update: {new Date(data.updatedAt).toLocaleString('en-GB')}.</p>
       </section>
+
+      {footer}
+
+      {legal}
     </main>
   );
 }

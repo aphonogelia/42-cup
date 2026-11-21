@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { api } from './api.js';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { api, TOKEN_KEY } from './api.js';
 import Login from './components/Login.jsx';
 import WordTabs from './components/WordTabs.jsx';
 import Game from './components/Game.jsx';
@@ -8,6 +8,8 @@ import AuthCallback from './components/AuthCallback.jsx';
 import AlertModal from './components/AlertModal.jsx';
 import Stats from './components/Stats.jsx';
 import LoginRequired from './components/LoginRequired.jsx';
+import LegalFooter from './components/LegalFooter.jsx';
+import { CONTACT_EMAIL, IMPRESSUM, PRIVACY, PRIVACY_EN } from './legal.js';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
@@ -40,17 +42,6 @@ function scoringParagraphs(rules) {
 }
 
 const INFO_PAGES = {
-  privacy: {
-    title: 'Privacy',
-    eyebrow: 'Data and access',
-    body: [
-      'You enter through 42 OAuth, and we keep only what is needed to recognise you: your intra ID, login, display name and avatar.',
-      'You can also play as a guest. A guest profile has a random name and your results, stored the same way, and never appears in the ledger. It is deleted after 90 days without playing.',
-      'A signed token stays in your browser so you are not asked twice. It serves no other purpose than to vouch for your requests.',
-      'Your guesses, your progress and your results are kept in Supabase, so the ledger can remember across players and days. Should a result be flagged as suspicious, that mark is kept as well. Nothing is sold, and no third-party trackers watch you play.',
-      'If you wish your data to be removed, write to htharrau.',
-    ],
-  },
   about: {
     title: 'About',
     eyebrow: 'The 42 Cup',
@@ -77,14 +68,116 @@ function formatTimeShort(seconds) {
 }
 
 
-function InfoModal({ page, rules, onClose }) {
-  const content = INFO_PAGES[page];
+// Turns the contact address inside a paragraph into a mailto link. Plain
+// markup, no obfuscation: the Impressum has to stay readable.
+function linkify(text) {
+  if (!text.includes(CONTACT_EMAIL)) return text;
+
+  const parts = text.split(CONTACT_EMAIL);
+
+  return parts.map((part, index) => (
+    <Fragment key={index}>
+      {part}
+      {index < parts.length - 1 && (
+        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+      )}
+    </Fragment>
+  ));
+}
+
+function InfoBlock({ block }) {
+  if (typeof block === 'string') {
+    return <p>{linkify(block)}</p>;
+  }
+
+  if (block.rule) {
+    return <hr className="info-divider" />;
+  }
+
+  return (
+    <section className="info-section">
+      {block.heading && <h3>{block.heading}</h3>}
+
+      {block.lines && (
+        <p>
+          {block.lines.map((line, index) => (
+            <Fragment key={index}>
+              {index > 0 && <br />}
+              {linkify(line)}
+            </Fragment>
+          ))}
+        </p>
+      )}
+
+      {block.paragraphs?.map((paragraph, index) => (
+        <p key={index}>{linkify(paragraph)}</p>
+      ))}
+    </section>
+  );
+}
+
+function AccountActions({ busy, confirming, error, onDownload, onRequestDelete, onConfirmDelete, onCancel }) {
+  return (
+    <section className="info-actions">
+      <h3>Deine Daten</h3>
+      <p>
+        Du kannst deine Daten hier herunterladen oder dein Konto endgültig löschen.
+        Das gilt auch für Gastkonten.
+      </p>
+
+      {confirming ? (
+        <div className="info-action-row">
+          <button type="button" className="info-btn danger" onClick={onConfirmDelete} disabled={busy}>
+            {busy ? 'lösche…' : 'Ja, endgültig löschen'}
+          </button>
+          <button type="button" className="info-btn" onClick={onCancel} disabled={busy}>
+            Abbrechen
+          </button>
+        </div>
+      ) : (
+        <div className="info-action-row">
+          <button type="button" className="info-btn" onClick={onDownload} disabled={busy}>
+            Meine Daten herunterladen
+          </button>
+          <button type="button" className="info-btn danger" onClick={onRequestDelete} disabled={busy}>
+            Konto löschen
+          </button>
+        </div>
+      )}
+
+      {error && <p className="info-error" role="alert">{error}</p>}
+    </section>
+  );
+}
+
+function InfoModal({
+  page,
+  rules,
+  onClose,
+  showAccountActions = false,
+  accountBusy = false,
+  accountError = '',
+  accountConfirming = false,
+  onDownloadData,
+  onRequestDelete,
+  onConfirmDelete,
+  onCancelDelete,
+}) {
+  const content =
+    page === 'impressum'
+      ? IMPRESSUM
+      : page === 'privacy'
+        ? PRIVACY
+        : INFO_PAGES[page];
 
   if (!content) return null;
 
-  const body = content.body.flatMap((paragraph) =>
-    paragraph === SCORING_PLACEHOLDER ? scoringParagraphs(rules) : [paragraph]
-  );
+  const body =
+    page === 'privacy'
+      ? [...PRIVACY.blocks, { rule: true }, ...PRIVACY_EN.blocks]
+      : (content.blocks ?? content.body).flatMap((block) =>
+        block === SCORING_PLACEHOLDER ? scoringParagraphs(rules) : [block]
+      );
 
   return (
     <div className="info-overlay" role="presentation" onClick={onClose}>
@@ -104,9 +197,21 @@ function InfoModal({ page, rules, onClose }) {
         </div>
         <h2 id="info-title">{content.title}</h2>
         <div id="info-body" className="info-copy">
-          {body.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+          {body.map((block, index) => (
+            <InfoBlock key={index} block={block} />
           ))}
+
+          {showAccountActions && (
+            <AccountActions
+              busy={accountBusy}
+              confirming={accountConfirming}
+              error={accountError}
+              onDownload={onDownloadData}
+              onRequestDelete={onRequestDelete}
+              onConfirmDelete={onConfirmDelete}
+              onCancel={onCancelDelete}
+            />
+          )}
         </div>
       </section>
     </div>
@@ -256,6 +361,9 @@ export default function App() {
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
   const [rules, setRules] = useState(null); // leaderboard thresholds, loaded when About opens
+  const [accountBusy, setAccountBusy] = useState(false);
+  const [accountError, setAccountError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
@@ -410,6 +518,45 @@ export default function App() {
     }
   };
 
+  // Art. 15 GDPR: hand the user their own data as one JSON file.
+  const handleDownloadData = async () => {
+    setAccountBusy(true);
+    setAccountError('');
+    try {
+      const blob = await api.exportData();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `wordel-data-${getBerlinDateKey()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('export failed:', err);
+      setAccountError('Der Export ist fehlgeschlagen. Versuche es später erneut.');
+    } finally {
+      setAccountBusy(false);
+    }
+  };
+
+  // Art. 17 GDPR: irreversible. The token is useless once the row is gone, but
+  // it is cleared anyway so a stale tab cannot keep retrying.
+  const handleDeleteAccount = async () => {
+    setAccountBusy(true);
+    setAccountError('');
+    try {
+      await api.deleteAccount();
+      localStorage.removeItem(TOKEN_KEY);
+      window.location.replace('/');
+    } catch (err) {
+      console.error('account delete failed:', err);
+      setAccountError('Das Konto konnte nicht gelöscht werden. Versuche es später erneut.');
+      setAccountBusy(false);
+      setConfirmDelete(false);
+    }
+  };
+
   const isDayComplete = words.length > 0 && words.every((word) => word.status === 'solved' || word.status === 'failed');
   const handleShare = async () => {
     try {
@@ -450,6 +597,8 @@ export default function App() {
     return (
       <div className="app-shell loading-shell">
         <div className="loader" aria-label="Loading" role="status" />
+        <LegalFooter onOpen={setInfoPage} />
+        <InfoModal page={infoPage} rules={rules} onClose={() => setInfoPage(null)} />
       </div>
     );
   }
@@ -457,7 +606,11 @@ export default function App() {
   if (!user) {
     return (
       <div className="app-shell login-shell">
-        <Login />
+        <Login onOpenLegal={setInfoPage} />
+
+        <LegalFooter onOpen={setInfoPage} />
+
+        <InfoModal page={infoPage} rules={rules} onClose={() => setInfoPage(null)} />
       </div>
     );
   }
@@ -589,19 +742,7 @@ export default function App() {
 
 
 
-      <footer className="app-footer">
-        <button type="button" onClick={() => setInfoPage('privacy')}>Privacy</button>
-
-        <button type="button" onClick={() => setInfoPage('about')}>About</button>
-
-        <a
-          href="https://github.com/aphonogelia/42-cup"
-          target="_blank"
-          rel="noreferrer"
-        >
-          GitHub
-        </a>
-      </footer>
+      <LegalFooter onOpen={setInfoPage} />
       <AlertModal
         title="Finished!"
         message={
@@ -615,7 +756,23 @@ export default function App() {
           setView(user.is_guest ? 'stats' : 'leaderboard');
         }}
       />
-      <InfoModal page={infoPage} rules={rules} onClose={() => setInfoPage(null)} />
+      <InfoModal
+        page={infoPage}
+        rules={rules}
+        onClose={() => {
+          setInfoPage(null);
+          setConfirmDelete(false);
+          setAccountError('');
+        }}
+        showAccountActions={infoPage === 'privacy'}
+        accountBusy={accountBusy}
+        accountError={accountError}
+        accountConfirming={confirmDelete}
+        onDownloadData={handleDownloadData}
+        onRequestDelete={() => setConfirmDelete(true)}
+        onConfirmDelete={handleDeleteAccount}
+        onCancelDelete={() => setConfirmDelete(false)}
+      />
     </div >
   );
 }

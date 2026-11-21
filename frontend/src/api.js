@@ -58,6 +58,20 @@ export const api = {
     }),
 
   shareData: () => request('/api/game/share'),
+  // GDPR Art. 15: one JSON file with everything we hold about the account.
+  exportData: async () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const res = await fetch(`${API_URL}/api/auth/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      throw new ApiError('Export failed', res.status, null);
+    }
+    return res.blob();
+  },
+  // GDPR Art. 17: irreversible, removes the account and all its game data.
+  // Fastify rejects an empty body with a JSON content type, hence '{}'.
+  deleteAccount: () => request('/api/auth/me', { method: 'DELETE', body: '{}' }),
   leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
   leaderboardDates: () => request('/api/leaderboard/dates'),
   // { months: ['2026-10', ...], thresholds: { monthly, global } }

@@ -20,6 +20,20 @@ that directory. Root `npm install` only installs the Supabase CLI.
   `backend/scripts/entropy-bot.js`, `backend/scripts/test_guesses/`. Leave it
   alone unless the task is specifically about it.
 
+## Legal (Germany)
+
+- The Impressum lives in `frontend/src/legal.js` and `stat/src/legal.js`. It is
+  German only by design; the privacy notice is German plus English on the game
+  side. Keep both copies of the Impressum identical.
+- The footer must render **before** sign-in too: the privacy notice has to be
+  reachable when the account or guest row is created (Art. 13 GDPR). Do not put
+  it back inside the authenticated shell only.
+- Fonts are self-hosted from `public/fonts/`. Never reintroduce a
+  `fonts.googleapis.com` request — that was the reason for the move.
+- `delete_account(uuid)` in the migrations is service-role only (no
+  `ON DELETE CASCADE` in this schema, children are deleted explicitly). The API
+  calls it from `DELETE /api/auth/me` and removes the avatar object separately.
+
 ## Commands
 
 ```bash

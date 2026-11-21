@@ -119,6 +119,93 @@ export default async function authRoutes(fastify) {
     return user;
   });
 
+  // GDPR Art. 15: everything we hold about the caller, as one JSON file.
+  fastify.get('/api/auth/export', { preHandler: [fastify.requireAuth] }, async (request, reply) => {
+    const userId = request.user.id;
+
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, intra_id, login, display_name, avatar_url, privacy_enabled, is_guest, created_at')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user) return reply.code(404).send({ error: 'User not found' });
+
+    const { data: results, error: resultsError } = await supabase
+      .from('word_results')
+      .select('id, word_id, status, nb_tries, started_at, solved_at, time_seconds')
+      .eq('user_id', userId);
+
+    if (resultsError) return reply.code(500).send({ error: 'Export failed' });
+
+    // One query through the guesses -> word_results foreign key. Chunking ids
+    // would work too, but the URL limit is not worth testing on long accounts.
+    const [{ data: guessRows, error: guessesError }, { data: flags }] = await Promise.all([
+      supabase
+        .from('guesses')
+        .select('id, word_result_id, guess, feedback, created_at, word_results!inner(user_id)')
+        .eq('word_results.user_id', userId),
+      supabase
+        .from('flagged_users')
+        .select('draw_date, reason, fast_gap_words, low_variance_words, created_at')
+        .eq('user_id', userId),
+    ]);
+
+    if (guessesError) return reply.code(500).send({ error: 'Export failed' });
+
+    const guesses = (guessRows ?? []).map((row) => ({
+      id: row.id,
+      word_result_id: row.word_result_id,
+      guess: row.guess,
+      feedback: row.feedback,
+      created_at: row.created_at,
+    }));
+
+    const payload = {
+      exported_at: new Date().toISOString(),
+      controller: 'Helene Tharrault c/o 42, Harzer Straße 39, 12043 Berlin, Deutschland',
+      user,
+      word_results: results ?? [],
+      guesses,
+      flagged_days: flags ?? [],
+    };
+
+    return reply
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .header('Content-Disposition', 'attachment; filename="wordel-data.json"')
+      .send(JSON.stringify(payload, null, 2));
+  });
+
+  // GDPR Art. 17: irreversible. The mirrored avatar lives in object storage, so
+  // it is removed separately; a failure there must not keep the account alive.
+  fastify.delete('/api/auth/me', { preHandler: [fastify.requireAuth] }, async (request, reply) => {
+    const userId = request.user.id;
+
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, intra_id')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user) return reply.code(404).send({ error: 'User not found' });
+
+    if (user.intra_id != null) {
+      const { error: storageError } = await supabase.storage
+        .from('avatars')
+        .remove([`${user.intra_id}.jpg`]);
+      if (storageError) request.log.warn(storageError, 'avatar delete failed during account deletion');
+    }
+
+    const { error } = await supabase.rpc('delete_account', { p_user_id: userId });
+    if (error) {
+      request.log.error(error, 'Failed to delete account');
+      return reply.code(500).send({ error: 'Failed to delete account' });
+    }
+
+    invalidateAllLeaderboards();
+    return { ok: true };
+  });
+
   fastify.patch('/api/auth/privacy', { preHandler: [fastify.requireAuth] }, async (request, reply) => {
     const { privacy_enabled } = request.body ?? {};
     if (typeof privacy_enabled !== 'boolean') {
