@@ -32,11 +32,7 @@
   display: grid;
   gap: 8px;
   width: 100%;
-  /* Width caps the board, but so does the viewport height: on a window that is
-     wide and short (half of a laptop screen) a fixed 380px board plus header
-     and keyboard overflows. 46svh keeps the board at ~55% of the height. */
   max-width: 380px;
-  max-width: min(380px, 46svh);
   margin-inline: auto;
 }
 
@@ -300,7 +296,13 @@
   }
 }
 
-@media (max-width: 640px) {
+/* Phones only. At 640px this used to catch half of a 1280px laptop screen and
+   blow the board up to the full width. */
+@media (max-width: 480px) {
+  .grid {
+    max-width: 100%;
+  }
+
   .tile {
     font-size: clamp(16px, 7vw, 22px);
   }
