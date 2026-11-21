@@ -180,13 +180,18 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 32px;
+}
+
+/* Auto margins on the loader centre it in the space above the footer. Putting
+   margin-top: auto on the footer instead packs everything against the top,
+   because that margin then absorbs all the free space. */
+.loading-shell .loader {
+  margin: auto;
 }
 
 .loading-shell .app-footer {
-  margin-top: auto;
   width: 100%;
+  border-top: 0;
 }
 
 .loader {
