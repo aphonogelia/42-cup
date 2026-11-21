@@ -249,6 +249,9 @@ export default function App() {
   const [view, setView] = useState('play'); // 'play' | 'leaderboard' | 'stats'
   const [words, setWords] = useState([]);
   const [showCompletionToast, setShowCompletionToast] = useState(false);
+  // Set when a word finished in this session, cleared once the completion
+  // check has run. Keeps the leaderboard switch from firing before the toast.
+  const [completionPending, setCompletionPending] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const [infoPage, setInfoPage] = useState(null);
@@ -273,14 +276,20 @@ export default function App() {
         if (checkCompletion) {
           const allDone = data.every((w) => w.status === 'solved' || w.status === 'failed');
           if (allDone) setShowCompletionToast(true);
+          setCompletionPending(false);
         }
       })
-      .catch(() => { });
+      .catch(() => {
+        if (checkCompletion) setCompletionPending(false);
+      });
   }, []);
 
   // Applies one word's server-confirmed result to the tab strip immediately,
   // from the same guess response the grid uses. No extra request.
   const applyWordUpdate = useCallback((orderIndex, patch) => {
+    if (patch.status === 'solved' || patch.status === 'failed') {
+      setCompletionPending(true);
+    }
     setWords((prev) =>
       prev.map((w) => (w.order_index === orderIndex ? { ...w, ...patch } : w))
     );
@@ -320,13 +329,14 @@ export default function App() {
 
   useEffect(() => {
     if (
+      !completionPending &&
       !showCompletionToast &&
       words.length > 0 &&
       words.every((word) => word.status === 'solved' || word.status === 'failed')
     ) {
       setView(user?.is_guest ? 'stats' : 'leaderboard');
     }
-  }, [words, showCompletionToast, user]);
+  }, [words, showCompletionToast, completionPending, user]);
 
 
   useEffect(() => {
