@@ -296,7 +296,9 @@
   }
 }
 
-@media (max-width: 640px) {
+/* Phones only. At 640px this used to catch half of a 1280px laptop screen and
+   blow the board up to the full width. */
+@media (max-width: 480px) {
   .grid {
     max-width: 100%;
   }

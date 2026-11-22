@@ -86,6 +86,8 @@ npm start       # production
 | `POST /api/auth/logout` | - | No-op; the frontend drops the stored token |
 | `POST /api/auth/guest` | - | Creates a guest user and returns a JWT |
 | `GET /api/auth/me` | required | Current user profile |
+| `GET /api/auth/export` | required | GDPR Art. 15 export: account, results, guesses and flags as JSON |
+| `DELETE /api/auth/me` | required | GDPR Art. 17 erasure: account, game data, flags and mirrored avatar |
 | `GET /api/game/progress` | required | Status of all words for this user |
 | `POST /api/game/start` | required | `{ order_index }` -> resumes/starts a word |
 | `POST /api/game/guess` | required | `{ word_id, guess, submission_id? }` -> `outcome` + feedback/status/guesses |
