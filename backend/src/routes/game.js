@@ -234,7 +234,7 @@ export default async function gameRoutes(fastify) {
     const outcome = rpc.outcome;
     const updated = rpc.result;
 
-    if (outcome === 'accepted' && !request.user.guest && (updated.status === 'solved' || updated.status === 'failed')){
+    if (outcome === 'accepted' && (updated.status === 'solved' || updated.status === 'failed')){
       // Count only today's words; a lifetime count would fire the check on
       // every guess after the first day.
       const wordIds = words.map((item) => item.id);

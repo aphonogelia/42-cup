@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import AlertModal from './AlertModal.jsx';
 import WordTimesPopup from './WordTimesPopup.jsx';
 import PeriodLeaderboard from './PeriodLeaderboard.jsx';
+import JoinHandleModal from './JoinHandleModal.jsx';
 import { formatTime } from '../lib/formatTime.js';
 
 function formatDateLabel(dateStr) {
@@ -245,13 +246,95 @@ const TABS = [
   { id: 'global', label: 'All-time' },
 ];
 
+// The new axis. "global" already means all-time in this codebase, so the code
+// name for the public board is `open`.
+const SCOPES = [
+  { id: '42', label: '42' },
+  { id: 'open', label: 'Open' },
+];
+
+// "Just looking" is remembered per account, per browser. Storage can throw in
+// private mode, and a failure must never block the UI.
+function readPrompted(key) {
+  if (!key) return false;
+  try {
+    return window.localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writePrompted(key) {
+  if (!key) return;
+  try {
+    window.localStorage.setItem(key, '1');
+  } catch {
+    // ignore
+  }
+}
+
 // viewerId is optional: when given, the viewer's own row is highlighted on the
 // monthly and all-time boards.
-export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
+export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me, onMeChange }) {
+  const isGuest = Boolean(me?.is_guest);
   const [tab, setTab] = useState('daily');
+  // Real users always start on 42. Guests are fixed on open. Never persisted.
+  const [scope, setScope] = useState(() => (isGuest ? 'open' : '42'));
+  // null | 'join' (42 player, first time) | 'guest-choose' (one-time change)
+  const [handleModal, setHandleModal] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  const promptedKey = me?.id ? `wordel.openPrompted.${me.id}` : null;
+
+  const handleScopeChange = (next) => {
+    if (next === scope) return;
+    setScope(next);
+
+    const undecided = !isGuest && !me?.global_opt_in && !readPrompted(promptedKey);
+    if (next === 'open' && undecided) setHandleModal('join');
+  };
+
+  const handleJustLooking = () => {
+    writePrompted(promptedKey);
+    setHandleModal(null);
+  };
+
+  const handleHandleSaved = (updated) => {
+    onMeChange?.({
+      handle: updated.handle,
+      global_opt_in: updated.global_opt_in,
+      handle_changed_at: updated.handle_changed_at,
+    });
+    writePrompted(promptedKey);
+    setHandleModal(null);
+    // The player is on the open board now: refetch so the row appears.
+    setRefreshToken((token) => token + 1);
+  };
+
+  const showJoinBanner = scope === 'open' && !isGuest && !me?.global_opt_in;
+  // Guests get exactly one choice, until handle_changed_at is set.
+  const canGuestChoose = isGuest && me?.handle_changed_at == null;
 
   return (
     <div>
+      {!isGuest && (
+        <div className="ledger-tabs ledger-scope" role="group" aria-label="Leaderboard scope">
+          {SCOPES.map(({ id, label }, i) => (
+            <Fragment key={id}>
+              {i > 0 && <span className="ledger-tab-sep" aria-hidden="true">{'//'}</span>}
+              <button
+                type="button"
+                className={`ledger-tab${scope === id ? ' active' : ''}`}
+                aria-pressed={scope === id}
+                onClick={() => handleScopeChange(id)}
+              >
+                {label}
+              </button>
+            </Fragment>
+          ))}
+        </div>
+      )}
+
       <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
         {TABS.map(({ id, label }, i) => (
           <Fragment key={id}>
@@ -268,20 +351,69 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
         ))}
       </div>
 
+      {scope === 'open' && (showJoinBanner || isGuest) && (
+        <div className="ledger-scope-note">
+          {showJoinBanner && (
+            <button
+              type="button"
+              className="ledger-join-banner"
+              onClick={() => setHandleModal('join')}
+            >
+              Join the Open leaderboard
+            </button>
+          )}
+
+          {isGuest && (
+            <span className="ledger-scope-hint">Your ranking is tied to this browser.</span>
+          )}
+
+          {canGuestChoose && (
+            <button
+              type="button"
+              className="ledger-link-btn"
+              onClick={() => setHandleModal('guest-choose')}
+            >
+              Change handle
+            </button>
+          )}
+        </div>
+      )}
+
       {tab === 'daily' ? (
         <DailyLeaderboard
           totalWords={totalWords}
           viewerIsPrivate={viewerIsPrivate}
           viewerId={viewerId}
+          scope={scope}
+          me={me}
+          refreshToken={refreshToken}
         />
       ) : (
-        <PeriodLeaderboard key={tab} mode={tab} viewerId={viewerId} />
+        <PeriodLeaderboard
+          key={tab}
+          mode={tab}
+          viewerId={viewerId}
+          scope={scope}
+          me={me}
+          refreshToken={refreshToken}
+        />
+      )}
+
+      {handleModal && (
+        <JoinHandleModal
+          mode={handleModal}
+          me={me}
+          onDismiss={handleModal === 'join' ? handleJustLooking : undefined}
+          onClose={() => setHandleModal(null)}
+          onDone={handleHandleSaved}
+        />
       )}
     </div>
   );
 }
 
-function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
+function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, refreshToken }) {
+  const isOpen = scope === 'open';
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -301,7 +433,7 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
     }
 
     api
-      .leaderboard(date)
+      .leaderboard(date, scope)
       .then((data) => {
         if (cancelled) return;
         setRows(data.rows);
@@ -315,7 +447,7 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
     let cancelled = false;
@@ -331,7 +463,12 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
       return;
     }
     return fetchLeaderboard(selectedDate, { resetRows: true });
-  }, [selectedDate, fetchLeaderboard]);
+  }, [selectedDate, fetchLeaderboard, refreshToken]);
+
+  // A popup opened in one scope must not survive into the other.
+  useEffect(() => {
+    setActivePlayer(null);
+  }, [scope]);
 
   useEffect(() => {
     const refresh = () => {
@@ -362,6 +499,11 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
   const handlePlayerClick = (row) => {
     if (viewerIsPrivate) {
       setActivePlayer({ type: 'viewer-private' });
+      return;
+    }
+
+    if (isOpen) {
+      setActivePlayer({ type: 'view', handle: row.handle });
       return;
     }
 
@@ -400,8 +542,10 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
 
       {activePlayer?.type === 'view' && effectiveDate && (
         <WordTimesPopup
+          scope={scope}
           userId={activePlayer.userId}
           login={activePlayer.login}
+          handle={activePlayer.handle}
           date={effectiveDate}
           onClose={() => setActivePlayer(null)}
         />
@@ -486,13 +630,17 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
                   const hasPlayed = row.total_tries > 0;
                   const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
                   const clickable = hasPlayed && !isPrivate;
-                  const isYou = Boolean(viewerId) && row.user_id === viewerId;
+                  // Open rows carry no user_id: "me" is the handle from /api/auth/me.
+                  const isYou = isOpen
+                    ? Boolean(me?.handle) && row.handle?.toLowerCase() === me.handle.toLowerCase()
+                    : Boolean(viewerId) && row.user_id === viewerId;
+                  const rowKey = isOpen ? row.handle : row.user_id;
 
                   const nameBlock = (
                     <>
-                      {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
+                      {!isOpen && row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
                       <span className={`login-name ${clickable ? 'login-public' : ''}`}>
-                        {row.login}
+                        {isOpen ? row.handle : row.login}
                       </span>
                       <span
                         className="leaderboard-statuses"
@@ -508,7 +656,7 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
                   );
 
                   return (
-                    <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={row.user_id}>
+                    <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={rowKey}>
                       <span className="rank">{row.rank}</span>
                       {clickable ? (
                         <button

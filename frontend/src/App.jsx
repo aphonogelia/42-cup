@@ -7,7 +7,6 @@ import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
 import AlertModal from './components/AlertModal.jsx';
 import Stats from './components/Stats.jsx';
-import LoginRequired from './components/LoginRequired.jsx';
 import LegalFooter from './components/LegalFooter.jsx';
 import { CONTACT_EMAIL, IMPRESSUM, PRIVACY } from './legal.js';
 
@@ -402,6 +401,12 @@ export default function App() {
       });
   }, []);
 
+  // Handles come back from PUT /api/me/global; keep App's single copy of the
+  // account in step so the modal and the boards agree without a refetch.
+  const updateMe = useCallback((patch) => {
+    setUser((current) => (current ? { ...current, ...patch } : current));
+  }, []);
+
   // Applies one word's server-confirmed result to the tab strip immediately,
   // from the same guess response the grid uses. No extra request.
   const applyWordUpdate = useCallback((orderIndex, patch) => {
@@ -688,16 +693,14 @@ export default function App() {
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
             </button>
 
-            {!user.is_guest && (
-              <button
-                className="icon-btn theme-toggle"
-                onClick={handleTogglePrivacy}
-                aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
-                title={user.privacy_enabled ? 'Public' : 'Private'}
-              >
-                {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            )}
+            <button
+              className="icon-btn theme-toggle"
+              onClick={handleTogglePrivacy}
+              aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
+              title={user.privacy_enabled ? 'Public' : 'Private'}
+            >
+              {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
 
             <button
               className="icon-btn theme-toggle"
@@ -735,15 +738,13 @@ export default function App() {
             )}
           </>
               ) : view === 'leaderboard' ? (
-      user.is_guest ? (
-        <LoginRequired />
-      ) : (
         <Leaderboard
           totalWords={words.length}
           viewerIsPrivate={!!user.privacy_enabled}
           viewerId={user.id}
+          me={user}
+          onMeChange={updateMe}
         />
-      )
     ) : (
       <Stats isGuest={!!user.is_guest} />
     )}

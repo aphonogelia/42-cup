@@ -112,7 +112,7 @@ export default async function authRoutes(fastify) {
   fastify.get('/api/auth/me', { preHandler: [fastify.requireAuth] }, async (request, reply) => {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, login, display_name, avatar_url, privacy_enabled, is_guest')
+      .select('id, login, display_name, avatar_url, privacy_enabled, is_guest, handle, global_opt_in, handle_changed_at')
       .eq('id', request.user.id)
       .single();
     if (error) return reply.code(404).send({ error: 'User not found' });
@@ -125,7 +125,7 @@ export default async function authRoutes(fastify) {
 
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, intra_id, login, display_name, avatar_url, privacy_enabled, is_guest, created_at')
+      .select('id, intra_id, login, display_name, avatar_url, privacy_enabled, is_guest, handle, global_opt_in, handle_changed_at, created_at')
       .eq('id', userId)
       .single();
 

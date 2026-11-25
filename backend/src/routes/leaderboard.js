@@ -10,10 +10,30 @@ import {
   loadPeriod,
 } from '../lib/leaderboardCache.js';
 import { LEADERBOARD_RULES } from '../lib/leaderboardConfig.js';
+import { toOpenDailyRow, projectPeriodRows, toOpenWordTimesRows } from '../lib/openRows.js';
 
 
 
 const MONTH_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+// `global` already means all-time in this codebase, so the new axis is `scope`:
+// 42 = 42 players only (as before), open = opt-in, handle-based, guests included.
+const SCOPES = new Set(['42', 'open']);
+
+function parseScope(value) {
+  const scope = value === undefined || value === '' ? '42' : value;
+  return SCOPES.has(scope) ? scope : null;
+}
+
+// The scope is per request, so it cannot be a route-level preHandler: this
+// returns the same 403 body as fastify.requireRealUser.
+function allowScope(scope, request, reply) {
+  if (scope === '42' && request.user?.guest) {
+    reply.code(403).send({ error: 'login_required' });
+    return false;
+  }
+  return true;
+}
 
 function lastDayOfMonth(year, month1to12) {
   // day 0 of the next month = last day of this one
@@ -86,17 +106,153 @@ async function loadDates() {
   return dates;
 }
 
+// Per-word breakdown (times + tries) for one player on one day, for the
+// leaderboard popup. Blocked server-side if the target has privacy on — this is
+// the enforcement point, not just the frontend grey-out.
+//
+// scope=42 : by user id, real users only (unchanged).
+// scope=open: by handle, any authenticated user. The handle is resolved among
+//             open-listed users only, and the payload carries no id at all.
+//
+// `db` is injectable so the route can be tested without a database.
+export function makeWordTimesHandler(db = supabase) {
+  return async function wordTimesHandler(request, reply) {
+    const scope = parseScope(request.query.scope);
+    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+    if (!allowScope(scope, request, reply)) return;
+
+    const date = request.query.date;
+    if (!date) return reply.code(400).send({ error: 'date required' });
+
+    let target;
+
+    if (scope === '42') {
+      const { userId } = request.query;
+      if (!userId) return reply.code(400).send({ error: 'userId and date required' });
+
+      const { data, error } = await db
+        .from('users')
+        .select('id, privacy_enabled')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) return reply.code(500).send({ error: 'Failed to load user' });
+      target = data;
+    } else {
+      const handle = typeof request.query.handle === 'string' ? request.query.handle : '';
+      if (!handle) return reply.code(400).send({ error: 'handle and date required' });
+
+      // The same filter as the open board: a handle is only reachable if its
+      // owner is opted in. A user who left the board is indistinguishable from
+      // a handle that never existed.
+      const { data, error } = await db
+        .from('users')
+        .select('id, handle, privacy_enabled')
+        .eq('handle', handle)
+        .eq('global_opt_in', true)
+        .maybeSingle();
+
+      if (error) return reply.code(500).send({ error: 'Failed to load user' });
+      target = data;
+    }
+
+    // Same body for "no such handle" and "not on the open board": the 404 must
+    // not work as a handle-exists oracle.
+    if (!target) return reply.code(404).send({ error: 'User not found' });
+    if (target.privacy_enabled) {
+      return reply.code(403).send({ error: 'This player has hidden their word times' });
+    }
+
+    const cached = getCachedWordTimes(target.id, date);
+    if (cached) return wordTimesPayload(scope, target, date, cached);
+
+    const { data: words, error: wordsErr } = await db
+      .from('words')
+      .select('id, order_index, length')
+      .eq('draw_date', date)
+      .order('order_index', { ascending: true });
+
+    if (wordsErr) return reply.code(500).send({ error: 'Failed to load words' });
+
+    const wordIds = (words ?? []).map((w) => w.id);
+    let results = [];
+
+    if (wordIds.length > 0) {
+      const { data, error } = await db
+        .from('word_results')
+        .select('id, word_id, status, nb_tries, time_seconds')
+        .eq('user_id', target.id)
+        .in('word_id', wordIds);
+
+      if (error) return reply.code(500).send({ error: 'Failed to load word times' });
+      results = data ?? [];
+    }
+
+    const byWordId = Object.fromEntries(results.map((r) => [r.word_id, r]));
+    const rows = (words ?? [])
+      .map((w) => {
+        const r = byWordId[w.id];
+        if (!r) return null;
+        return {
+          word_result_id: r.id,
+          word_id: w.id,
+          order_index: w.order_index,
+          length: w.length,
+          status: r.status,
+          nb_tries: r.nb_tries,
+          time_seconds: r.time_seconds,
+        };
+      })
+      .filter(Boolean);
+
+    setCachedWordTimes(target.id, date, rows, date === getBerlinDateKey());
+    return wordTimesPayload(scope, target, date, rows);
+  };
+}
+
+// The open payload has no id of any kind. word_result_id is the same value in
+// both scopes, so returning it would let a real user match a handle to a login.
+function wordTimesPayload(scope, target, date, rows) {
+  if (scope === 'open') {
+    return { handle: target.handle, date, words: toOpenWordTimesRows(rows) };
+  }
+  return { userId: target.id, date, words: rows };
+}
+
 export default async function leaderboardRoutes(fastify) {
   
   const authOnly = { preHandler: [fastify.requireAuth] };
-  const realUsersOnly = { preHandler: [fastify.requireAuth, fastify.requireRealUser] };
 
-  fastify.get('/api/leaderboard', realUsersOnly, async (request, reply) => {
+  // Daily board. The 42 scope reads the unchanged `leaderboard` view; the open
+  // scope reads `leaderboard_open` and projects each row through an allowlist
+  // before caching, so no identity column can leak from cache either.
+  fastify.get('/api/leaderboard', authOnly, async (request, reply) => {
+    const scope = parseScope(request.query.scope);
+    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+    if (!allowScope(scope, request, reply)) return;
+
     const date = request.query.date || getBerlinDateKey();
 
-    const cached = getCachedLeaderboard(date);
+    const cached = getCachedLeaderboard(date, scope);
     if (cached) {
-      return { date, rows: cached };
+      return { date, scope, rows: cached };
+    }
+
+    if (scope === 'open') {
+      const { data, error } = await supabase
+        .from('leaderboard_open')
+        .select('handle, privacy_enabled, words_found, total_time, total_tries, word_statuses')
+        .eq('draw_date', date)
+        .eq('global_opt_in', true)
+        .not('handle', 'is', null)
+        .order('words_found', { ascending: false })
+        .order('total_time', { ascending: true });
+
+      if (error) return reply.code(500).send({ error: 'Failed to load leaderboard' });
+
+      const rows = (data ?? []).map(toOpenDailyRow);
+      setCachedLeaderboard(date, 'open', rows);
+      return { date, scope, rows };
     }
 
     const { data, error } = await supabase
@@ -108,8 +264,8 @@ export default async function leaderboardRoutes(fastify) {
 
     if (error) return reply.code(500).send({ error: 'Failed to load leaderboard' });
 
-    setCachedLeaderboard(date, data ?? []);
-    return { date, rows: data };
+    setCachedLeaderboard(date, '42', data ?? []);
+    return { date, scope, rows: data };
   });
 
   fastify.get('/api/leaderboard/dates', authOnly, async (request, reply) => {
@@ -153,7 +309,11 @@ export default async function leaderboardRoutes(fastify) {
   // Monthly board. ?month=YYYY-MM (defaults to the current Berlin month).
   // The month is its own window: complete days, longevity and the min-days
   // threshold are all measured inside it.
-  fastify.get('/api/leaderboard/monthly', realUsersOnly, async (request, reply) => {
+  fastify.get('/api/leaderboard/monthly', authOnly, async (request, reply) => {
+    const scope = parseScope(request.query.scope);
+    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+    if (!allowScope(scope, request, reply)) return;
+
     const today = getBerlinDateKey();
     const currentMonth = today.slice(0, 7);
     const month = request.query.month || currentMonth;
@@ -172,13 +332,14 @@ export default async function leaderboardRoutes(fastify) {
     const daysInMonth = lastDayOfMonth(Number(match[1]), Number(match[2]));
 
     try {
-      const payload = await loadPeriod(`monthly:${month}:${minDays}`, isCurrent, async () => ({
+      const payload = await loadPeriod(`monthly:${scope}:${month}:${minDays}`, isCurrent, async () => ({
         month,
+        scope,
         from,
         to,
         isCurrent,
         thresholds: monthlyThresholds(daysInMonth),
-        rows: await fetchPeriodRows({
+        rows: projectPeriodRows(scope, await fetchPeriodRows({
           p_from: from,
           p_to: to,
           p_min_days: minDays,
@@ -187,7 +348,8 @@ export default async function leaderboardRoutes(fastify) {
           p_longevity_days: daysInMonth,
           p_fail_weight: LEADERBOARD_RULES.failPenaltyWeight,
           p_today: today,
-        }),
+          p_scope: scope,
+        })),
       }));
       return payload;
     } catch (err) {
@@ -197,15 +359,20 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   // All-time board. Longevity saturates at allTimeLongevityDays complete days.
-  fastify.get('/api/leaderboard/global', realUsersOnly, async (request, reply) => {
+  fastify.get('/api/leaderboard/global', authOnly, async (request, reply) => {
+    const scope = parseScope(request.query.scope);
+    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+    if (!allowScope(scope, request, reply)) return;
+
     const today = getBerlinDateKey();
     const minDays = LEADERBOARD_RULES.globalMinDays;
 
     try {
-      const payload = await loadPeriod(`global:${minDays}`, true, async () => ({
+      const payload = await loadPeriod(`global:${scope}:${minDays}`, true, async () => ({
+        scope,
         to: today,
         thresholds: globalThresholds(),
-        rows: await fetchPeriodRows({
+        rows: projectPeriodRows(scope, await fetchPeriodRows({
           p_from: null,
           p_to: today,
           p_min_days: minDays,
@@ -214,7 +381,8 @@ export default async function leaderboardRoutes(fastify) {
           p_longevity_days: LEADERBOARD_RULES.allTimeLongevityDays,
           p_fail_weight: LEADERBOARD_RULES.failPenaltyWeight,
           p_today: today,
-        }),
+          p_scope: scope,
+        })),
       }));
       return payload;
     } catch (err) {
@@ -224,68 +392,7 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   // Per-word breakdown (times + tries) for one player on one day, for the
-  // leaderboard popup. Blocked server-side if the target has privacy on —
-  // this is the enforcement point, not just the frontend grey-out.
-  fastify.get('/api/leaderboard/word-times', realUsersOnly, async (request, reply) => {
-    const { userId, date } = request.query;
-    if (!userId || !date) {
-      return reply.code(400).send({ error: 'userId and date required' });
-    }
-    const cached = getCachedWordTimes(userId, date);
-
-    const [
-      { data: targetUser, error: userErr },
-      { data: words, error: wordsErr },
-    ] = await Promise.all([
-      supabase.from('users').select('privacy_enabled').eq('id', userId).maybeSingle(),
-      cached ? Promise.resolve({ data: null, error: null }) : supabase
-        .from('words')
-        .select('id, order_index, length')
-        .eq('draw_date', date)
-        .order('order_index', { ascending: true }),
-    ]);
-
-    if (userErr) return reply.code(500).send({ error: 'Failed to load user' });
-    if (!targetUser) return reply.code(404).send({ error: 'User not found' });
-    if (targetUser.privacy_enabled) {
-      return reply.code(403).send({ error: 'This player has hidden their word times' });
-    }
-    if (cached) return { userId, date, words: cached };
-    if (wordsErr) return reply.code(500).send({ error: 'Failed to load words' });
-
-
-    const wordIds = (words ?? []).map((w) => w.id);
-    let results = [];
-
-    if (wordIds.length > 0) {
-      const { data, error } = await supabase
-        .from('word_results')
-        .select('id, word_id, status, nb_tries, time_seconds')
-        .eq('user_id', userId)
-        .in('word_id', wordIds);
-
-      if (error) return reply.code(500).send({ error: 'Failed to load word times' });
-      results = data ?? [];
-    }
-
-    const byWordId = Object.fromEntries(results.map((r) => [r.word_id, r]));
-    const rows = (words ?? [])
-      .map((w) => {
-        const r = byWordId[w.id];
-        if (!r) return null;
-        return {
-          word_result_id: r.id,
-          word_id: w.id,
-          order_index: w.order_index,
-          length: w.length,
-          status: r.status,
-          nb_tries: r.nb_tries,
-          time_seconds: r.time_seconds,
-        };
-      })
-      .filter(Boolean);
-
-    setCachedWordTimes(userId, date, rows, date === getBerlinDateKey());
-    return { userId, date, words: rows };
-  });
+  // leaderboard popup. scope=42 keeps the real-user gate; scope=open resolves
+  // the handle and returns a projected payload.
+  fastify.get('/api/leaderboard/word-times', authOnly, makeWordTimesHandler());
 }

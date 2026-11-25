@@ -27,17 +27,25 @@ function setCacheEntry(cache, key, value, ttlMs) {
     });
 }
 
-export function getCachedLeaderboard(date) {
-    return getCacheEntry(leaderboardCache, date);
+// Daily keys carry the scope: the 42 board and the open board are different
+// payloads for the same date.
+function dailyKey(scope, date) {
+    return `daily:${scope}:${date}`;
 }
 
-export function setCachedLeaderboard(date, rows) {
-    setCacheEntry(leaderboardCache, date, rows, LEADERBOARD_CACHE_TTL_MS);
+export function getCachedLeaderboard(date, scope = '42') {
+    return getCacheEntry(leaderboardCache, dailyKey(scope, date));
 }
 
+export function setCachedLeaderboard(date, scope, rows) {
+    setCacheEntry(leaderboardCache, dailyKey(scope, date), rows, LEADERBOARD_CACHE_TTL_MS);
+}
+
+// A finished word (or a new flag) changes both scopes for that day.
 export function invalidateLeaderboard(date) {
     if (date) {
-        leaderboardCache.delete(date);
+        leaderboardCache.delete(dailyKey('42', date));
+        leaderboardCache.delete(dailyKey('open', date));
         return;
     }
 
@@ -98,7 +106,7 @@ export function setCachedGuesses(wordResultId, guesses) {
 
 /* ---- Period leaderboards (monthly + global aggregates) ----
  *
- * Keys look like `monthly:2026-10:9` or `global`. These queries are heavier
+ * Keys look like `monthly:42:2026-10:5` or `global:open:15`. These queries are heavier
  * than the daily one and a few minutes of staleness is fine for aggregates, so
  * they are NOT touched by invalidateAllLeaderboards(): flushing them on every
  * finished word would defeat the cache.
@@ -146,6 +154,19 @@ export function loadPeriod(key, isLive, loader) {
 
 export function invalidatePeriods() {
     periodCache.clear();
+}
+
+// Joining or renaming changes one scope across every cache (daily included).
+// Period keys are not flushed by invalidateAllLeaderboards(), so a scope change
+// has to remove its own keys explicitly.
+export function invalidateScope(scope) {
+    const prefixes = [`daily:${scope}:`, `monthly:${scope}:`, `global:${scope}:`];
+
+    for (const cache of [leaderboardCache, periodCache]) {
+        for (const key of [...cache.keys()]) {
+            if (prefixes.some((prefix) => key.startsWith(prefix))) cache.delete(key);
+        }
+    }
 }
 
 export function invalidateAllLeaderboards() {

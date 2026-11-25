@@ -56,23 +56,25 @@ function GuessHistory({ wordResultId, preloaded }) {
   );
 }
 
-function WordTimeRow({ word, preloadedGuesses }) {
+function WordTimeRow({ word, preloadedGuesses, showGuesses }) {
   return (
     <div className="word-time-col">
       <div className="word-time-header">
         <span className="word-time-index">#{word.order_index}</span>
         <span className="word-time-value">{formatTime(word.time_seconds)}</span>
       </div>
-      <GuessHistory wordResultId={word.word_result_id} preloaded={preloadedGuesses} />
+      {showGuesses && <GuessHistory wordResultId={word.word_result_id} preloaded={preloadedGuesses} />}
     </div>
   );
 }
 
-export default function WordTimesPopup({ userId, login, date, onClose }) {
+export default function WordTimesPopup({ scope = '42', userId, login, handle, date, onClose }) {
+  const isOpen = scope === 'open';
   const [state, setState] = useState({ loading: true, words: null, error: '' });
   // Guess access is gated server-side as a single yes/no (has the viewer finished today?),
   // but the gate lives on the per-word guesses endpoint. Check it once, up front, with the
   // first word, instead of letting every row hit the same error independently.
+  // The open payload has no word_result_id, so there is nothing to check there.
   const [guessAccess, setGuessAccess] = useState({ checked: false, blocked: false, message: '', firstGuesses: null });
 
   useEffect(() => {
@@ -81,10 +83,15 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
     setGuessAccess({ checked: false, blocked: false, message: '', firstGuesses: null });
 
     api
-      .wordTimes(userId, date)
+      .wordTimes({ scope, userId, handle, date })
       .then((data) => {
         if (cancelled) return;
         setState({ loading: false, words: data.words, error: '' });
+
+        if (isOpen) {
+          setGuessAccess({ checked: true, blocked: false, message: '', firstGuesses: null });
+          return;
+        }
 
         const firstWord = data.words?.[0];
         if (!firstWord) {
@@ -110,13 +117,13 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [userId, date]);
+  }, [scope, userId, handle, date, isOpen]);
 
   return (
     <div className="info-overlay" onClick={onClose}>
       <div className="info-card word-times-card" onClick={(e) => e.stopPropagation()}>
         <div className="info-card-head">
-          <p className="info-eyebrow">{login}</p>
+          <p className="info-eyebrow">{isOpen ? handle : login}</p>
           <button className="info-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
@@ -137,9 +144,10 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
           <div className="word-times-list">
             {state.words.map((w, i) => (
               <WordTimeRow
-                key={w.word_id}
+                key={w.order_index}
                 word={w}
-                preloadedGuesses={i === 0 ? guessAccess.firstGuesses : undefined}
+                preloadedGuesses={!isOpen && i === 0 ? guessAccess.firstGuesses : undefined}
+                showGuesses={!isOpen}
               />
             ))}
           </div>

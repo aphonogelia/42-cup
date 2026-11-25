@@ -580,6 +580,137 @@ body.theme-light .status-dot.not_started {
   color: var(--crimson);
 }
 
+/* ---- Scope toggle (42 | Open) ------------------------------------------------ */
+/* Sits above the period tabs and reuses their spacing. */
+.ledger-scope {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+/* Banner / guest note / one-time handle link, on the Open tab only. */
+.ledger-scope-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+}
+
+.ledger-scope-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ledger-join-banner {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ledger-join-banner:hover {
+  border-color: var(--amber-dim);
+  color: var(--paper);
+}
+
+.ledger-link-btn {
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+}
+
+.ledger-link-btn:hover {
+  color: var(--paper);
+}
+
+/* ---- Handle dialog (join / guest one-time choose) ---------------------------- */
+.join-card {
+  width: min(100%, 420px);
+}
+
+.join-field {
+  display: grid;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.join-field input {
+  width: 100%;
+  padding: 9px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.join-field input:focus {
+  outline: none;
+  border-color: var(--amber-dim);
+}
+
+.join-status {
+  margin: 0;
+  min-height: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.join-status.available {
+  color: var(--amber);
+}
+
+.join-status.taken,
+.join-status.invalid,
+.join-status.rate-limited,
+.join-status.error {
+  color: var(--crimson);
+}
+
+.join-warning {
+  margin: 0;
+  font-size: 11px;
+  color: var(--lila);
+}
+
+.join-confirm {
+  margin: 0;
+  font-size: 13px;
+  color: var(--paper);
+}
+
+.join-primary {
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+
+.join-primary:hover:not(:disabled) {
+  border-color: var(--amber);
+  color: var(--paper);
+}
+
 /* ---- Responsive --------------------------------------------------------------- */
 @media (max-width: 640px) {
   .ledger-row {

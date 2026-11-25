@@ -72,15 +72,33 @@ export const api = {
   // GDPR Art. 17: irreversible, removes the account and all its game data.
   // Fastify rejects an empty body with a JSON content type, hence '{}'.
   deleteAccount: () => request('/api/auth/me', { method: 'DELETE', body: '{}' }),
-  leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
+  leaderboard: (date, scope = '42') => {
+    const params = new URLSearchParams({ scope });
+    if (date) params.set('date', date);
+    return request(`/api/leaderboard?${params}`);
+  },
   leaderboardDates: () => request('/api/leaderboard/dates'),
   // { months: ['2026-10', ...], thresholds: { monthly, global } }
   leaderboardMeta: () => request('/api/leaderboard/meta'),
-  leaderboardMonthly: (month) =>
-    request(`/api/leaderboard/monthly${month ? `?month=${encodeURIComponent(month)}` : ''}`),
-  leaderboardGlobal: () => request('/api/leaderboard/global'),
-  wordTimes: (userId, date) =>
-    request(`/api/leaderboard/word-times?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`),
+  leaderboardMonthly: (month, scope = '42') => {
+    const params = new URLSearchParams({ scope });
+    if (month) params.set('month', month);
+    return request(`/api/leaderboard/monthly?${params}`);
+  },
+  leaderboardGlobal: (scope = '42') =>
+    request(`/api/leaderboard/global?scope=${encodeURIComponent(scope)}`),
+  // scope=42: userId, returns word_result_id (guess history available).
+  // scope=open: handle, returns no ids at all.
+  wordTimes: ({ scope = '42', userId, handle, date }) => {
+    const params = new URLSearchParams({ scope });
+    if (date) params.set('date', date);
+    if (handle) params.set('handle', handle);
+    if (userId) params.set('userId', userId);
+    return request(`/api/leaderboard/word-times?${params}`);
+  },
+  handleAvailable: (h) => request(`/api/me/handle-available?h=${encodeURIComponent(h)}`),
+  joinGlobal: (handle) =>
+    request('/api/me/global', { method: 'PUT', body: JSON.stringify({ handle }) }),
   guesses: (wordResultId) => request(`/api/word-results/${wordResultId}/guesses`),
   loginUrl: () => `${API_URL}/api/auth/42`,
   stats: () => request('/api/stats/me'),

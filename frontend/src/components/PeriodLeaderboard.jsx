@@ -4,8 +4,8 @@ import { formatClock } from '../lib/formatTime.js';
 import AlertModal from './AlertModal.jsx';
 import './Leaderboard.css';
 
-const fetchPeriod = (isMonthly, month) =>
-  isMonthly ? api.leaderboardMonthly(month) : api.leaderboardGlobal();
+const fetchPeriod = (isMonthly, month, scope) =>
+  isMonthly ? api.leaderboardMonthly(month, scope) : api.leaderboardGlobal(scope);
 
 function monthLabel(monthKey) {
   const [y, m] = monthKey.split('-').map(Number);
@@ -33,8 +33,9 @@ function NavArrow({ direction }) {
   );
 }
 
-export default function PeriodLeaderboard({ mode, viewerId }) {
+export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshToken }) {
   const isMonthly = mode === 'monthly';
+  const isOpen = scope === 'open';
   const [months, setMonths] = useState(null); // monthly tab only, newest first
   const [monthlyMinDays, setMonthlyMinDays] = useState(null);
   const [month, setMonth] = useState(null);
@@ -71,7 +72,7 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
 
     setData(null);
 
-    fetchPeriod(isMonthly, month)
+    fetchPeriod(isMonthly, month, scope)
       .then((d) => {
         if (!cancelled) setData(d);
       })
@@ -81,7 +82,7 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
 
     const refresh = () => {
       if (document.visibilityState !== 'visible') return;
-      fetchPeriod(isMonthly, month)
+      fetchPeriod(isMonthly, month, scope)
         .then((d) => {
           if (!cancelled) setData(d);
         })
@@ -98,7 +99,7 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
       document.removeEventListener('visibilitychange', refresh);
       window.clearInterval(intervalId);
     };
-  }, [isMonthly, month]);
+  }, [isMonthly, month, scope, refreshToken]);
 
   const monthIdx = months && month ? months.indexOf(month) : -1;
   const olderMonth = monthIdx !== -1 ? months[monthIdx + 1] ?? null : null;
@@ -150,18 +151,22 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
         </div>
 
         {ranked.map((row) => {
-          const isYou = Boolean(viewerId) && row.user_id === viewerId;
+          // Open rows carry no user_id: "me" is the handle from /api/auth/me.
+          const isYou = isOpen
+            ? Boolean(me?.handle) && row.handle?.toLowerCase() === me.handle.toLowerCase()
+            : Boolean(viewerId) && row.user_id === viewerId;
+          const rowKey = isOpen ? row.handle : row.user_id;
           const classes = ['period-row'];
           if (isYou) classes.push('is-you');
 
           return (
-            <div className={classes.join(' ')} key={row.user_id}>
+            <div className={classes.join(' ')} key={rowKey}>
               <span className="rank">{row.rank}</span>
               <span className="login">
-                {row.avatar_url ? (
+                {!isOpen && row.avatar_url ? (
                   <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" />
                 ) : null}
-                <span className="login-name">{row.login}</span>
+                <span className="login-name">{isOpen ? row.handle : row.login}</span>
               </span>
               <span className="period-num">{formatPct(row.solve_rate)}</span>
               <span className="period-num">{formatTries(row.avg_tries)}</span>
