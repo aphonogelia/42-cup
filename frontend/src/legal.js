@@ -121,10 +121,11 @@ const PRIVACY_DE = [
     {
       heading: '2. Welche Daten verarbeitet werden',
       paragraphs: [
-        'Konto: Bei der Anmeldung über 42 werden die interne Nutzer-ID (intra_id), der Login-Name, der Anzeigename und das Profilbild übernommen. Das Profilbild wird einmalig in unseren eigenen Speicher kopiert und von dort ausgeliefert.',
+        'Konto: Bei der Anmeldung über 42 werden die interne Nutzer-ID (intra_id), der Login-Name und das Profilbild übernommen. Das Profilbild wird einmalig in unseren eigenen Speicher kopiert und von dort ausgeliefert.',
         'Spiel: Für jedes gestartete Wort werden Vermutungen, Buchstaben-Rückmeldungen, Zeitstempel, Anzahl der Versuche und das Ergebnis (gelöst, nicht gelöst, abgebrochen) gespeichert. Diese Daten bilden die Ranglisten.',
         'Missbrauchsabwehr: Beim Aufruf der API verarbeitet der Server die IP-Adresse, um Anfragen zu begrenzen. Auffällige Spieltage können mit einem internen Vermerk gekennzeichnet werden.',
         'Gäste: Ein Gastkonto besteht aus einem zufällig erzeugten Login, dem Anzeigenamen „Guest“ und den Spieldaten. Es wird kein 42-Konto und keine E-Mail-Adresse verlangt.',
+        'Offene Rangliste: Die Rangliste „Open“ ist nur für ihre Mitglieder sichtbar. Wer sie öffnen will, muss beitreten und wählt dabei einen Handle; dieser wird zusammen mit den Ranglisten-Kennzahlen (Lösungsquote, durchschnittliche Versuche, Median, Score) angezeigt, nicht der Login. Gäste sind automatisch Mitglied und werden mit ihrem zufälligen Gast-Login als Handle aufgenommen. Die Einstellung „privat“ verbirgt nur Wortzeiten und Vermutungen; Handle, Kennzahlen und der Eintrag selbst bleiben sichtbar. Der Handle kann nach der Wahl nicht mehr geändert werden (außer Groß-/Kleinschreibung); eine Korrektur ist über die Kontaktadresse möglich.',
         'Nicht verarbeitet werden: E-Mail-Adressen, Passwörter, Zahlungsdaten, Standortdaten, Werbe-IDs. Es findet kein Tracking durch Dritte statt, es werden keine Analyse-Werkzeuge eingesetzt und es werden keine Profile für Werbung gebildet.',
       ],
     },
@@ -140,9 +141,9 @@ const PRIVACY_DE = [
     {
       heading: '4. Speicherdauer',
       paragraphs: [
-        'Gastkonten werden 90 Tage nach der letzten Vermutung automatisch gelöscht. Der Löschlauf findet täglich um 03:00 UTC statt und entfernt Konto, Ergebnisse, Vermutungen und Vermerke.',
-        'Registrierte Konten bleiben bis zur Löschung durch die Nutzerin oder den Nutzer bestehen. Mit der Kontolöschung werden Konto, Ergebnisse, Vermutungen und Vermerke entfernt.',
-        'Vermerke über auffällige Spieltage werden gelöscht, sobald der zugehörige Spieltag nicht mehr für Ranglisten ausgewertet wird.',
+        'Gastkonten werden 90 Tage nach der letzten Vermutung automatisch gelöscht; hat ein Gast nie geraten, 90 Tage nach der Anlage. Der Löschlauf findet täglich um 03:00 UTC statt und entfernt Konto, Ergebnisse, Vermutungen, Abgabe-Protokoll und Vermerke.',
+        'Registrierte Konten bleiben bis zur Löschung durch die Nutzerin oder den Nutzer bestehen. Mit der Kontolöschung werden Konto, Ergebnisse, Vermutungen, Abgabe-Protokoll und Vermerke entfernt.',
+        'Vermerke über auffällige Spieltage bleiben bis zur Löschung des Kontos bestehen; ab dem Vermerk zählt der Tag nicht mehr für die Ranglisten.',
         'IP-Adressen werden für die Ratenbegrenzung nur im Arbeitsspeicher des Servers gehalten, längstens für die Dauer des Zählfensters (eine Minute, bei der Anlage von Gastkonten eine Stunde). Eigene Zugriffsprotokolle führen wir nicht. Render führt als Hoster technische Protokolle und löscht sie nach sieben Tagen. Für Vercel ist eine solche Frist nicht zugesagt; dort gelten die Nutzungsbedingungen von Vercel.',
       ],
     },
@@ -177,7 +178,8 @@ const PRIVACY_DE = [
       heading: '8. Deine Rechte',
       paragraphs: [
         'Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21).',
-        'Auskunft und Löschung kannst du direkt in der App auslösen: „Meine Daten herunterladen“ liefert eine JSON-Datei mit Konto, Ergebnissen, Vermutungen und Vermerken. „Konto löschen“ entfernt Konto, Ergebnisse, Vermutungen und das gespiegelte Profilbild endgültig.',
+        'Auskunft und Löschung kannst du direkt in der App auslösen: „Meine Daten herunterladen“ liefert eine JSON-Datei mit Konto, Ergebnissen, Vermutungen und Vermerken. „Konto löschen“ entfernt Konto, Ergebnisse, Vermutungen, Abgabe-Protokoll und das gespiegelte Profilbild endgültig.',
+        'Eine Korrektur des Handles ist in der App nicht möglich; wende dich dafür an die Kontaktadresse.',
         `Für alles Weitere genügt eine E-Mail an ${CONTACT_EMAIL}. Anfragen werden unverzüglich, spätestens innerhalb eines Monats beantwortet.`,
         'Beschwerden nimmt die Berliner Beauftragte für Datenschutz und Informationsfreiheit entgegen, Alt-Moabit 59–61, 10555 Berlin, mail@datenschutz-berlin.de.',
       ],
@@ -196,7 +198,7 @@ const PRIVACY_DE = [
     },
     {
       heading: '11. Stand',
-      paragraphs: ['21. November 2026'],
+      paragraphs: ['26. November 2026'],
     },
 ];
 
@@ -211,10 +213,11 @@ const PRIVACY_EN = [
     {
       heading: '2. What is processed',
       paragraphs: [
-        'Account: when you sign in with 42 we receive your internal user ID (intra_id), login name, display name and avatar. The avatar is copied once into our own storage and served from there.',
+        'Account: when you sign in with 42 we receive your internal user ID (intra_id), login name and avatar. The avatar is copied once into our own storage and served from there.',
         'Game: for every word you start we store your guesses, the letter feedback, timestamps, the number of tries and the outcome (solved, failed, unfinished). This data makes up the leaderboards.',
         'Abuse prevention: the server processes your IP address to rate-limit requests. A day with suspicious play can be marked with an internal note.',
         'Guests: a guest account is a random login, the display name “Guest” and the game data. No 42 account and no email address is required.',
+        'Open leaderboard: the “Open” board is visible to its members only. A 42 player has to join to see it, choosing a handle; the handle is shown with your leaderboard figures (solve rate, average tries, median, score) instead of your login. Guests are members automatically under their random guest login. The “private” setting hides only word times and guesses; the handle, the figures and the entry itself stay visible. A handle cannot be changed once chosen (apart from letter case); corrections go through the contact address.',
         'Not processed: email addresses, passwords, payment data, location data, advertising IDs. There is no third-party tracking, no analytics tool, and no advertising profile is built.',
       ],
     },
@@ -230,9 +233,9 @@ const PRIVACY_EN = [
     {
       heading: '4. Retention',
       paragraphs: [
-        'Guest accounts are deleted automatically 90 days after the last guess. The purge runs daily at 03:00 UTC and removes the account, results, guesses and notes.',
-        'Registered accounts stay until you delete them. Results and guesses are then removed with the account, not kept for the leaderboard history.',
-        'Notes about suspicious days are deleted once that day is no longer used for rankings.',
+        'Guest accounts are deleted automatically 90 days after the last guess, or 90 days after creation if the guest never guessed. The purge runs daily at 03:00 UTC and removes the account, results, guesses, the submission log and notes.',
+        'Registered accounts stay until you delete them. Deleting the account removes the account, results, guesses, the submission log and notes.',
+        'Notes about suspicious days stay until the account is deleted; from the note onwards that day no longer counts for the leaderboards.',
         'IP addresses are held for rate limiting in server memory only, for the length of the counting window (one minute, one hour for creating guest accounts). We keep no access logs of our own. Render keeps technical logs as our host and deletes them after seven days. Vercel does not commit to such a period; its terms of use apply.',
       ],
     },
@@ -267,7 +270,8 @@ const PRIVACY_EN = [
       heading: '8. Your rights',
       paragraphs: [
         'You have the right to access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction (Art. 18), data portability (Art. 20) and objection to processing based on legitimate interests (Art. 21).',
-        'Access and erasure can be triggered in the app: “Download my data” gives you a JSON file with your account, results, guesses and notes. “Delete my account” permanently removes the account, results, guesses and the mirrored avatar.',
+        'Access and erasure can be triggered in the app: “Download my data” gives you a JSON file with your account, results, guesses and notes. “Delete my account” permanently removes the account, results, guesses, the submission log and the mirrored avatar.',
+        'A handle cannot be corrected in the app; write to the contact address for that.',
         `For anything else, email ${CONTACT_EMAIL}. Requests are answered without undue delay and within one month at the latest.`,
         'Complaints go to the Berlin Commissioner for Data Protection and Freedom of Information, Alt-Moabit 59–61, 10555 Berlin, mail@datenschutz-berlin.de.',
       ],
@@ -286,7 +290,7 @@ const PRIVACY_EN = [
     },
     {
       heading: '11. Last updated',
-      paragraphs: ['21 November 2026'],
+      paragraphs: ['26 November 2026'],
     },
 ];
 

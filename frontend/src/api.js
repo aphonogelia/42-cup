@@ -72,18 +72,44 @@ export const api = {
   // GDPR Art. 17: irreversible, removes the account and all its game data.
   // Fastify rejects an empty body with a JSON content type, hence '{}'.
   deleteAccount: () => request('/api/auth/me', { method: 'DELETE', body: '{}' }),
-  leaderboard: (date) => request(`/api/leaderboard${date ? `?date=${date}` : ''}`),
+  leaderboard: (date, scope = '42') => {
+    const params = new URLSearchParams({ scope });
+    if (date) params.set('date', date);
+    return request(`/api/leaderboard?${params}`);
+  },
   leaderboardDates: () => request('/api/leaderboard/dates'),
   // { months: ['2026-10', ...], thresholds: { monthly, global } }
   leaderboardMeta: () => request('/api/leaderboard/meta'),
-  leaderboardMonthly: (month) =>
-    request(`/api/leaderboard/monthly${month ? `?month=${encodeURIComponent(month)}` : ''}`),
-  leaderboardGlobal: () => request('/api/leaderboard/global'),
-  wordTimes: (userId, date) =>
-    request(`/api/leaderboard/word-times?userId=${encodeURIComponent(userId)}&date=${encodeURIComponent(date)}`),
+  leaderboardMonthly: (month, scope = '42') => {
+    const params = new URLSearchParams({ scope });
+    if (month) params.set('month', month);
+    return request(`/api/leaderboard/monthly?${params}`);
+  },
+  leaderboardGlobal: (scope = '42') =>
+    request(`/api/leaderboard/global?scope=${encodeURIComponent(scope)}`),
+  wordTimes: ({ scope = '42', userId, handle, date }) => {
+    const params = new URLSearchParams({ scope });
+    if (date) params.set('date', date);
+    if (handle) params.set('handle', handle);
+    if (userId) params.set('userId', userId);
+    return request(`/api/leaderboard/word-times?${params}`);
+  },
+  handleAvailable: (h) => request(`/api/me/handle-available?h=${encodeURIComponent(h)}`),
+  joinGlobal: (handle) =>
+    request('/api/me/global', { method: 'PUT', body: JSON.stringify({ handle }) }),
+  // Open guess history, addressed by handle + date + order_index: no id ever
+  // comes back, so a handle cannot be matched to a login.
+  wordGuesses: ({ handle, date, orderIndex }) => {
+    const params = new URLSearchParams({ scope: 'open', handle, date, order: String(orderIndex) });
+    return request(`/api/leaderboard/word-guesses?${params}`);
+  },
   guesses: (wordResultId) => request(`/api/word-results/${wordResultId}/guesses`),
   loginUrl: () => `${API_URL}/api/auth/42`,
   stats: () => request('/api/stats/me'),
 };
 
 export { ApiError, API_URL, TOKEN_KEY };
+
+// The backend refuses every scope=open read without membership.
+export const isJoinRequired = (err) =>
+  err?.status === 403 && err?.body?.error === 'join_required';

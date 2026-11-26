@@ -6,12 +6,14 @@ import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
 import AlertModal from './components/AlertModal.jsx';
+import AnnouncementModal from './components/AnnouncementModal.jsx';
+import JoinHandleModal from './components/JoinHandleModal.jsx';
 import Stats from './components/Stats.jsx';
-import LoginRequired from './components/LoginRequired.jsx';
 import LegalFooter from './components/LegalFooter.jsx';
 import { CONTACT_EMAIL, IMPRESSUM, PRIVACY } from './legal.js';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
+const ANNOUNCEMENT_KEY = 'wordel-open-board-announcement-v1';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 const GITHUB_URL = 'https://github.com/aphonogelia/42-cup';
 
@@ -48,10 +50,11 @@ const INFO_PAGES = {
     eyebrow: 'The 42 Cup',
     body: [
     'wordel // 42 Cup is a small thing made by Helene Tharrault (htharrau). The source code lives on GitHub: ' + GITHUB_URL,
-    'Each day at midnight (Paris time), a new set of words is drawn at random from a pool of about 2,000 past NYT Wordle answers plus 500 curated words. A word, once drawn, rests for 90 days before it may return. Guesses are checked against the same 14,855 words as the official Wordle.',
+    'Each day at midnight (Berlin time), a new set of words is drawn at random from a pool of about 2,000 past NYT Wordle answers plus 500 curated words. A word, once drawn, rests for 90 days before it may return. Guesses are checked against the same 14,855 words as the official Wordle.',
     'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
     'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
     SCORING_PLACEHOLDER,
+    'There are two boards. 42 ranks 42 players under their intra login, as before. Open is members-only: a 42 player has to join to read it, with a handle of their choice shown instead of their login. Joining is permanent and the handle is chosen once. Guests are on the Open board automatically, under a random guest handle, and their ranking is tied to this browser.',
     'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
     'The server is hosted on free tiers (Render), so it may take a little while to wake up on your first visit. Thanks for your patience!',
   ],
@@ -374,6 +377,8 @@ export default function App() {
   const [accountBusy, setAccountBusy] = useState(false);
   const [accountError, setAccountError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [guestHandlePrompt, setGuestHandlePrompt] = useState(false);
   const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
@@ -402,6 +407,12 @@ export default function App() {
       });
   }, []);
 
+  // Handles come back from PUT /api/me/global; keep App's single copy of the
+  // account in step so the modal and the boards agree without a refetch.
+  const updateMe = useCallback((patch) => {
+    setUser((current) => (current ? { ...current, ...patch } : current));
+  }, []);
+
   // Applies one word's server-confirmed result to the tab strip immediately,
   // from the same guess response the grid uses. No extra request.
   const applyWordUpdate = useCallback((orderIndex, patch) => {
@@ -428,6 +439,47 @@ export default function App() {
       .finally(() => setAuthChecked(true));
   }, []);
 
+  // One-time Open-board notice, once per account in this browser.
+  useEffect(() => {
+    if (!authChecked || !user) return;
+
+    const key = `${ANNOUNCEMENT_KEY}:${user.id ?? user.login}`;
+    let seen = false;
+    try {
+      seen = window.localStorage.getItem(key) === '1';
+    } catch {
+      // Ignore storage quota and privacy-mode failures.
+    }
+    if (!seen) setShowAnnouncement(true);
+  }, [authChecked, user]);
+
+  const dismissAnnouncement = () => {
+    if (user) {
+      try {
+        window.localStorage.setItem(`${ANNOUNCEMENT_KEY}:${user.id ?? user.login}`, '1');
+      } catch {
+        // Ignore storage quota and privacy-mode failures.
+      }
+    }
+    setShowAnnouncement(false);
+  };
+
+  const needsGuestHandle = Boolean(user?.is_guest && user.handle_changed_at == null);
+
+  const openLedger = useCallback(() => {
+    if (needsGuestHandle) {
+      setGuestHandlePrompt(true);
+      return;
+    }
+    setView('leaderboard');
+  }, [needsGuestHandle]);
+
+  const handleGuestHandleSaved = (updated) => {
+    setUser((u) => ({ ...u, ...updated }));
+    setGuestHandlePrompt(false);
+    setView('leaderboard');
+  };
+
   useEffect(() => {
     if (!user?.login) return;
 
@@ -452,9 +504,9 @@ export default function App() {
       words.length > 0 &&
       words.every((word) => word.status === 'solved' || word.status === 'failed')
     ) {
-      setView(user?.is_guest ? 'stats' : 'leaderboard');
+      openLedger();
     }
-  }, [words, showCompletionToast, completionPending, user]);
+  }, [words, showCompletionToast, completionPending, openLedger]);
 
 
   useEffect(() => {
@@ -672,7 +724,7 @@ export default function App() {
 
             <button
               className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => setView('leaderboard')}
+              onClick={openLedger}
             >
               Ledger
             </button>
@@ -688,16 +740,14 @@ export default function App() {
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
             </button>
 
-            {!user.is_guest && (
-              <button
-                className="icon-btn theme-toggle"
-                onClick={handleTogglePrivacy}
-                aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
-                title={user.privacy_enabled ? 'Public' : 'Private'}
-              >
-                {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            )}
+            <button
+              className="icon-btn theme-toggle"
+              onClick={handleTogglePrivacy}
+              aria-label={user.privacy_enabled ? 'Make profile private' : 'Make profile public'}
+              title={user.privacy_enabled ? 'Public' : 'Private'}
+            >
+              {user.privacy_enabled ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
 
             <button
               className="icon-btn theme-toggle"
@@ -735,15 +785,13 @@ export default function App() {
             )}
           </>
               ) : view === 'leaderboard' ? (
-      user.is_guest ? (
-        <LoginRequired />
-      ) : (
         <Leaderboard
           totalWords={words.length}
           viewerIsPrivate={!!user.privacy_enabled}
           viewerId={user.id}
+          me={user}
+          onMeChange={updateMe}
         />
-      )
     ) : (
       <Stats isGuest={!!user.is_guest} />
     )}
@@ -763,7 +811,7 @@ export default function App() {
         duration={2200}
         onClose={() => {
           setShowCompletionToast(false);
-          setView(user.is_guest ? 'stats' : 'leaderboard');
+          openLedger();
         }}
       />
       <InfoModal
@@ -783,6 +831,19 @@ export default function App() {
         onConfirmDelete={handleDeleteAccount}
         onCancelDelete={() => setConfirmDelete(false)}
       />
+      {showAnnouncement && (
+        <AnnouncementModal
+          isGuest={!!user.is_guest}
+          onClose={dismissAnnouncement}
+        />
+      )}
+      {guestHandlePrompt && (
+        <JoinHandleModal
+          mode="guest-choose"
+          onClose={() => setGuestHandlePrompt(false)}
+          onDone={handleGuestHandleSaved}
+        />
+      )}
     </div >
   );
 }

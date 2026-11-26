@@ -132,12 +132,7 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
 
       setWordState(data);
       writeCachedWordState(userLogin, orderIndex, data);
-      // A finished word must restore its result panel (and next word button),
-      // even when it was finished somewhere else.
-      if (isFinishedStatus(data.status)) {
-        setFinished(data);
-        setCurrentGuess('');
-      }
+      if (isFinishedStatus(data.status)) setCurrentGuess('');
 
       // Refresh the tab timers with the same data the board just showed.
       if (notifyParent) onProgressChangedRef.current?.();
@@ -352,6 +347,20 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
 
   useEffect(() => {
     function onKeyDown(e) {
+      const target = e.target;
+      if (
+        e.metaKey ||
+        e.ctrlKey ||
+        e.altKey ||
+        (target instanceof HTMLElement && (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        )) ||
+        document.querySelector('[role="dialog"][aria-modal="true"]') !== null
+      ) {
+        return;
+      }
       if (e.key === 'Enter') handleKey('enter');
       else if (e.key === 'Backspace') handleKey('back');
       else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toLowerCase());

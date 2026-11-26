@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.js';
+import { api, isJoinRequired } from '../api.js';
 import { formatTime } from '../lib/formatTime.js';
 
-function GuessHistory({ wordResultId, preloaded }) {
+function GuessHistory({ wordResultId, preloaded, openHandle, openDate, openOrder }) {
   const [state, setState] = useState(() =>
     preloaded ? { loading: false, guesses: preloaded, error: '' } : { loading: true, guesses: null, error: '' }
   );
@@ -16,8 +16,11 @@ function GuessHistory({ wordResultId, preloaded }) {
     let cancelled = false;
     setState({ loading: true, guesses: null, error: '' });
 
-    api
-      .guesses(wordResultId)
+    const request = openHandle
+      ? api.wordGuesses({ handle: openHandle, date: openDate, orderIndex: openOrder })
+      : api.guesses(wordResultId);
+
+    request
       .then((data) => {
         if (!cancelled) setState({ loading: false, guesses: data.guesses, error: '' });
       })
@@ -29,7 +32,7 @@ function GuessHistory({ wordResultId, preloaded }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wordResultId]);
+  }, [wordResultId, openHandle, openDate, openOrder]);
 
   if (state.loading) {
     return <div className="guess-history-status">Loading…</div>;
@@ -56,19 +59,26 @@ function GuessHistory({ wordResultId, preloaded }) {
   );
 }
 
-function WordTimeRow({ word, preloadedGuesses }) {
+function WordTimeRow({ word, preloadedGuesses, openHandle, openDate }) {
   return (
     <div className="word-time-col">
       <div className="word-time-header">
         <span className="word-time-index">#{word.order_index}</span>
         <span className="word-time-value">{formatTime(word.time_seconds)}</span>
       </div>
-      <GuessHistory wordResultId={word.word_result_id} preloaded={preloadedGuesses} />
+      <GuessHistory
+        wordResultId={word.word_result_id}
+        preloaded={preloadedGuesses}
+        openHandle={openHandle}
+        openDate={openDate}
+        openOrder={word.order_index}
+      />
     </div>
   );
 }
 
-export default function WordTimesPopup({ userId, login, date, onClose }) {
+export default function WordTimesPopup({ scope = '42', userId, login, handle, date, onClose, onJoinRequired }) {
+  const isOpen = scope === 'open';
   const [state, setState] = useState({ loading: true, words: null, error: '' });
   // Guess access is gated server-side as a single yes/no (has the viewer finished today?),
   // but the gate lives on the per-word guesses endpoint. Check it once, up front, with the
@@ -81,7 +91,7 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
     setGuessAccess({ checked: false, blocked: false, message: '', firstGuesses: null });
 
     api
-      .wordTimes(userId, date)
+      .wordTimes({ scope, userId, handle, date })
       .then((data) => {
         if (cancelled) return;
         setState({ loading: false, words: data.words, error: '' });
@@ -92,8 +102,11 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
           return;
         }
 
-        api
-          .guesses(firstWord.word_result_id)
+        const request = isOpen
+          ? api.wordGuesses({ handle, date, orderIndex: firstWord.order_index })
+          : api.guesses(firstWord.word_result_id);
+
+        request
           .then((guessData) => {
             if (cancelled) return;
             setGuessAccess({ checked: true, blocked: false, message: '', firstGuesses: guessData.guesses });
@@ -104,19 +117,25 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
           });
       })
       .catch((err) => {
-        if (!cancelled) setState({ loading: false, words: null, error: err.message });
+        if (cancelled) return;
+        if (isJoinRequired(err)) {
+          onJoinRequired?.();
+          onClose();
+          return;
+        }
+        setState({ loading: false, words: null, error: err.message });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [userId, date]);
+  }, [scope, userId, handle, date, isOpen, onJoinRequired, onClose]);
 
   return (
     <div className="info-overlay" onClick={onClose}>
       <div className="info-card word-times-card" onClick={(e) => e.stopPropagation()}>
         <div className="info-card-head">
-          <p className="info-eyebrow">{login}</p>
+          <p className="info-eyebrow">{isOpen ? handle : login}</p>
           <button className="info-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
@@ -137,9 +156,11 @@ export default function WordTimesPopup({ userId, login, date, onClose }) {
           <div className="word-times-list">
             {state.words.map((w, i) => (
               <WordTimeRow
-                key={w.word_id}
+                key={w.order_index}
                 word={w}
                 preloadedGuesses={i === 0 ? guessAccess.firstGuesses : undefined}
+                openHandle={isOpen ? handle : undefined}
+                openDate={isOpen ? date : undefined}
               />
             ))}
           </div>

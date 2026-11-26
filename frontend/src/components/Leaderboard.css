@@ -56,12 +56,37 @@
   margin-bottom: 10px;
 }
 
+/* Controls row: picker full width, switch on its own right-aligned line below. */
+.ledger-date-picker-controls {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+/* Groups [<] date [>] and anchors the calendar popover to the picker. */
+.ledger-date-picker-nav {
+  order: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  position: relative;
+}
+
+.ledger-date-picker-controls .ledger-switch {
+  order: 2;
+  align-self: flex-end;
+  margin-top: 16px;
+}
+
 .ledger-date-trigger,
 .ledger-month-label {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 128px;
+  flex: 1;
+  min-width: 0;
   min-height: 32px;
   padding: 6px 10px;
   background: var(--surface);
@@ -75,6 +100,7 @@
 /* Wrapper around the daily trigger so it sits in the picker row like the month label */
 .ledger-date-popover-wrap {
   display: flex;
+  flex: 1;
 }
 
 .ledger-date-trigger {
@@ -293,6 +319,17 @@
   border-bottom: 1px solid var(--line-soft);
   padding-bottom: 6px;
   margin-bottom: 8px;
+}
+
+.ledger-tier-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ledger-tier-head .ledger-tier-label {
+  margin-bottom: 0;
 }
 
 /* Row height: 7px 4px padding + 13px text. .period-row below uses the same. */
@@ -580,6 +617,145 @@ body.theme-light .status-dot.not_started {
   color: var(--crimson);
 }
 
+/* ---- Scope switch (Open) ---------------------------------------------------- */
+.ledger-switch-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 16px 0;
+}
+
+.ledger-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ledger-switch-track {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.ledger-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 7px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--text-muted);
+  transition: left 120ms;
+}
+
+.ledger-switch.on {
+  color: var(--amber);
+}
+
+.ledger-switch.on .ledger-switch-track {
+  background: var(--amber);
+}
+
+.ledger-switch.on .ledger-switch-thumb {
+  left: 20px;
+  background: var(--amber-dim);
+}
+
+.ledger-switch:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* ---- Open-tab note ---------------------------------------------------------- */
+.ledger-error {
+  margin: 0 0 12px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--crimson);
+}
+
+/* ---- Handle dialog (join / guest one-time choose) ---------------------------- */
+.join-card {
+  width: min(100%, 420px);
+}
+
+.join-field {
+  display: grid;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.join-field input {
+  width: 100%;
+  padding: 9px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.join-field input:focus {
+  outline: none;
+  border-color: var(--amber-dim);
+}
+
+.join-status {
+  margin: 0;
+  min-height: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.join-status.available {
+  color: var(--amber);
+}
+
+.join-status.taken,
+.join-status.invalid,
+.join-status.rate-limited,
+.join-status.error {
+  color: var(--crimson);
+}
+
+.join-warning {
+  margin: 0;
+  font-size: 11px;
+  color: var(--lila);
+}
+
+.join-confirm {
+  margin: 0;
+  font-size: 13px;
+  color: var(--paper);
+}
+
+.join-primary {
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+
+.join-primary:hover:not(:disabled) {
+  border-color: var(--amber);
+  color: var(--paper);
+}
+
 /* ---- Responsive --------------------------------------------------------------- */
 @media (max-width: 640px) {
   .ledger-row {
@@ -609,16 +785,6 @@ body.theme-light .status-dot.not_started {
 
   .period-num {
     font-size: 11px;
-  }
-
-  .ledger-date-popover-wrap {
-    flex: 1;
-  }
-
-  .ledger-date-trigger,
-  .ledger-month-label {
-    min-width: 0;
-    flex: 1;
   }
 
   .word-times-list {

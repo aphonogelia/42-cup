@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.js';
+import { api, isJoinRequired } from '../api.js';
 import { formatClock } from '../lib/formatTime.js';
 import AlertModal from './AlertModal.jsx';
 import './Leaderboard.css';
 
-const fetchPeriod = (isMonthly, month) =>
-  isMonthly ? api.leaderboardMonthly(month) : api.leaderboardGlobal();
+const fetchPeriod = (isMonthly, month, scope) =>
+  isMonthly ? api.leaderboardMonthly(month, scope) : api.leaderboardGlobal(scope);
 
 function monthLabel(monthKey) {
   const [y, m] = monthKey.split('-').map(Number);
@@ -33,8 +33,9 @@ function NavArrow({ direction }) {
   );
 }
 
-export default function PeriodLeaderboard({ mode, viewerId }) {
+export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshToken, onJoinRequired, scopeSwitch }) {
   const isMonthly = mode === 'monthly';
+  const isOpen = scope === 'open';
   const [months, setMonths] = useState(null); // monthly tab only, newest first
   const [monthlyMinDays, setMonthlyMinDays] = useState(null);
   const [month, setMonth] = useState(null);
@@ -71,21 +72,28 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
 
     setData(null);
 
-    fetchPeriod(isMonthly, month)
+    fetchPeriod(isMonthly, month, scope)
       .then((d) => {
         if (!cancelled) setData(d);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message);
+        if (cancelled) return;
+        if (isJoinRequired(err)) {
+          onJoinRequired();
+          return;
+        }
+        setError(err.message);
       });
 
     const refresh = () => {
       if (document.visibilityState !== 'visible') return;
-      fetchPeriod(isMonthly, month)
+      fetchPeriod(isMonthly, month, scope)
         .then((d) => {
           if (!cancelled) setData(d);
         })
-        .catch(() => {});
+        .catch((err) => {
+          if (!cancelled && isJoinRequired(err)) onJoinRequired();
+        });
     };
 
     window.addEventListener('focus', refresh);
@@ -98,7 +106,7 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
       document.removeEventListener('visibilitychange', refresh);
       window.clearInterval(intervalId);
     };
-  }, [isMonthly, month]);
+  }, [isMonthly, month, scope, refreshToken, onJoinRequired]);
 
   const monthIdx = months && month ? months.indexOf(month) : -1;
   const olderMonth = monthIdx !== -1 ? months[monthIdx + 1] ?? null : null;
@@ -150,18 +158,22 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
         </div>
 
         {ranked.map((row) => {
-          const isYou = Boolean(viewerId) && row.user_id === viewerId;
+          // Open rows carry no user_id: "me" is the handle from /api/auth/me.
+          const isYou = isOpen
+            ? Boolean(me?.handle) && row.handle?.toLowerCase() === me.handle.toLowerCase()
+            : Boolean(viewerId) && row.user_id === viewerId;
+          const rowKey = isOpen ? row.handle : row.user_id;
           const classes = ['period-row'];
           if (isYou) classes.push('is-you');
 
           return (
-            <div className={classes.join(' ')} key={row.user_id}>
+            <div className={classes.join(' ')} key={rowKey}>
               <span className="rank">{row.rank}</span>
               <span className="login">
-                {row.avatar_url ? (
+                {!isOpen && row.avatar_url ? (
                   <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" />
                 ) : null}
-                <span className="login-name">{row.login}</span>
+                <span className="login-name">{isOpen ? row.handle : row.login}</span>
               </span>
               <span className="period-num">{formatPct(row.solve_rate)}</span>
               <span className="period-num">{formatTries(row.avg_tries)}</span>
@@ -178,35 +190,44 @@ export default function PeriodLeaderboard({ mode, viewerId }) {
     <div>
       <AlertModal message={error} onClose={() => setError('')} />
 
-      {isMonthly && months && months.length > 0 && month && (
-        <div className="ledger-date-picker">
-          {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
-          <button
-            type="button"
-            className="ledger-date-nav"
-            onClick={() => olderMonth && setMonth(olderMonth)}
-            aria-disabled={!olderMonth}
-            aria-label="Previous month"
-            title="Previous month"
-          >
-            <NavArrow direction="left" />
-          </button>
+      {isMonthly ? (
+        // Same controls row as the daily board: switch left, month picker right.
+        // Always mounted so the switch never disappears while months load.
+        <div className="ledger-date-picker ledger-date-picker-controls">
+          {scopeSwitch}
+          {months && months.length > 0 && month && (
+            <div className="ledger-date-picker-nav">
+              {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
+              <button
+                type="button"
+                className="ledger-date-nav"
+                onClick={() => olderMonth && setMonth(olderMonth)}
+                aria-disabled={!olderMonth}
+                aria-label="Previous month"
+                title="Previous month"
+              >
+                <NavArrow direction="left" />
+              </button>
 
-          <span className="ledger-month-label" aria-live="polite">
-            {monthLabel(month)}
-          </span>
+              <span className="ledger-month-label" aria-live="polite">
+                {monthLabel(month)}
+              </span>
 
-          <button
-            type="button"
-            className="ledger-date-nav"
-            onClick={() => newerMonth && setMonth(newerMonth)}
-            aria-disabled={!newerMonth}
-            aria-label="Next month"
-            title="Next month"
-          >
-            <NavArrow direction="right" />
-          </button>
+              <button
+                type="button"
+                className="ledger-date-nav"
+                onClick={() => newerMonth && setMonth(newerMonth)}
+                aria-disabled={!newerMonth}
+                aria-label="Next month"
+                title="Next month"
+              >
+                <NavArrow direction="right" />
+              </button>
+            </div>
+          )}
         </div>
+      ) : (
+        scopeSwitch && <div className="ledger-switch-row">{scopeSwitch}</div>
       )}
 
       {body}

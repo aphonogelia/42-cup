@@ -1,8 +1,9 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api } from '../api.js';
+import { api, isJoinRequired } from '../api.js';
 import AlertModal from './AlertModal.jsx';
 import WordTimesPopup from './WordTimesPopup.jsx';
 import PeriodLeaderboard from './PeriodLeaderboard.jsx';
+import JoinHandleModal from './JoinHandleModal.jsx';
 import { formatTime } from '../lib/formatTime.js';
 
 function formatDateLabel(dateStr) {
@@ -247,8 +248,67 @@ const TABS = [
 
 // viewerId is optional: when given, the viewer's own row is highlighted on the
 // monthly and all-time boards.
-export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
+export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me, onMeChange }) {
+  const isGuest = Boolean(me?.is_guest);
   const [tab, setTab] = useState('daily');
+  // Real users always start on 42. Guests are fixed on open. Never persisted.
+  const [scope, setScope] = useState(() => (isGuest ? 'open' : '42'));
+  const [handleModal, setHandleModal] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [boardError, setBoardError] = useState('');
+
+  const handleScopeChange = (next) => {
+    if (next === scope) return;
+
+    // A 42 player who has not joined cannot open the board: ask for a handle
+    // first and stay on 42 until they accept.
+    if (next === 'open' && !isGuest && !me?.global_opt_in) {
+      setHandleModal('join');
+      return;
+    }
+
+    setScope(next);
+  };
+
+  const handleHandleSaved = (updated) => {
+    onMeChange?.({
+      handle: updated.handle,
+      global_opt_in: updated.global_opt_in,
+      handle_changed_at: updated.handle_changed_at,
+    });
+    setScope('open');
+    setHandleModal(null);
+    // The player is on the open board now: refetch so the row appears.
+    setRefreshToken((token) => token + 1);
+  };
+
+  // Backend refused an open read: membership changed under us. Ask again.
+  // Guests are always members (the insert trigger sets global_opt_in), so for
+  // them join_required means the account is gone, not that they have to join.
+  const handleJoinRequired = useCallback(() => {
+    if (isGuest) {
+      setBoardError('Session expired. Reload to start a new guest session.');
+      return;
+    }
+
+    setScope('42');
+    setHandleModal('join');
+  }, [isGuest]);
+
+  const scopeSwitch = isGuest ? null : (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={scope === 'open'}
+      className={`ledger-switch${scope === 'open' ? ' on' : ''}`}
+      onClick={() => handleScopeChange(scope === 'open' ? '42' : 'open')}
+    >
+      <span>Open</span>
+      <span className="ledger-switch-track" aria-hidden="true">
+        <span className="ledger-switch-thumb" />
+      </span>
+    </button>
+  );
 
   return (
     <div>
@@ -268,20 +328,47 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId }) {
         ))}
       </div>
 
+      {boardError && (
+        <p className="ledger-error" role="alert">{boardError}</p>
+      )}
+
       {tab === 'daily' ? (
         <DailyLeaderboard
           totalWords={totalWords}
           viewerIsPrivate={viewerIsPrivate}
           viewerId={viewerId}
+          scope={scope}
+          me={me}
+          refreshToken={refreshToken}
+          onJoinRequired={handleJoinRequired}
+          scopeSwitch={scopeSwitch}
         />
       ) : (
-        <PeriodLeaderboard key={tab} mode={tab} viewerId={viewerId} />
+        <PeriodLeaderboard
+          key={tab}
+          mode={tab}
+          viewerId={viewerId}
+          scope={scope}
+          me={me}
+          refreshToken={refreshToken}
+          onJoinRequired={handleJoinRequired}
+          scopeSwitch={scopeSwitch}
+        />
+      )}
+
+      {handleModal && (
+        <JoinHandleModal
+          mode={handleModal}
+          onClose={() => setHandleModal(null)}
+          onDone={handleHandleSaved}
+        />
       )}
     </div>
   );
 }
 
-function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
+function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, refreshToken, onJoinRequired, scopeSwitch }) {
+  const isOpen = scope === 'open';
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -301,7 +388,7 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
     }
 
     api
-      .leaderboard(date)
+      .leaderboard(date, scope)
       .then((data) => {
         if (cancelled) return;
         setRows(data.rows);
@@ -310,12 +397,19 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
           setSelectedDate(data.date);
         }
       })
-      .catch((err) => !cancelled && setError(err.message));
+      .catch((err) => {
+        if (cancelled) return;
+        if (isJoinRequired(err)) {
+          onJoinRequired();
+          return;
+        }
+        setError(err.message);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scope, onJoinRequired]);
 
   useEffect(() => {
     let cancelled = false;
@@ -331,7 +425,14 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
       return;
     }
     return fetchLeaderboard(selectedDate, { resetRows: true });
-  }, [selectedDate, fetchLeaderboard]);
+  }, [selectedDate, fetchLeaderboard, refreshToken]);
+
+  // A popup opened in one scope must not survive into the other.
+  useEffect(() => {
+    setActivePlayer(null);
+  }, [scope]);
+
+  const closePopup = useCallback(() => setActivePlayer(null), []);
 
   useEffect(() => {
     const refresh = () => {
@@ -362,6 +463,11 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
   const handlePlayerClick = (row) => {
     if (viewerIsPrivate) {
       setActivePlayer({ type: 'viewer-private' });
+      return;
+    }
+
+    if (isOpen) {
+      setActivePlayer({ type: 'view', handle: row.handle });
       return;
     }
 
@@ -400,10 +506,13 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
 
       {activePlayer?.type === 'view' && effectiveDate && (
         <WordTimesPopup
+          scope={scope}
           userId={activePlayer.userId}
           login={activePlayer.login}
+          handle={activePlayer.handle}
           date={effectiveDate}
-          onClose={() => setActivePlayer(null)}
+          onClose={closePopup}
+          onJoinRequired={onJoinRequired}
         />
       )}
 
@@ -414,124 +523,130 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId }) {
         />
       )}
 
+      {/* Controls row: scope switch left, date picker right. Always mounted so the
+          switch never disappears while dates load or the list is empty. */}
+      <div className="ledger-date-picker ledger-date-picker-controls">
+        {scopeSwitch}
+        {datesLoaded && dates.length > 0 && (
+          <div className="ledger-date-picker-nav">
+            {/* aria-disabled instead of disabled: a disabled button drops keyboard focus */}
+            <button
+              type="button"
+              className="ledger-date-nav"
+              onClick={() => olderDate && setSelectedDate(olderDate)}
+              aria-disabled={!olderDate}
+              aria-label="Previous day"
+              title="Previous day"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <DateCalendar
+              dates={dates}
+              value={effectiveDate}
+              onSelect={setSelectedDate}
+            />
+
+            <button
+              type="button"
+              className="ledger-date-nav"
+              onClick={() => newerDate && setSelectedDate(newerDate)}
+              aria-disabled={!newerDate}
+              aria-label="Next day"
+              title="Next day"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+
       {!datesLoaded ? (
         loader
+      ) : !rows || rows.length === 0 ? (
+        !rows ? (
+          loader
+        ) : (
+          <div className="empty-state">No entries yet. Be the first.</div>
+        )
       ) : (
-        <>
-          {/* Picker lives outside the rows-loading branch so it stays mounted (and keeps focus) while rows reload */}
-          {dates.length > 0 && (
-            <div className="ledger-date-picker">
-              {/* aria-disabled instead of disabled: a disabled button drops keyboard focus */}
-              <button
-                type="button"
-                className="ledger-date-nav"
-                onClick={() => olderDate && setSelectedDate(olderDate)}
-                aria-disabled={!olderDate}
-                aria-label="Previous day"
-                title="Previous day"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-
-              <DateCalendar
-                dates={dates}
-                value={effectiveDate}
-                onSelect={setSelectedDate}
-              />
-
-              <button
-                type="button"
-                className="ledger-date-nav"
-                onClick={() => newerDate && setSelectedDate(newerDate)}
-                aria-disabled={!newerDate}
-                aria-label="Next day"
-                title="Next day"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
+        tiers.map((tier) => (
+          <div className="ledger-tier" key={tier.words_found}>
+            <div className="ledger-tier-label">
+              {tier.words_found}/{totalWords ?? tier.words_found} solved
             </div>
-          )}
+            {tier.rows.map((row) => {
+              const hasPlayed = row.total_tries > 0;
+              const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
+              const clickable = hasPlayed && !isPrivate;
+              // Open rows carry no user_id: "me" is the handle from /api/auth/me.
+              const isYou = isOpen
+                ? Boolean(me?.handle) && row.handle?.toLowerCase() === me.handle.toLowerCase()
+                : Boolean(viewerId) && row.user_id === viewerId;
+              const rowKey = isOpen ? row.handle : row.user_id;
 
-          {!rows ? (
-            loader
-          ) : rows.length === 0 ? (
-            <div className="empty-state">No entries yet. Be the first.</div>
-          ) : (
-            tiers.map((tier) => (
-              <div className="ledger-tier" key={tier.words_found}>
-                <div className="ledger-tier-label">
-                  {tier.words_found}/{totalWords ?? tier.words_found} solved
+              const nameBlock = (
+                <>
+                  {!isOpen && row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
+                  <span className={`login-name ${clickable ? 'login-public' : ''}`}>
+                    {isOpen ? row.handle : row.login}
+                  </span>
+                  <span
+                    className="leaderboard-statuses"
+                    aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
+                      .map((s) => STATUS_LABEL[s])
+                      .join(', ')}`}
+                  >
+                    {getStatusList(row.word_statuses, totalWords).map((status, i) => (
+                      <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
+                    ))}
+                  </span>
+                </>
+              );
+
+              return (
+                <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={rowKey}>
+                  <span className="rank">{row.rank}</span>
+                  {clickable ? (
+                    <button
+                      type="button"
+                      className="login login-clickable"
+                      onClick={() => handlePlayerClick(row)}
+                    >
+                      {nameBlock}
+                    </button>
+                  ) : (
+                    <span className="login">
+                      {nameBlock}
+                    </span>
+                  )}
+                  <span className="tries">{row.total_tries} tries</span>
+                  <span className="time">{formatTime(row.total_time)}</span>
                 </div>
-                {tier.rows.map((row) => {
-                  const hasPlayed = row.total_tries > 0;
-                  const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
-                  const clickable = hasPlayed && !isPrivate;
-                  const isYou = Boolean(viewerId) && row.user_id === viewerId;
-
-                  const nameBlock = (
-                    <>
-                      {row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
-                      <span className={`login-name ${clickable ? 'login-public' : ''}`}>
-                        {row.login}
-                      </span>
-                      <span
-                        className="leaderboard-statuses"
-                        aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
-                          .map((s) => STATUS_LABEL[s])
-                          .join(', ')}`}
-                      >
-                        {getStatusList(row.word_statuses, totalWords).map((status, i) => (
-                          <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
-                        ))}
-                      </span>
-                    </>
-                  );
-
-                  return (
-                    <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={row.user_id}>
-                      <span className="rank">{row.rank}</span>
-                      {clickable ? (
-                        <button
-                          type="button"
-                          className="login login-clickable"
-                          onClick={() => handlePlayerClick(row)}
-                        >
-                          {nameBlock}
-                        </button>
-                      ) : (
-                        <span className="login">
-                          {nameBlock}
-                        </span>
-                      )}
-                      <span className="tries">{row.total_tries} tries</span>
-                      <span className="time">{formatTime(row.total_time)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </>
+              );
+            })}
+          </div>
+        ))
       )}
     </div>
   );

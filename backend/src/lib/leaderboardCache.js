@@ -27,17 +27,23 @@ function setCacheEntry(cache, key, value, ttlMs) {
     });
 }
 
-export function getCachedLeaderboard(date) {
-    return getCacheEntry(leaderboardCache, date);
+function dailyKey(scope, date) {
+    return `daily:${scope}:${date}`;
 }
 
-export function setCachedLeaderboard(date, rows) {
-    setCacheEntry(leaderboardCache, date, rows, LEADERBOARD_CACHE_TTL_MS);
+export function getCachedLeaderboard(date, scope = '42') {
+    return getCacheEntry(leaderboardCache, dailyKey(scope, date));
 }
 
+export function setCachedLeaderboard(date, scope, rows) {
+    setCacheEntry(leaderboardCache, dailyKey(scope, date), rows, LEADERBOARD_CACHE_TTL_MS);
+}
+
+// A finished word (or a new flag) changes both scopes for that day.
 export function invalidateLeaderboard(date) {
     if (date) {
-        leaderboardCache.delete(date);
+        leaderboardCache.delete(dailyKey('42', date));
+        leaderboardCache.delete(dailyKey('open', date));
         return;
     }
 
@@ -98,7 +104,7 @@ export function setCachedGuesses(wordResultId, guesses) {
 
 /* ---- Period leaderboards (monthly + global aggregates) ----
  *
- * Keys look like `monthly:2026-10:9` or `global`. These queries are heavier
+ * Keys look like `monthly:42:2026-10:5` or `global:open:15`. These queries are heavier
  * than the daily one and a few minutes of staleness is fine for aggregates, so
  * they are NOT touched by invalidateAllLeaderboards(): flushing them on every
  * finished word would defeat the cache.
@@ -112,6 +118,21 @@ const periodInflight = new Map();
 
 const PERIOD_LIVE_TTL_MS = 2 * 60_000;
 const PERIOD_CLOSED_TTL_MS = 60 * 60_000;
+
+// One counter per scope: a load that started on an older counter is served but
+// never cached, so a handle change cannot be undone by a board load that was
+// already running (a closed month would otherwise keep it for an hour).
+const scopeEpoch = new Map();
+
+export function getScopeEpoch(scope) {
+    return scopeEpoch.get(scope) ?? 0;
+}
+
+// Period keys are `monthly:<scope>:<month>:<minDays>` or `global:<scope>:<minDays>`.
+function scopeFromPeriodKey(key) {
+    const [, scope] = key.split(':');
+    return scope;
+}
 
 export function getCachedPeriod(key) {
     return getCacheEntry(periodCache, key);
@@ -130,14 +151,20 @@ export function loadPeriod(key, isLive, loader) {
     const pending = periodInflight.get(key);
     if (pending) return pending;
 
+    const scope = scopeFromPeriodKey(key);
+    const epoch = getScopeEpoch(scope);
+
     const promise = Promise.resolve()
         .then(loader)
         .then((value) => {
-            setCachedPeriod(key, value, isLive);
+            // Obsolete if the scope was invalidated while this was running.
+            if (getScopeEpoch(scope) === epoch) setCachedPeriod(key, value, isLive);
             return value;
         })
         .finally(() => {
-            periodInflight.delete(key);
+            // Only drop our own entry: invalidateScope() may already have
+            // removed it and a newer load may have registered under this key.
+            if (periodInflight.get(key) === promise) periodInflight.delete(key);
         });
 
     periodInflight.set(key, promise);
@@ -146,6 +173,28 @@ export function loadPeriod(key, isLive, loader) {
 
 export function invalidatePeriods() {
     periodCache.clear();
+}
+
+// Joining or renaming changes one scope across every cache (daily included).
+// Period keys are not flushed by invalidateAllLeaderboards(), so a scope change
+// has to remove its own keys explicitly.
+export function invalidateScope(scope) {
+    // New generation: loads that are already running become uncacheable.
+    scopeEpoch.set(scope, getScopeEpoch(scope) + 1);
+
+    const prefixes = [`daily:${scope}:`, `monthly:${scope}:`, `global:${scope}:`];
+
+    for (const cache of [leaderboardCache, periodCache]) {
+        for (const key of [...cache.keys()]) {
+            if (prefixes.some((prefix) => key.startsWith(prefix))) cache.delete(key);
+        }
+    }
+
+    // A request arriving now must not join a pre-change load: drop the in-flight
+    // entries so it starts a fresh one (the old promise resolves uncached).
+    for (const key of [...periodInflight.keys()]) {
+        if (prefixes.some((prefix) => key.startsWith(prefix))) periodInflight.delete(key);
+    }
 }
 
 export function invalidateAllLeaderboards() {

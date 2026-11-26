@@ -14,7 +14,7 @@ export default async function guestRoutes(fastify) {
 
         const { data: user, error } = await supabase
           .from('users')
-          .insert({ login, display_name: 'Guest', is_guest: true })
+          .insert({ login, is_guest: true })
           .select('id, login')
           .single();
 
