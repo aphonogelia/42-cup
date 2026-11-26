@@ -725,6 +725,30 @@ body.theme-light .info-copy a:hover {
   outline-offset: 2px;
 }
 
+.join-copy > p:first-child {
+  margin-bottom: 14px;
+}
+
+.join-actions {
+  margin-top: 18px;
+}
+
+.join-actions .announcement-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.announcement-card .join-status {
+  margin: 8px 0 0;
+  min-height: 0;
+  font-size: 12px;
+}
+
+.announcement-card .join-field input:focus-visible {
+  outline: 1px solid var(--text-muted);
+  outline-offset: 2px;
+}
+
 .icon-btn svg {
   width: 16px;
   height: 16px;

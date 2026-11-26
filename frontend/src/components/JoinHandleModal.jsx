@@ -6,15 +6,13 @@ import { api } from '../api.js';
 
 const COPY = {
   join: {
-    eyebrow: 'Open leaderboard',
     title: 'Join the Open leaderboard',
     body: 'To join the Open leaderboard, choose a handle.',
     primary: 'Join',
   },
   'guest-choose': {
-    eyebrow: 'Leaderboard',
     title: 'Choose your handle',
-    body: 'Your handle is shown on the leaderboard. You can only choose it once.',
+    body: 'Shown on the leaderboard. You can only choose it once.',
     primary: 'Continue',
   },
 };
@@ -134,14 +132,14 @@ export default function JoinHandleModal({ mode, onClose, onDone, dismissible = t
   return (
     <div className="info-overlay" role="presentation" onClick={dismissible ? close : undefined}>
       <section
-        className="info-card join-card"
+        className="info-card announcement-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="join-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="info-card-head">
-          <p className="info-eyebrow">{copy.eyebrow}</p>
+        <div className="announcement-head">
+          <h2 id="join-title">{copy.title}</h2>
           {dismissible && (
             <button type="button" className="info-close" onClick={close} aria-label="Close dialog">
               ×
@@ -149,16 +147,14 @@ export default function JoinHandleModal({ mode, onClose, onDone, dismissible = t
           )}
         </div>
 
-        <h2 id="join-title">{copy.title}</h2>
-
-        <div className="info-copy">
+        <div className="info-copy announcement-copy join-copy">
           <p>{copy.body}</p>
 
-          <label className="join-field">
-            <span>Handle</span>
+          <div className="join-field">
             <input
               ref={inputRef}
               type="text"
+              aria-label="Handle"
               value={value}
               maxLength={16}
               autoComplete="off"
@@ -175,18 +171,20 @@ export default function JoinHandleModal({ mode, onClose, onDone, dismissible = t
                 }
               }}
             />
-          </label>
+          </div>
 
-          <p className={`join-status ${check.status}`} aria-live="polite">
-            {statusText}
-          </p>
+          {statusText && (
+            <p className={`join-status ${check.status}`} aria-live="polite">
+              {statusText}
+            </p>
+          )}
 
           {error && <p className="info-error" role="alert">{error}</p>}
 
-          <div className="info-action-row">
+          <div className="announcement-actions join-actions">
             <button
               type="button"
-              className="info-btn join-primary"
+              className="announcement-btn"
               disabled={!canSubmit || submitting}
               onClick={submit}
             >
