@@ -352,6 +352,20 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
 
   useEffect(() => {
     function onKeyDown(e) {
+      const target = e.target;
+      if (
+        e.metaKey ||
+        e.ctrlKey ||
+        e.altKey ||
+        (target instanceof HTMLElement && (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        )) ||
+        document.querySelector('[role="dialog"][aria-modal="true"]') !== null
+      ) {
+        return;
+      }
       if (e.key === 'Enter') handleKey('enter');
       else if (e.key === 'Backspace') handleKey('back');
       else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toLowerCase());
