@@ -95,12 +95,9 @@ CREATE TRIGGER users_guest_handle
 
 
 -- 6. Open Daily board ------------------------------------------------------------
--- Same body as public.leaderboard, except:
---   * the `AND NOT u.is_guest` join predicate is gone
---   * handle, global_opt_in and is_guest are appended (appending is required:
---     a view cannot be reordered or have columns inserted in the middle)
--- The route reads this, filters `global_opt_in AND handle IS NOT NULL`, then
--- removes user_id, login and avatar_url before caching. Grants: service role only.
+-- New columns must be appended: a view cannot be reordered. The route filters
+-- `global_opt_in AND handle IS NOT NULL` and strips identity columns before
+-- caching. Grants: service role only.
 CREATE OR REPLACE VIEW public.leaderboard_open WITH (security_invoker = on) AS
 SELECT u.id AS user_id,
        u.login,
@@ -151,12 +148,7 @@ GRANT EXECUTE ON FUNCTION public.handle_available(text, uuid) TO service_role;
 
 
 -- 8. Period boards with a scope ------------------------------------------------------
--- Same scoring and eligibility as before. Only the final filter and the extra
--- `handle` column change:
---   scope = 'open' -> opted in with a handle (guests are always opted in)
---   scope = '42'   -> 42 players only, as today
--- `handle` is only populated on open rows; `privacy_enabled` is returned for
--- both scopes, so 42 payloads gain one boolean and nothing else.
+-- open = opted in with a handle (handle only on open rows); 42 = 42 players only.
 -- An unknown scope returns no rows on purpose: the route validates the value.
 DROP FUNCTION IF EXISTS public.leaderboard_period(
   date, date, integer, numeric, numeric, integer, numeric, date
