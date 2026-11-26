@@ -6,11 +6,13 @@ import Game from './components/Game.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import AuthCallback from './components/AuthCallback.jsx';
 import AlertModal from './components/AlertModal.jsx';
+import AnnouncementModal from './components/AnnouncementModal.jsx';
 import Stats from './components/Stats.jsx';
 import LegalFooter from './components/LegalFooter.jsx';
 import { CONTACT_EMAIL, IMPRESSUM, PRIVACY } from './legal.js';
 
 const PROGRESS_CACHE_PREFIX = 'wordel-progress';
+const ANNOUNCEMENT_KEY = 'wordel-open-board-announcement-v1';
 const BERLIN_TIME_ZONE = 'Europe/Berlin';
 const GITHUB_URL = 'https://github.com/aphonogelia/42-cup';
 
@@ -374,6 +376,7 @@ export default function App() {
   const [accountBusy, setAccountBusy] = useState(false);
   const [accountError, setAccountError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
   const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
@@ -433,6 +436,31 @@ export default function App() {
       .catch(() => setUser(null))
       .finally(() => setAuthChecked(true));
   }, []);
+
+  // One-time Open-board notice, once per account in this browser.
+  useEffect(() => {
+    if (!authChecked || !user) return;
+
+    const key = `${ANNOUNCEMENT_KEY}:${user.id ?? user.login}`;
+    let seen = false;
+    try {
+      seen = window.localStorage.getItem(key) === '1';
+    } catch {
+      // Ignore storage quota and privacy-mode failures.
+    }
+    if (!seen) setShowAnnouncement(true);
+  }, [authChecked, user]);
+
+  const dismissAnnouncement = () => {
+    if (user) {
+      try {
+        window.localStorage.setItem(`${ANNOUNCEMENT_KEY}:${user.id ?? user.login}`, '1');
+      } catch {
+        // Ignore storage quota and privacy-mode failures.
+      }
+    }
+    setShowAnnouncement(false);
+  };
 
   useEffect(() => {
     if (!user?.login) return;
@@ -785,6 +813,12 @@ export default function App() {
         onConfirmDelete={handleDeleteAccount}
         onCancelDelete={() => setConfirmDelete(false)}
       />
+      {showAnnouncement && (
+        <AnnouncementModal
+          isGuest={!!user.is_guest}
+          onClose={dismissAnnouncement}
+        />
+      )}
     </div >
   );
 }
