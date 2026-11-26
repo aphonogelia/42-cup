@@ -121,7 +121,7 @@ const PRIVACY_DE = [
     {
       heading: '2. Welche Daten verarbeitet werden',
       paragraphs: [
-        'Konto: Bei der Anmeldung über 42 werden die interne Nutzer-ID (intra_id), der Login-Name, der Anzeigename und das Profilbild übernommen. Das Profilbild wird einmalig in unseren eigenen Speicher kopiert und von dort ausgeliefert.',
+        'Konto: Bei der Anmeldung über 42 werden die interne Nutzer-ID (intra_id), der Login-Name und das Profilbild übernommen. Das Profilbild wird einmalig in unseren eigenen Speicher kopiert und von dort ausgeliefert.',
         'Spiel: Für jedes gestartete Wort werden Vermutungen, Buchstaben-Rückmeldungen, Zeitstempel, Anzahl der Versuche und das Ergebnis (gelöst, nicht gelöst, abgebrochen) gespeichert. Diese Daten bilden die Ranglisten.',
         'Missbrauchsabwehr: Beim Aufruf der API verarbeitet der Server die IP-Adresse, um Anfragen zu begrenzen. Auffällige Spieltage können mit einem internen Vermerk gekennzeichnet werden.',
         'Gäste: Ein Gastkonto besteht aus einem zufällig erzeugten Login, dem Anzeigenamen „Guest“ und den Spieldaten. Es wird kein 42-Konto und keine E-Mail-Adresse verlangt.',
@@ -213,7 +213,7 @@ const PRIVACY_EN = [
     {
       heading: '2. What is processed',
       paragraphs: [
-        'Account: when you sign in with 42 we receive your internal user ID (intra_id), login name, display name and avatar. The avatar is copied once into our own storage and served from there.',
+        'Account: when you sign in with 42 we receive your internal user ID (intra_id), login name and avatar. The avatar is copied once into our own storage and served from there.',
         'Game: for every word you start we store your guesses, the letter feedback, timestamps, the number of tries and the outcome (solved, failed, unfinished). This data makes up the leaderboards.',
         'Abuse prevention: the server processes your IP address to rate-limit requests. A day with suspicious play can be marked with an internal note.',
         'Guests: a guest account is a random login, the display name “Guest” and the game data. No 42 account and no email address is required.',

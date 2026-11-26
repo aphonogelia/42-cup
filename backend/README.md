@@ -29,6 +29,12 @@ the Supabase CLI (`npx supabase db push` from the repo root). They add
 `words.draw_date` and the per-day unique key on `(draw_date, order_index)`,
 which lets the backend store a new draw every day while keeping past draws.
 
+Deploy order for a migration that removes a column (for example
+`20261126130000_drop_display_name.sql`): feature migrations first, then the
+backend that no longer reads or writes the column, then the column-drop
+migration, then the frontend. The drop is irreversible, and the GDPR data
+export no longer contains the removed field.
+
 ### 4. Seed the daily draw
 `data/competition-words.txt` is your full word **pool** (one word per line;
 blank lines and `#` comments ignored) — not the 5 answers directly. Put as

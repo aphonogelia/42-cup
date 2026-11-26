@@ -1,7 +1,7 @@
 // Explicit allowlist for open-scope rows. Identity columns (user_id, login,
-// display_name, avatar_url) must never reach an open payload, so a handle cannot
-// be joined back to an intra login.
-export const OPEN_IDENTITY_KEYS = ['user_id', 'login', 'display_name', 'avatar_url'];
+// avatar_url) must never reach an open payload, so a handle cannot be joined
+// back to an intra login.
+export const OPEN_IDENTITY_KEYS = ['user_id', 'login', 'avatar_url'];
 
 const pick = (row, keys) => Object.fromEntries(keys.map((key) => [key, row[key]]));
 
