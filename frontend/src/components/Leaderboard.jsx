@@ -295,6 +295,21 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
     setHandleModal('join');
   }, [isGuest]);
 
+  const scopeSwitch = isGuest ? null : (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={scope === 'open'}
+      className={`ledger-switch${scope === 'open' ? ' on' : ''}`}
+      onClick={() => handleScopeChange(scope === 'open' ? '42' : 'open')}
+    >
+      <span>Open</span>
+      <span className="ledger-switch-track" aria-hidden="true">
+        <span className="ledger-switch-thumb" />
+      </span>
+    </button>
+  );
+
   return (
     <div>
       <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
@@ -313,23 +328,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
         ))}
       </div>
 
-      {!isGuest && (
-        <div className="ledger-switch-row">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={scope === 'open'}
-            className={`ledger-switch${scope === 'open' ? ' on' : ''}`}
-            onClick={() => handleScopeChange(scope === 'open' ? '42' : 'open')}
-          >
-            <span>Open</span>
-            <span className="ledger-switch-track" aria-hidden="true">
-              <span className="ledger-switch-thumb" />
-            </span>
-          </button>
-        </div>
-      )}
-
       {boardError && (
         <p className="ledger-error" role="alert">{boardError}</p>
       )}
@@ -343,6 +341,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
           me={me}
           refreshToken={refreshToken}
           onJoinRequired={handleJoinRequired}
+          scopeSwitch={scopeSwitch}
         />
       ) : (
         <PeriodLeaderboard
@@ -353,6 +352,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
           me={me}
           refreshToken={refreshToken}
           onJoinRequired={handleJoinRequired}
+          scopeSwitch={scopeSwitch}
         />
       )}
 
@@ -367,7 +367,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
   );
 }
 
-function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, refreshToken, onJoinRequired }) {
+function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, refreshToken, onJoinRequired, scopeSwitch }) {
   const isOpen = scope === 'open';
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
@@ -524,7 +524,12 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, re
       )}
 
       {!datesLoaded ? (
-        loader
+        <>
+          {scopeSwitch && (
+            <div className="ledger-switch-row">{scopeSwitch}</div>
+          )}
+          {loader}
+        </>
       ) : (
         <>
           {/* Picker lives outside the rows-loading branch so it stays mounted (and keeps focus) while rows reload */}
@@ -581,16 +586,32 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, re
             </div>
           )}
 
-          {!rows ? (
-            loader
-          ) : rows.length === 0 ? (
-            <div className="empty-state">No entries yet. Be the first.</div>
+          {!rows || rows.length === 0 ? (
+            <>
+              {scopeSwitch && (
+                <div className="ledger-switch-row">{scopeSwitch}</div>
+              )}
+              {!rows ? (
+                loader
+              ) : (
+                <div className="empty-state">No entries yet. Be the first.</div>
+              )}
+            </>
           ) : (
-            tiers.map((tier) => (
+            tiers.map((tier, tierIndex) => (
               <div className="ledger-tier" key={tier.words_found}>
-                <div className="ledger-tier-label">
-                  {tier.words_found}/{totalWords ?? tier.words_found} solved
-                </div>
+                {tierIndex === 0 && scopeSwitch ? (
+                  <div className="ledger-tier-head">
+                    <div className="ledger-tier-label">
+                      {tier.words_found}/{totalWords ?? tier.words_found} solved
+                    </div>
+                    {scopeSwitch}
+                  </div>
+                ) : (
+                  <div className="ledger-tier-label">
+                    {tier.words_found}/{totalWords ?? tier.words_found} solved
+                  </div>
+                )}
                 {tier.rows.map((row) => {
                   const hasPlayed = row.total_tries > 0;
                   const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private

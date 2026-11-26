@@ -295,6 +295,17 @@
   margin-bottom: 8px;
 }
 
+.ledger-tier-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ledger-tier-head .ledger-tier-label {
+  margin-bottom: 0;
+}
+
 /* Row height: 7px 4px padding + 13px text. .period-row below uses the same. */
 .ledger-row {
   display: grid;

@@ -33,7 +33,7 @@ function NavArrow({ direction }) {
   );
 }
 
-export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshToken, onJoinRequired }) {
+export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshToken, onJoinRequired, scopeSwitch }) {
   const isMonthly = mode === 'monthly';
   const isOpen = scope === 'open';
   const [months, setMonths] = useState(null); // monthly tab only, newest first
@@ -219,6 +219,10 @@ export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshTo
             <NavArrow direction="right" />
           </button>
         </div>
+      )}
+
+      {scopeSwitch && (
+        <div className="ledger-switch-row">{scopeSwitch}</div>
       )}
 
       {body}
