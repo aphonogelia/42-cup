@@ -56,6 +56,22 @@
   margin-bottom: 10px;
 }
 
+/* Daily controls row: scope switch left, date picker right. */
+.ledger-date-picker-controls {
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Groups [<] date [>] so the picker stays right-aligned, even without a switch. */
+.ledger-date-picker-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  margin-left: auto;
+}
+
 .ledger-date-trigger,
 .ledger-month-label {
   display: inline-flex;
@@ -594,8 +610,8 @@ body.theme-light .status-dot.not_started {
 /* ---- Scope switch (Open) ---------------------------------------------------- */
 .ledger-switch-row {
   display: flex;
-  justify-content: flex-end;
-  margin: 0 0 10px;
+  justify-content: flex-start;
+  margin: 14px 0 16px;
 }
 
 .ledger-switch {
@@ -731,6 +747,19 @@ body.theme-light .status-dot.not_started {
 }
 
 /* ---- Responsive --------------------------------------------------------------- */
+@media (max-width: 599px) {
+  .ledger-date-picker-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .ledger-date-picker-nav {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .ledger-row {
     grid-template-columns: 20px minmax(0, 1fr) auto auto;

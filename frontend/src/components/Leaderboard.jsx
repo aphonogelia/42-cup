@@ -523,149 +523,130 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, re
         />
       )}
 
+      {/* Controls row: scope switch left, date picker right. Always mounted so the
+          switch never disappears while dates load or the list is empty. */}
+      <div className="ledger-date-picker ledger-date-picker-controls">
+        {scopeSwitch}
+        {datesLoaded && dates.length > 0 && (
+          <div className="ledger-date-picker-nav">
+            {/* aria-disabled instead of disabled: a disabled button drops keyboard focus */}
+            <button
+              type="button"
+              className="ledger-date-nav"
+              onClick={() => olderDate && setSelectedDate(olderDate)}
+              aria-disabled={!olderDate}
+              aria-label="Previous day"
+              title="Previous day"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <DateCalendar
+              dates={dates}
+              value={effectiveDate}
+              onSelect={setSelectedDate}
+            />
+
+            <button
+              type="button"
+              className="ledger-date-nav"
+              onClick={() => newerDate && setSelectedDate(newerDate)}
+              aria-disabled={!newerDate}
+              aria-label="Next day"
+              title="Next day"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+
       {!datesLoaded ? (
-        <>
-          {scopeSwitch && (
-            <div className="ledger-switch-row">{scopeSwitch}</div>
-          )}
-          {loader}
-        </>
+        loader
+      ) : !rows || rows.length === 0 ? (
+        !rows ? (
+          loader
+        ) : (
+          <div className="empty-state">No entries yet. Be the first.</div>
+        )
       ) : (
-        <>
-          {/* Picker lives outside the rows-loading branch so it stays mounted (and keeps focus) while rows reload */}
-          {dates.length > 0 && (
-            <div className="ledger-date-picker">
-              {/* aria-disabled instead of disabled: a disabled button drops keyboard focus */}
-              <button
-                type="button"
-                className="ledger-date-nav"
-                onClick={() => olderDate && setSelectedDate(olderDate)}
-                aria-disabled={!olderDate}
-                aria-label="Previous day"
-                title="Previous day"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-
-              <DateCalendar
-                dates={dates}
-                value={effectiveDate}
-                onSelect={setSelectedDate}
-              />
-
-              <button
-                type="button"
-                className="ledger-date-nav"
-                onClick={() => newerDate && setSelectedDate(newerDate)}
-                aria-disabled={!newerDate}
-                aria-label="Next day"
-                title="Next day"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
+        tiers.map((tier) => (
+          <div className="ledger-tier" key={tier.words_found}>
+            <div className="ledger-tier-label">
+              {tier.words_found}/{totalWords ?? tier.words_found} solved
             </div>
-          )}
+            {tier.rows.map((row) => {
+              const hasPlayed = row.total_tries > 0;
+              const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
+              const clickable = hasPlayed && !isPrivate;
+              // Open rows carry no user_id: "me" is the handle from /api/auth/me.
+              const isYou = isOpen
+                ? Boolean(me?.handle) && row.handle?.toLowerCase() === me.handle.toLowerCase()
+                : Boolean(viewerId) && row.user_id === viewerId;
+              const rowKey = isOpen ? row.handle : row.user_id;
 
-          {!rows || rows.length === 0 ? (
-            <>
-              {scopeSwitch && (
-                <div className="ledger-switch-row">{scopeSwitch}</div>
-              )}
-              {!rows ? (
-                loader
-              ) : (
-                <div className="empty-state">No entries yet. Be the first.</div>
-              )}
-            </>
-          ) : (
-            tiers.map((tier, tierIndex) => (
-              <div className="ledger-tier" key={tier.words_found}>
-                {tierIndex === 0 && scopeSwitch ? (
-                  <div className="ledger-tier-head">
-                    <div className="ledger-tier-label">
-                      {tier.words_found}/{totalWords ?? tier.words_found} solved
-                    </div>
-                    {scopeSwitch}
-                  </div>
-                ) : (
-                  <div className="ledger-tier-label">
-                    {tier.words_found}/{totalWords ?? tier.words_found} solved
-                  </div>
-                )}
-                {tier.rows.map((row) => {
-                  const hasPlayed = row.total_tries > 0;
-                  const isPrivate = row.privacy_enabled ?? true; // fail-safe: treat missing field as private
-                  const clickable = hasPlayed && !isPrivate;
-                  // Open rows carry no user_id: "me" is the handle from /api/auth/me.
-                  const isYou = isOpen
-                    ? Boolean(me?.handle) && row.handle?.toLowerCase() === me.handle.toLowerCase()
-                    : Boolean(viewerId) && row.user_id === viewerId;
-                  const rowKey = isOpen ? row.handle : row.user_id;
+              const nameBlock = (
+                <>
+                  {!isOpen && row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
+                  <span className={`login-name ${clickable ? 'login-public' : ''}`}>
+                    {isOpen ? row.handle : row.login}
+                  </span>
+                  <span
+                    className="leaderboard-statuses"
+                    aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
+                      .map((s) => STATUS_LABEL[s])
+                      .join(', ')}`}
+                  >
+                    {getStatusList(row.word_statuses, totalWords).map((status, i) => (
+                      <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
+                    ))}
+                  </span>
+                </>
+              );
 
-                  const nameBlock = (
-                    <>
-                      {!isOpen && row.avatar_url ? <img className="leaderboard-avatar" src={row.avatar_url} alt="" referrerPolicy="no-referrer" /> : null}
-                      <span className={`login-name ${clickable ? 'login-public' : ''}`}>
-                        {isOpen ? row.handle : row.login}
-                      </span>
-                      <span
-                        className="leaderboard-statuses"
-                        aria-label={`Word status: ${getStatusList(row.word_statuses, totalWords)
-                          .map((s) => STATUS_LABEL[s])
-                          .join(', ')}`}
-                      >
-                        {getStatusList(row.word_statuses, totalWords).map((status, i) => (
-                          <span key={i} className={`status-dot ${status}`} title={STATUS_LABEL[status]} />
-                        ))}
-                      </span>
-                    </>
-                  );
-
-                  return (
-                    <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={rowKey}>
-                      <span className="rank">{row.rank}</span>
-                      {clickable ? (
-                        <button
-                          type="button"
-                          className="login login-clickable"
-                          onClick={() => handlePlayerClick(row)}
-                        >
-                          {nameBlock}
-                        </button>
-                      ) : (
-                        <span className="login">
-                          {nameBlock}
-                        </span>
-                      )}
-                      <span className="tries">{row.total_tries} tries</span>
-                      <span className="time">{formatTime(row.total_time)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </>
+              return (
+                <div className={`ledger-row${isYou ? ' is-you' : ''}`} key={rowKey}>
+                  <span className="rank">{row.rank}</span>
+                  {clickable ? (
+                    <button
+                      type="button"
+                      className="login login-clickable"
+                      onClick={() => handlePlayerClick(row)}
+                    >
+                      {nameBlock}
+                    </button>
+                  ) : (
+                    <span className="login">
+                      {nameBlock}
+                    </span>
+                  )}
+                  <span className="tries">{row.total_tries} tries</span>
+                  <span className="time">{formatTime(row.total_time)}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))
       )}
     </div>
   );
