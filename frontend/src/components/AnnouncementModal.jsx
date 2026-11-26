@@ -37,7 +37,7 @@ export default function AnnouncementModal({ isGuest, onClose }) {
       >
         <div className="announcement-head">
           <span className="announcement-tag">New</span>
-          <h2 id="announcement-title">Open leaderboard</h2>
+          <h2 id="announcement-title">{isGuest ? 'Leaderboard' : 'Open leaderboard'}</h2>
           <button type="button" className="info-close" onClick={onClose} aria-label="Close dialog">
             ×
           </button>
@@ -46,8 +46,8 @@ export default function AnnouncementModal({ isGuest, onClose }) {
         <div className="info-copy announcement-copy">
           <p>
             {isGuest
-              ? "Guests can now join the leaderboard. You're on the Open board, so check your rank in the Ledger."
-              : "It's open to everyone, guests included. To join, choose a handle in the Ledger."}
+              ? 'Guests can now join the leaderboard. Check your rank in the ledger.'
+              : "There's now a leaderboard open to guests. Join it to compare yourself with your players outside 42."}
           </p>
 
           <div className="announcement-actions">
