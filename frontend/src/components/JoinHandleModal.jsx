@@ -7,17 +7,15 @@ import { api } from '../api.js';
 const COPY = {
   join: {
     eyebrow: 'Open leaderboard',
-    title: 'Open leaderboard',
-    body: "Joining is required to view it. Your handle replaces your login. Results are the same on both boards, so players can compare them. You can't leave and you can't change your handle.",
+    title: 'Join the Open leaderboard',
+    body: 'To join the Open leaderboard, choose a handle.',
     primary: 'Join',
-    confirm: (handle) => `Join as ${handle}? This can't be undone.`,
   },
   'guest-choose': {
     eyebrow: 'Open leaderboard',
     title: 'Choose your handle',
     body: 'Your handle is shown on the Open leaderboard. You can only choose it once.',
     primary: 'Continue',
-    confirm: (handle) => `Use ${handle}? You can't change it again.`,
   },
 };
 
@@ -33,24 +31,19 @@ const STATUS_TEXT = {
 
 const initialCheck = { status: 'idle', handle: '', message: '' };
 
-export default function JoinHandleModal({ mode, me, onClose, onDone }) {
+export default function JoinHandleModal({ mode, onClose, onDone }) {
   const copy = COPY[mode];
-  const isJoin = mode === 'join';
   const close = onClose;
 
   const [value, setValue] = useState('');
   const [check, setCheck] = useState(initialCheck);
-  const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const inputRef = useRef(null);
-  const confirmRef = useRef(null);
   const restoreFocusRef = useRef(null);
 
   const trimmed = value.trim();
-  const ownLogin =
-    isJoin && me?.login && trimmed.toLowerCase() === me.login.toLowerCase();
   const canSubmit = check.status === 'available' && check.handle === trimmed;
 
   // Focus goes into the dialog, and back to where it came from on close.
@@ -63,10 +56,6 @@ export default function JoinHandleModal({ mode, me, onClose, onDone }) {
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
     };
   }, []);
-
-  useEffect(() => {
-    if (confirming) confirmRef.current?.focus();
-  }, [confirming]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -93,7 +82,7 @@ export default function JoinHandleModal({ mode, me, onClose, onDone }) {
           if (cancelled) return;
           setCheck({
             status: data.available ? 'available' : 'taken',
-            handle: data.handle ?? trimmed,
+            handle: trimmed,
             message: '',
           });
         })
@@ -116,6 +105,8 @@ export default function JoinHandleModal({ mode, me, onClose, onDone }) {
   }, [trimmed]);
 
   const submit = async () => {
+    if (!canSubmit || submitting) return;
+
     setSubmitting(true);
     setError('');
 
@@ -125,10 +116,11 @@ export default function JoinHandleModal({ mode, me, onClose, onDone }) {
     } catch (err) {
       if (err.status === 409) {
         setError(err.body?.locked ? 'Your handle is locked' : 'This handle is already taken');
-      } else {
+      } else if (err.status === 400) {
         setError(err.message || 'Something went wrong');
+      } else {
+        setError('Something went wrong');
       }
-      setConfirming(false);
     } finally {
       setSubmitting(false);
     }
@@ -160,84 +152,45 @@ export default function JoinHandleModal({ mode, me, onClose, onDone }) {
         <div className="info-copy">
           <p>{copy.body}</p>
 
-          {!confirming ? (
-            <>
-              <label className="join-field">
-                <span>Handle</span>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={value}
-                  maxLength={16}
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder="your-handle"
-                  onChange={(event) => {
-                    setValue(event.target.value);
-                    setError('');
-                  }}
-                />
-              </label>
+          <label className="join-field">
+            <span>Handle</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              maxLength={16}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="your-handle"
+              onChange={(event) => {
+                setValue(event.target.value);
+                setError('');
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  submit();
+                }
+              }}
+            />
+          </label>
 
-              <p className={`join-status ${check.status}`} aria-live="polite">
-                {statusText}
-              </p>
+          <p className={`join-status ${check.status}`} aria-live="polite">
+            {statusText}
+          </p>
 
-              {ownLogin && (
-                <p className="join-warning">
-                  This is your 42 login. It would link your Open entry to your login.
-                </p>
-              )}
+          {error && <p className="info-error" role="alert">{error}</p>}
 
-              {error && <p className="info-error" role="alert">{error}</p>}
-
-              <div className="info-action-row">
-                <button
-                  type="button"
-                  className="info-btn join-primary"
-                  disabled={!canSubmit}
-                  onClick={() => {
-                    setError('');
-                    setConfirming(true);
-                  }}
-                >
-                  {copy.primary}
-                </button>
-
-                {isJoin && (
-                  <button type="button" className="info-btn" onClick={onClose}>
-                    Back to 42
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="join-confirm">{copy.confirm(trimmed)}</p>
-
-              {error && <p className="info-error" role="alert">{error}</p>}
-
-              <div className="info-action-row">
-                <button
-                  ref={confirmRef}
-                  type="button"
-                  className="info-btn join-primary"
-                  disabled={submitting}
-                  onClick={submit}
-                >
-                  {submitting ? 'Saving…' : 'Confirm'}
-                </button>
-                <button
-                  type="button"
-                  className="info-btn"
-                  disabled={submitting}
-                  onClick={() => setConfirming(false)}
-                >
-                  Back
-                </button>
-              </div>
-            </>
-          )}
+          <div className="info-action-row">
+            <button
+              type="button"
+              className="info-btn join-primary"
+              disabled={!canSubmit || submitting}
+              onClick={submit}
+            >
+              {submitting ? 'Saving…' : copy.primary}
+            </button>
+          </div>
         </div>
       </section>
     </div>

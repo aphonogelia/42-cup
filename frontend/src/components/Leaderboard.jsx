@@ -386,7 +386,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
       {handleModal && (
         <JoinHandleModal
           mode={handleModal}
-          me={me}
           onClose={() => setHandleModal(null)}
           onDone={handleHandleSaved}
         />
