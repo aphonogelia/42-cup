@@ -1,11 +1,27 @@
 import { supabase } from '../supabase.js';
 import { planHandleUpdate, validateHandle, checkAvailability } from '../lib/handles.js';
 import { invalidateScope } from '../lib/leaderboardCache.js';
+import { installSchemaErrors } from '../lib/schemaErrors.js';
 
 const USER_FIELDS = 'id, login, is_guest, global_opt_in, handle, handle_changed_at';
 const UPDATED_FIELDS = 'handle, global_opt_in, handle_changed_at';
 
 const LOCKED = { error: "Handles can't be changed once set", locked: true };
+
+export const HANDLE_AVAILABLE_SCHEMA = {
+  querystring: {
+    type: 'object',
+    properties: { h: { type: 'string', maxLength: 64 } },
+  },
+};
+
+export const JOIN_GLOBAL_SCHEMA = {
+  body: {
+    type: 'object',
+    required: ['handle'],
+    properties: { handle: { type: 'string', maxLength: 64 } },
+  },
+};
 
 // Join the open board (global_opt_in false -> true) or spend the one free change
 // a guest gets. There is no leave endpoint on purpose.
@@ -48,12 +64,10 @@ export function makeJoinGlobalHandler({ db = supabase, isHandleFree = checkAvail
       return reply.code(500).send({ error: 'Failed to check handle' });
     }
 
-    // The read above is only a fast path. The write carries the predicate the
-    // decision depended on, so a second tab cannot apply a stale decision:
-    //   join  -> the row is still not opted in
-    //   first -> handle_changed_at is still NULL
-    //   case  -> the row is still opted in, and the handle is still the one the
-    //            decision was made on (a real change may have landed meanwhile)
+    // The read above is only a fast path: the write carries the predicate the
+    // decision depended on, so a second tab cannot apply a stale decision.
+    //   join  -> not opted in yet;  first -> handle_changed_at still NULL;
+    //   case  -> still opted in and the handle is still the one read.
     let update = db.from('users').update(plan.patch).eq('id', userId);
 
     if (plan.guard === 'join') update = update.eq('global_opt_in', false);
@@ -80,12 +94,15 @@ export function makeJoinGlobalHandler({ db = supabase, isHandleFree = checkAvail
 }
 
 export default async function handleRoutes(fastify) {
+  installSchemaErrors(fastify);
+
   // Live availability check for the handle input. Rate-limited separately from
   // the global limiter because the field calls it on every keystroke.
   fastify.get(
     '/api/me/handle-available',
     {
       preHandler: [fastify.requireAuth],
+      schema: HANDLE_AVAILABLE_SCHEMA,
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
     },
     async (request, reply) => {
@@ -102,5 +119,9 @@ export default async function handleRoutes(fastify) {
     }
   );
 
-  fastify.put('/api/me/global', { preHandler: [fastify.requireAuth] }, makeJoinGlobalHandler());
+  fastify.put(
+    '/api/me/global',
+    { preHandler: [fastify.requireAuth], schema: JOIN_GLOBAL_SCHEMA },
+    makeJoinGlobalHandler()
+  );
 }

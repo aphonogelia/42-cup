@@ -77,6 +77,19 @@ npm start       # production
   values are allowed, e.g. the main app and the stats site). `NODE_ENV` does not
   change auth behavior; the frontend stores the JWT itself.
 
+## Manual checks
+
+Data-level behaviour that unit tests cannot reach (needs a migrated dev DB):
+
+1. Play a guest until all five words of a day are finished (or insert the
+   `word_results` rows), then trip a cheat rule, e.g. two guesses less than a
+   second apart. Expect a `flagged_users` row for that guest.
+2. Flag every day that guest played:
+   `INSERT INTO flagged_users (user_id, draw_date, reason) SELECT wr.user_id, w.draw_date, 'manual test' FROM word_results wr JOIN words w ON w.id = wr.word_id WHERE wr.user_id = '<guest uuid>' ON CONFLICT DO NOTHING;`
+3. `GET /api/leaderboard?scope=open`, `/monthly?scope=open` and `/global?scope=open`:
+   the guest is gone from all three boards.
+4. Repeat on a 42 player against the three `scope=42` boards.
+
 ## API summary
 
 | Route | Auth | Description |

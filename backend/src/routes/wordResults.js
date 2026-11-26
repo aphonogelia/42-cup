@@ -2,7 +2,7 @@ import { supabase } from '../supabase.js';
 import { getBerlinDateKey, ensureDailyDraw } from '../lib/dailyDraw.js';
 import { getCachedGuesses, setCachedGuesses } from '../lib/leaderboardCache.js';
 
-async function hasCompletedToday(userId, drawDate) {
+export async function hasCompletedToday(userId, drawDate) {
   const words = await ensureDailyDraw({ drawDate });
   const wordIds = words.map((w) => w.id);
   if (wordIds.length === 0) return false;

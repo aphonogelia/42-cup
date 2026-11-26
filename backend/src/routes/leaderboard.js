@@ -7,23 +7,74 @@ import {
   setCachedLeaderboardDates,
   getCachedWordTimes,
   setCachedWordTimes,
+  getCachedGuesses,
+  setCachedGuesses,
+  getScopeEpoch,
   loadPeriod,
 } from '../lib/leaderboardCache.js';
 import { LEADERBOARD_RULES } from '../lib/leaderboardConfig.js';
 import { toOpenDailyRow, projectPeriodRows, toOpenWordTimesRows } from '../lib/openRows.js';
+import { installSchemaErrors } from '../lib/schemaErrors.js';
+import { hasCompletedToday } from './wordResults.js';
 
 
 
 const MONTH_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
 
 // `global` already means all-time in this codebase, so the new axis is `scope`:
-// 42 = 42 players only (as before), open = opt-in, handle-based, guests included.
-const SCOPES = new Set(['42', 'open']);
+// 42 = 42 players only, open = opt-in, handle-based, guests included.
+const SCOPE_SCHEMA = { type: 'string', enum: ['42', 'open'], default: '42' };
+const DATE_SCHEMA = { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' };
 
-function parseScope(value) {
-  const scope = value === undefined || value === '' ? '42' : value;
-  return SCOPES.has(scope) ? scope : null;
-}
+export const DAILY_BOARD_SCHEMA = {
+  querystring: {
+    type: 'object',
+    properties: { scope: SCOPE_SCHEMA, date: DATE_SCHEMA },
+  },
+};
+
+export const MONTHLY_BOARD_SCHEMA = {
+  querystring: {
+    type: 'object',
+    properties: {
+      scope: SCOPE_SCHEMA,
+      month: { type: 'string', pattern: MONTH_RE.source },
+    },
+  },
+};
+
+export const GLOBAL_BOARD_SCHEMA = {
+  querystring: {
+    type: 'object',
+    properties: { scope: SCOPE_SCHEMA },
+  },
+};
+
+export const WORD_TIMES_SCHEMA = {
+  querystring: {
+    type: 'object',
+    required: ['date'],
+    properties: {
+      scope: SCOPE_SCHEMA,
+      date: DATE_SCHEMA,
+      userId: { type: 'string', minLength: 1, maxLength: 64 },
+      handle: { type: 'string', maxLength: 64 },
+    },
+  },
+};
+
+export const WORD_GUESSES_SCHEMA = {
+  querystring: {
+    type: 'object',
+    required: ['scope', 'handle', 'date', 'order'],
+    properties: {
+      scope: { type: 'string', enum: ['open'] },
+      handle: { type: 'string', maxLength: 64 },
+      date: DATE_SCHEMA,
+      order: { type: 'integer', minimum: 1 },
+    },
+  },
+};
 
 // The scope is per request, so it cannot be a route-level preHandler: this
 // returns the same 403 body as fastify.requireRealUser.
@@ -106,23 +157,15 @@ async function loadDates() {
   return dates;
 }
 
-// Per-word breakdown (times + tries) for one player on one day, for the
-// leaderboard popup. Blocked server-side if the target has privacy on — this is
-// the enforcement point, not just the frontend grey-out.
-//
-// scope=42 : by user id, real users only (unchanged).
-// scope=open: by handle, any authenticated user. The handle is resolved among
-//             open-listed users only, and the payload carries no id at all.
-//
-// `db` is injectable so the route can be tested without a database.
+// Per-word breakdown for the leaderboard popup. Privacy is enforced here, not in
+// the UI, and the open mode carries no id at all, so a handle cannot be matched
+// to a login. `db` is injectable for tests.
 export function makeWordTimesHandler(db = supabase) {
   return async function wordTimesHandler(request, reply) {
-    const scope = parseScope(request.query.scope);
-    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+    const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
     const date = request.query.date;
-    if (!date) return reply.code(400).send({ error: 'date required' });
 
     let target;
 
@@ -219,16 +262,93 @@ function wordTimesPayload(scope, target, date, rows) {
   return { userId: target.id, date, words: rows };
 }
 
+// Guess history for one open word (handle + date + order_index). No id ever
+// leaves the server, so a handle cannot be matched to a login; `db` and
+// `hasCompleted` are injectable for tests.
+export function makeWordGuessesHandler({ db = supabase, hasCompleted = hasCompletedToday } = {}) {
+  return async function wordGuessesHandler(request, reply) {
+    const { date, handle, order: orderIndex } = request.query;
+
+    // Same filter as the board: only opted-in, handled users are reachable, so
+    // an unknown handle and a non-listed user are the same 404.
+    const { data: target, error: userError } = await db
+      .from('users')
+      .select('id, handle, privacy_enabled')
+      .eq('handle', handle)
+      .eq('global_opt_in', true)
+      .maybeSingle();
+
+    if (userError) return reply.code(500).send({ error: 'Failed to load user' });
+    if (!target) return reply.code(404).send({ error: 'User not found' });
+
+    // Privacy first: it must not reveal whether that position exists.
+    if (target.privacy_enabled) {
+      return reply.code(403).send({ error: 'This player has hidden their guesses' });
+    }
+
+    const { data: word, error: wordError } = await db
+      .from('words')
+      .select('id, draw_date')
+      .eq('draw_date', date)
+      .eq('order_index', orderIndex)
+      .maybeSingle();
+
+    if (wordError) return reply.code(500).send({ error: 'Failed to load word' });
+    if (!word) return reply.code(404).send({ error: 'Not found' });
+
+    const { data: result, error: resultError } = await db
+      .from('word_results')
+      .select('id, status')
+      .eq('user_id', target.id)
+      .eq('word_id', word.id)
+      .maybeSingle();
+
+    if (resultError) return reply.code(500).send({ error: 'Failed to load word result' });
+    if (!result) return reply.code(404).send({ error: 'Not found' });
+
+    // Today's guesses stay hidden until the viewer has finished today's words.
+    if (word.draw_date === getBerlinDateKey()) {
+      try {
+        const allowed = await hasCompleted(request.user.id, word.draw_date);
+        if (!allowed) return reply.code(403).send({ error: "Finish today's words to view guesses" });
+      } catch (err) {
+        request.log.error(err, 'Failed to verify completion status');
+        return reply.code(500).send({ error: 'Failed to verify access' });
+      }
+    }
+
+    // Same policy as the 42 route: only finished words are cached, 1 h.
+    const cacheKey = `open:${target.id}:${date}:${orderIndex}`;
+    const cacheable = result.status === 'solved' || result.status === 'failed';
+    if (cacheable) {
+      const cached = getCachedGuesses(cacheKey);
+      if (cached) return { guesses: cached };
+    }
+
+    const { data: guesses, error } = await db
+      .from('guesses')
+      .select('guess, feedback, created_at')
+      .eq('word_result_id', result.id)
+      .order('created_at', { ascending: true });
+
+    if (error) return reply.code(500).send({ error: 'Failed to load guesses' });
+
+    const payload = guesses ?? [];
+    if (cacheable) setCachedGuesses(cacheKey, payload);
+
+    return { guesses: payload };
+  };
+}
+
 export default async function leaderboardRoutes(fastify) {
-  
+  installSchemaErrors(fastify);
+
   const authOnly = { preHandler: [fastify.requireAuth] };
 
-  // Daily board. The 42 scope reads the unchanged `leaderboard` view; the open
-  // scope reads `leaderboard_open` and projects each row through an allowlist
-  // before caching, so no identity column can leak from cache either.
-  fastify.get('/api/leaderboard', authOnly, async (request, reply) => {
-    const scope = parseScope(request.query.scope);
-    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+  // Daily board. Open rows go through the allowlist before caching, so no
+  // identity column can leak from the cache.
+  fastify.get('/api/leaderboard', { ...authOnly, schema: DAILY_BOARD_SCHEMA }, async (request, reply) => {
+    const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
     const date = request.query.date || getBerlinDateKey();
@@ -237,6 +357,10 @@ export default async function leaderboardRoutes(fastify) {
     if (cached) {
       return { date, scope, rows: cached };
     }
+
+    // A handle change while this read is running bumps the scope epoch; the
+    // rows below are then obsolete and must not be cached.
+    const epoch = getScopeEpoch(scope);
 
     if (scope === 'open') {
       const { data, error } = await supabase
@@ -251,7 +375,7 @@ export default async function leaderboardRoutes(fastify) {
       if (error) return reply.code(500).send({ error: 'Failed to load leaderboard' });
 
       const rows = (data ?? []).map(toOpenDailyRow);
-      setCachedLeaderboard(date, 'open', rows);
+      if (getScopeEpoch(scope) === epoch) setCachedLeaderboard(date, 'open', rows);
       return { date, scope, rows };
     }
 
@@ -264,7 +388,7 @@ export default async function leaderboardRoutes(fastify) {
 
     if (error) return reply.code(500).send({ error: 'Failed to load leaderboard' });
 
-    setCachedLeaderboard(date, '42', data ?? []);
+    if (getScopeEpoch(scope) === epoch) setCachedLeaderboard(date, '42', data ?? []);
     return { date, scope, rows: data };
   });
 
@@ -309,9 +433,8 @@ export default async function leaderboardRoutes(fastify) {
   // Monthly board. ?month=YYYY-MM (defaults to the current Berlin month).
   // The month is its own window: complete days, longevity and the min-days
   // threshold are all measured inside it.
-  fastify.get('/api/leaderboard/monthly', authOnly, async (request, reply) => {
-    const scope = parseScope(request.query.scope);
-    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+  fastify.get('/api/leaderboard/monthly', { ...authOnly, schema: MONTHLY_BOARD_SCHEMA }, async (request, reply) => {
+    const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
     const today = getBerlinDateKey();
@@ -319,7 +442,6 @@ export default async function leaderboardRoutes(fastify) {
     const month = request.query.month || currentMonth;
 
     const match = MONTH_RE.exec(month);
-    if (!match) return reply.code(400).send({ error: 'month must be YYYY-MM' });
     if (month > currentMonth) return reply.code(400).send({ error: 'month is in the future' });
 
     const isCurrent = month === currentMonth;
@@ -359,9 +481,8 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   // All-time board. Longevity saturates at allTimeLongevityDays complete days.
-  fastify.get('/api/leaderboard/global', authOnly, async (request, reply) => {
-    const scope = parseScope(request.query.scope);
-    if (!scope) return reply.code(400).send({ error: 'scope must be 42 or open' });
+  fastify.get('/api/leaderboard/global', { ...authOnly, schema: GLOBAL_BOARD_SCHEMA }, async (request, reply) => {
+    const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
     const today = getBerlinDateKey();
@@ -391,8 +512,15 @@ export default async function leaderboardRoutes(fastify) {
     }
   });
 
-  // Per-word breakdown (times + tries) for one player on one day, for the
-  // leaderboard popup. scope=42 keeps the real-user gate; scope=open resolves
-  // the handle and returns a projected payload.
-  fastify.get('/api/leaderboard/word-times', authOnly, makeWordTimesHandler());
+  fastify.get(
+    '/api/leaderboard/word-guesses',
+    {
+      preHandler: [fastify.requireAuth],
+      schema: WORD_GUESSES_SCHEMA,
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
+    },
+    makeWordGuessesHandler()
+  );
+
+  fastify.get('/api/leaderboard/word-times', { ...authOnly, schema: WORD_TIMES_SCHEMA }, makeWordTimesHandler());
 }
