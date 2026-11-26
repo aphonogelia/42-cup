@@ -21,7 +21,6 @@ const DATE = '2026-11-25';
 const RAW_DAILY_ROW = {
   user_id: '00000000-0000-0000-0000-000000000001',
   login: 'intra_login',
-  display_name: 'Intra Name',
   avatar_url: 'https://example.test/a.jpg',
   privacy_enabled: false,
   draw_date: DATE,
@@ -122,12 +121,11 @@ test('open word-times projection is the allowlist and nothing else', () => {
 });
 
 // Shape of what fetchPeriodRows really returns: the RPC columns
-// (user_id, login, display_name, avatar_url, stats..., qualified, handle,
-// privacy_enabled) with `rank` added by rankRows(). No is_guest.
+// (user_id, login, avatar_url, stats..., qualified, handle, privacy_enabled)
+// with `rank` added by rankRows(). No is_guest.
 const RPC_PERIOD_ROW = {
   user_id: '00000000-0000-0000-0000-000000000001',
   login: 'intra_login',
-  display_name: 'Intra Name',
   avatar_url: 'https://example.test/a.jpg',
   days_complete: 12,
   words_started: 60,

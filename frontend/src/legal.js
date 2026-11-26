@@ -121,10 +121,10 @@ const PRIVACY_DE = [
     {
       heading: '2. Welche Daten verarbeitet werden',
       paragraphs: [
-        'Konto: Bei der Anmeldung über 42 werden die interne Nutzer-ID (intra_id), der Login-Name, der Anzeigename und das Profilbild übernommen. Das Profilbild wird einmalig in unseren eigenen Speicher kopiert und von dort ausgeliefert.',
+        'Konto: Bei der Anmeldung über 42 werden die interne Nutzer-ID (intra_id), der Login-Name und das Profilbild übernommen. Das Profilbild wird einmalig in unseren eigenen Speicher kopiert und von dort ausgeliefert.',
         'Spiel: Für jedes gestartete Wort werden Vermutungen, Buchstaben-Rückmeldungen, Zeitstempel, Anzahl der Versuche und das Ergebnis (gelöst, nicht gelöst, abgebrochen) gespeichert. Diese Daten bilden die Ranglisten.',
         'Missbrauchsabwehr: Beim Aufruf der API verarbeitet der Server die IP-Adresse, um Anfragen zu begrenzen. Auffällige Spieltage können mit einem internen Vermerk gekennzeichnet werden.',
-        'Gäste: Ein Gastkonto besteht aus einem zufällig erzeugten Login, dem Anzeigenamen „Guest“ und den Spieldaten. Es wird kein 42-Konto und keine E-Mail-Adresse verlangt.',
+        'Gäste: Ein Gastkonto besteht aus einem zufällig erzeugten Login und den Spieldaten. Es wird kein 42-Konto und keine E-Mail-Adresse verlangt.',
         'Offene Rangliste: Die Rangliste „Open“ ist für alle angemeldeten Personen sichtbar, auch für Gäste. Wer ihr beitritt, wählt einen Handle; dieser wird zusammen mit den Ranglisten-Kennzahlen (Lösungsquote, durchschnittliche Versuche, Median, Score) angezeigt, nicht der Login. Gäste werden mit ihrem zufälligen Gast-Login als Handle automatisch aufgenommen. Die Einstellung „privat“ verbirgt nur Wortzeiten und Vermutungen; Handle, Kennzahlen und der Eintrag selbst bleiben sichtbar. Der Handle kann nach der Wahl nicht mehr geändert werden (außer Groß-/Kleinschreibung); eine Korrektur ist über die Kontaktadresse möglich.',
         'Nicht verarbeitet werden: E-Mail-Adressen, Passwörter, Zahlungsdaten, Standortdaten, Werbe-IDs. Es findet kein Tracking durch Dritte statt, es werden keine Analyse-Werkzeuge eingesetzt und es werden keine Profile für Werbung gebildet.',
       ],
@@ -214,10 +214,10 @@ const PRIVACY_EN = [
     {
       heading: '2. What is processed',
       paragraphs: [
-        'Account: when you sign in with 42 we receive your internal user ID (intra_id), login name, display name and avatar. The avatar is copied once into our own storage and served from there.',
+        'Account: when you sign in with 42 we receive your internal user ID (intra_id), login name and avatar. The avatar is copied once into our own storage and served from there.',
         'Game: for every word you start we store your guesses, the letter feedback, timestamps, the number of tries and the outcome (solved, failed, unfinished). This data makes up the leaderboards.',
         'Abuse prevention: the server processes your IP address to rate-limit requests. A day with suspicious play can be marked with an internal note.',
-        'Guests: a guest account is a random login, the display name “Guest” and the game data. No 42 account and no email address is required.',
+        'Guests: a guest account is a random login and the game data. No 42 account and no email address is required.',
         'Open leaderboard: the “Open” board is visible to every signed-in person, guests included. Joining it means choosing a handle; the handle is shown with your leaderboard figures (solve rate, average tries, median, score) instead of your login. Guests are added automatically under their random guest login. The “private” setting hides only word times and guesses; the handle, the figures and the entry itself stay visible. A handle cannot be changed once chosen (apart from letter case); corrections go through the contact address.',
         'Not processed: email addresses, passwords, payment data, location data, advertising IDs. There is no third-party tracking, no analytics tool, and no advertising profile is built.',
       ],

@@ -74,7 +74,6 @@ export default async function authRoutes(fastify) {
     const userProfile = {
       intra_id: profile.id,
       login: profile.login,
-      display_name: profile.displayname ?? profile.usual_full_name ?? profile.login,
     };
 
     if (avatarUrl) {
@@ -112,7 +111,7 @@ export default async function authRoutes(fastify) {
   fastify.get('/api/auth/me', { preHandler: [fastify.requireAuth] }, async (request, reply) => {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, login, display_name, avatar_url, privacy_enabled, is_guest, handle, global_opt_in, handle_changed_at')
+      .select('id, login, avatar_url, privacy_enabled, is_guest, handle, global_opt_in, handle_changed_at')
       .eq('id', request.user.id)
       .single();
     if (error) return reply.code(404).send({ error: 'User not found' });
@@ -125,7 +124,7 @@ export default async function authRoutes(fastify) {
 
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, intra_id, login, display_name, avatar_url, privacy_enabled, is_guest, handle, global_opt_in, handle_changed_at, created_at')
+      .select('id, intra_id, login, avatar_url, privacy_enabled, is_guest, handle, global_opt_in, handle_changed_at, created_at')
       .eq('id', userId)
       .single();
 
@@ -216,7 +215,7 @@ export default async function authRoutes(fastify) {
       .from('users')
       .update({ privacy_enabled })
       .eq('id', request.user.id)
-      .select('id, login, display_name, avatar_url, privacy_enabled')
+      .select('id, login, avatar_url, privacy_enabled')
       .single();
 
     if (error) return reply.code(500).send({ error: 'Failed to update privacy' });
