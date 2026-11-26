@@ -190,39 +190,44 @@ export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshTo
     <div>
       <AlertModal message={error} onClose={() => setError('')} />
 
-      {isMonthly && months && months.length > 0 && month && (
-        <div className="ledger-date-picker">
-          {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
-          <button
-            type="button"
-            className="ledger-date-nav"
-            onClick={() => olderMonth && setMonth(olderMonth)}
-            aria-disabled={!olderMonth}
-            aria-label="Previous month"
-            title="Previous month"
-          >
-            <NavArrow direction="left" />
-          </button>
+      {isMonthly ? (
+        // Same controls row as the daily board: switch left, month picker right.
+        // Always mounted so the switch never disappears while months load.
+        <div className="ledger-date-picker ledger-date-picker-controls">
+          {scopeSwitch}
+          {months && months.length > 0 && month && (
+            <div className="ledger-date-picker-nav">
+              {/* aria-disabled instead of disabled so keyboard focus isn't dropped */}
+              <button
+                type="button"
+                className="ledger-date-nav"
+                onClick={() => olderMonth && setMonth(olderMonth)}
+                aria-disabled={!olderMonth}
+                aria-label="Previous month"
+                title="Previous month"
+              >
+                <NavArrow direction="left" />
+              </button>
 
-          <span className="ledger-month-label" aria-live="polite">
-            {monthLabel(month)}
-          </span>
+              <span className="ledger-month-label" aria-live="polite">
+                {monthLabel(month)}
+              </span>
 
-          <button
-            type="button"
-            className="ledger-date-nav"
-            onClick={() => newerMonth && setMonth(newerMonth)}
-            aria-disabled={!newerMonth}
-            aria-label="Next month"
-            title="Next month"
-          >
-            <NavArrow direction="right" />
-          </button>
+              <button
+                type="button"
+                className="ledger-date-nav"
+                onClick={() => newerMonth && setMonth(newerMonth)}
+                aria-disabled={!newerMonth}
+                aria-label="Next month"
+                title="Next month"
+              >
+                <NavArrow direction="right" />
+              </button>
+            </div>
+          )}
         </div>
-      )}
-
-      {scopeSwitch && (
-        <div className="ledger-switch-row">{scopeSwitch}</div>
+      ) : (
+        scopeSwitch && <div className="ledger-switch-row">{scopeSwitch}</div>
       )}
 
       {body}
