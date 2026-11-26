@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 
-// Escape and a backdrop click mean "Just looking" in join mode, so the parent
-// gets onDismiss there and a plain onClose in guest mode.
+// Escape, the backdrop and the close button all cancel: in join mode the parent
+// keeps the 42 board, so nothing changes until the PUT succeeds.
 
 const COPY = {
   join: {
     eyebrow: 'Open leaderboard',
-    title: 'Join the Open leaderboard',
-    body: "Your handle is shown instead of your login. Your results are the same on both boards, so players can compare them. You can't leave and you can't change your handle once you join.",
-    primary: 'Join with a handle',
+    title: 'Open leaderboard',
+    body: "Joining is required to view it. Your handle replaces your login. Results are the same on both boards, so players can compare them. You can't leave and you can't change your handle.",
+    primary: 'Join',
     confirm: (handle) => `Join as ${handle}? This can't be undone.`,
   },
   'guest-choose': {
@@ -33,10 +33,10 @@ const STATUS_TEXT = {
 
 const initialCheck = { status: 'idle', handle: '', message: '' };
 
-export default function JoinHandleModal({ mode, me, onDismiss, onClose, onDone }) {
+export default function JoinHandleModal({ mode, me, onClose, onDone }) {
   const copy = COPY[mode];
   const isJoin = mode === 'join';
-  const close = isJoin ? onDismiss : onClose;
+  const close = onClose;
 
   const [value, setValue] = useState('');
   const [check, setCheck] = useState(initialCheck);
@@ -205,8 +205,8 @@ export default function JoinHandleModal({ mode, me, onDismiss, onClose, onDone }
                 </button>
 
                 {isJoin && (
-                  <button type="button" className="info-btn" onClick={onDismiss}>
-                    Just looking
+                  <button type="button" className="info-btn" onClick={onClose}>
+                    Back to 42
                   </button>
                 )}
               </div>

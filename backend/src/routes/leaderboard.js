@@ -86,6 +86,29 @@ function allowScope(scope, request, reply) {
   return true;
 }
 
+// Open boards are members-only. global_opt_in is read fresh: the JWT can be
+// older than the row, and a stale token must not open the board.
+export function makeOpenMemberGuard({ db = supabase } = {}) {
+  return async function openMemberGuard(request, reply) {
+    if (request.query.scope !== 'open') return;
+
+    const { data, error } = await db
+      .from('users')
+      .select('global_opt_in')
+      .eq('id', request.user.id)
+      .maybeSingle();
+
+    // Fail closed: a failed lookup is never membership.
+    if (error) {
+      request.log.error(error, 'open membership lookup failed');
+      return reply.code(500).send({ error: 'Failed to check membership' });
+    }
+    if (!data || data.global_opt_in !== true) {
+      return reply.code(403).send({ error: 'join_required' });
+    }
+  };
+}
+
 function lastDayOfMonth(year, month1to12) {
   // day 0 of the next month = last day of this one
   return new Date(Date.UTC(year, month1to12, 0)).getUTCDate();
@@ -134,8 +157,8 @@ function rankRows(rows) {
   return sorted.map((r) => ({ ...r, rank: isRanked(r) ? ++rank : null }));
 }
 
-async function fetchPeriodRows(params) {
-  const { data, error } = await supabase.rpc('leaderboard_period', params);
+async function fetchPeriodRows(params, db = supabase) {
+  const { data, error } = await db.rpc('leaderboard_period', params);
   if (error) throw error;
   return rankRows(data ?? []);
 }
@@ -340,14 +363,17 @@ export function makeWordGuessesHandler({ db = supabase, hasCompleted = hasComple
   };
 }
 
-export default async function leaderboardRoutes(fastify) {
+export default async function leaderboardRoutes(fastify, options = {}) {
   installSchemaErrors(fastify);
 
+  const db = options.db ?? supabase;
+  const requireOpenMember = makeOpenMemberGuard({ db });
   const authOnly = { preHandler: [fastify.requireAuth] };
+  const memberOnly = { preHandler: [fastify.requireAuth, requireOpenMember] };
 
   // Daily board. Open rows go through the allowlist before caching, so no
   // identity column can leak from the cache.
-  fastify.get('/api/leaderboard', { ...authOnly, schema: DAILY_BOARD_SCHEMA }, async (request, reply) => {
+  fastify.get('/api/leaderboard', { ...memberOnly, schema: DAILY_BOARD_SCHEMA }, async (request, reply) => {
     const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
@@ -363,7 +389,7 @@ export default async function leaderboardRoutes(fastify) {
     const epoch = getScopeEpoch(scope);
 
     if (scope === 'open') {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('leaderboard_open')
         .select('handle, privacy_enabled, words_found, total_time, total_tries, word_statuses')
         .eq('draw_date', date)
@@ -379,7 +405,7 @@ export default async function leaderboardRoutes(fastify) {
       return { date, scope, rows };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('leaderboard')
       .select('*')
       .eq('draw_date', date)
@@ -433,7 +459,7 @@ export default async function leaderboardRoutes(fastify) {
   // Monthly board. ?month=YYYY-MM (defaults to the current Berlin month).
   // The month is its own window: complete days, longevity and the min-days
   // threshold are all measured inside it.
-  fastify.get('/api/leaderboard/monthly', { ...authOnly, schema: MONTHLY_BOARD_SCHEMA }, async (request, reply) => {
+  fastify.get('/api/leaderboard/monthly', { ...memberOnly, schema: MONTHLY_BOARD_SCHEMA }, async (request, reply) => {
     const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
@@ -471,7 +497,7 @@ export default async function leaderboardRoutes(fastify) {
           p_fail_weight: LEADERBOARD_RULES.failPenaltyWeight,
           p_today: today,
           p_scope: scope,
-        })),
+        }, db)),
       }));
       return payload;
     } catch (err) {
@@ -481,7 +507,7 @@ export default async function leaderboardRoutes(fastify) {
   });
 
   // All-time board. Longevity saturates at allTimeLongevityDays complete days.
-  fastify.get('/api/leaderboard/global', { ...authOnly, schema: GLOBAL_BOARD_SCHEMA }, async (request, reply) => {
+  fastify.get('/api/leaderboard/global', { ...memberOnly, schema: GLOBAL_BOARD_SCHEMA }, async (request, reply) => {
     const scope = request.query.scope;
     if (!allowScope(scope, request, reply)) return;
 
@@ -503,7 +529,7 @@ export default async function leaderboardRoutes(fastify) {
           p_fail_weight: LEADERBOARD_RULES.failPenaltyWeight,
           p_today: today,
           p_scope: scope,
-        })),
+        }, db)),
       }));
       return payload;
     } catch (err) {
@@ -515,12 +541,16 @@ export default async function leaderboardRoutes(fastify) {
   fastify.get(
     '/api/leaderboard/word-guesses',
     {
-      preHandler: [fastify.requireAuth],
+      preHandler: [fastify.requireAuth, requireOpenMember],
       schema: WORD_GUESSES_SCHEMA,
       config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
     },
-    makeWordGuessesHandler()
+    makeWordGuessesHandler({ db })
   );
 
-  fastify.get('/api/leaderboard/word-times', { ...authOnly, schema: WORD_TIMES_SCHEMA }, makeWordTimesHandler());
+  fastify.get(
+    '/api/leaderboard/word-times',
+    { ...memberOnly, schema: WORD_TIMES_SCHEMA },
+    makeWordTimesHandler(db)
+  );
 }

@@ -109,3 +109,7 @@ export const api = {
 };
 
 export { ApiError, API_URL, TOKEN_KEY };
+
+// The backend refuses every scope=open read without membership.
+export const isJoinRequired = (err) =>
+  err?.status === 403 && err?.body?.error === 'join_required';

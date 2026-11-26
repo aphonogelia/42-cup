@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.js';
+import { api, isJoinRequired } from '../api.js';
 import { formatTime } from '../lib/formatTime.js';
 
 function GuessHistory({ wordResultId, preloaded, openHandle, openDate, openOrder }) {
@@ -77,7 +77,7 @@ function WordTimeRow({ word, preloadedGuesses, openHandle, openDate }) {
   );
 }
 
-export default function WordTimesPopup({ scope = '42', userId, login, handle, date, onClose }) {
+export default function WordTimesPopup({ scope = '42', userId, login, handle, date, onClose, onJoinRequired }) {
   const isOpen = scope === 'open';
   const [state, setState] = useState({ loading: true, words: null, error: '' });
   // Guess access is gated server-side as a single yes/no (has the viewer finished today?),
@@ -117,13 +117,19 @@ export default function WordTimesPopup({ scope = '42', userId, login, handle, da
           });
       })
       .catch((err) => {
-        if (!cancelled) setState({ loading: false, words: null, error: err.message });
+        if (cancelled) return;
+        if (isJoinRequired(err)) {
+          onJoinRequired?.();
+          onClose();
+          return;
+        }
+        setState({ loading: false, words: null, error: err.message });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [scope, userId, handle, date, isOpen]);
+  }, [scope, userId, handle, date, isOpen, onJoinRequired, onClose]);
 
   return (
     <div className="info-overlay" onClick={onClose}>

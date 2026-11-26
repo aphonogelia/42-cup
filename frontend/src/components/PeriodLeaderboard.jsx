@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.js';
+import { api, isJoinRequired } from '../api.js';
 import { formatClock } from '../lib/formatTime.js';
 import AlertModal from './AlertModal.jsx';
 import './Leaderboard.css';
@@ -33,7 +33,7 @@ function NavArrow({ direction }) {
   );
 }
 
-export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshToken }) {
+export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshToken, onJoinRequired }) {
   const isMonthly = mode === 'monthly';
   const isOpen = scope === 'open';
   const [months, setMonths] = useState(null); // monthly tab only, newest first
@@ -77,7 +77,12 @@ export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshTo
         if (!cancelled) setData(d);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message);
+        if (cancelled) return;
+        if (isJoinRequired(err)) {
+          onJoinRequired();
+          return;
+        }
+        setError(err.message);
       });
 
     const refresh = () => {
@@ -86,7 +91,9 @@ export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshTo
         .then((d) => {
           if (!cancelled) setData(d);
         })
-        .catch(() => {});
+        .catch((err) => {
+          if (!cancelled && isJoinRequired(err)) onJoinRequired();
+        });
     };
 
     window.addEventListener('focus', refresh);
@@ -99,7 +106,7 @@ export default function PeriodLeaderboard({ mode, viewerId, scope, me, refreshTo
       document.removeEventListener('visibilitychange', refresh);
       window.clearInterval(intervalId);
     };
-  }, [isMonthly, month, scope, refreshToken]);
+  }, [isMonthly, month, scope, refreshToken, onJoinRequired]);
 
   const monthIdx = months && month ? months.indexOf(month) : -1;
   const olderMonth = monthIdx !== -1 ? months[monthIdx + 1] ?? null : null;

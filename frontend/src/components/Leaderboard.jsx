@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api } from '../api.js';
+import { api, isJoinRequired } from '../api.js';
 import AlertModal from './AlertModal.jsx';
 import WordTimesPopup from './WordTimesPopup.jsx';
 import PeriodLeaderboard from './PeriodLeaderboard.jsx';
@@ -253,26 +253,6 @@ const SCOPES = [
   { id: 'open', label: 'Open' },
 ];
 
-// "Just looking" is remembered per account, per browser. Storage can throw in
-// private mode, and a failure must never block the UI.
-function readPrompted(key) {
-  if (!key) return false;
-  try {
-    return window.localStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function writePrompted(key) {
-  if (!key) return;
-  try {
-    window.localStorage.setItem(key, '1');
-  } catch {
-    // ignore
-  }
-}
-
 // viewerId is optional: when given, the viewer's own row is highlighted on the
 // monthly and all-time boards.
 export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me, onMeChange }) {
@@ -282,20 +262,19 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
   const [scope, setScope] = useState(() => (isGuest ? 'open' : '42'));
   const [handleModal, setHandleModal] = useState(null);
   const [refreshToken, setRefreshToken] = useState(0);
-
-  const promptedKey = me?.id ? `wordel.openPrompted.${me.id}` : null;
+  const [boardError, setBoardError] = useState('');
 
   const handleScopeChange = (next) => {
     if (next === scope) return;
+
+    // A 42 player who has not joined cannot open the board: ask for a handle
+    // first and stay on 42 until they accept.
+    if (next === 'open' && !isGuest && !me?.global_opt_in) {
+      setHandleModal('join');
+      return;
+    }
+
     setScope(next);
-
-    const undecided = !isGuest && !me?.global_opt_in && !readPrompted(promptedKey);
-    if (next === 'open' && undecided) setHandleModal('join');
-  };
-
-  const handleJustLooking = () => {
-    writePrompted(promptedKey);
-    setHandleModal(null);
   };
 
   const handleHandleSaved = (updated) => {
@@ -304,13 +283,25 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
       global_opt_in: updated.global_opt_in,
       handle_changed_at: updated.handle_changed_at,
     });
-    writePrompted(promptedKey);
+    setScope('open');
     setHandleModal(null);
     // The player is on the open board now: refetch so the row appears.
     setRefreshToken((token) => token + 1);
   };
 
-  const showJoinBanner = scope === 'open' && !isGuest && !me?.global_opt_in;
+  // Backend refused an open read: membership changed under us. Ask again.
+  // Guests are always members (the insert trigger sets global_opt_in), so for
+  // them join_required means the account is gone, not that they have to join.
+  const handleJoinRequired = useCallback(() => {
+    if (isGuest) {
+      setBoardError('Session expired. Reload to start a new guest session.');
+      return;
+    }
+
+    setScope('42');
+    setHandleModal('join');
+  }, [isGuest]);
+
   // Guests get exactly one choice, until handle_changed_at is set.
   const canGuestChoose = isGuest && me?.handle_changed_at == null;
 
@@ -350,21 +341,9 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
         ))}
       </div>
 
-      {scope === 'open' && (showJoinBanner || isGuest) && (
+      {scope === 'open' && isGuest && (
         <div className="ledger-scope-note">
-          {showJoinBanner && (
-            <button
-              type="button"
-              className="ledger-join-banner"
-              onClick={() => setHandleModal('join')}
-            >
-              Join the Open leaderboard
-            </button>
-          )}
-
-          {isGuest && (
-            <span className="ledger-scope-hint">Your ranking is tied to this browser.</span>
-          )}
+          <span className="ledger-scope-hint">Your ranking is tied to this browser.</span>
 
           {canGuestChoose && (
             <button
@@ -378,6 +357,10 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
         </div>
       )}
 
+      {boardError && (
+        <p className="ledger-error" role="alert">{boardError}</p>
+      )}
+
       {tab === 'daily' ? (
         <DailyLeaderboard
           totalWords={totalWords}
@@ -386,6 +369,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
           scope={scope}
           me={me}
           refreshToken={refreshToken}
+          onJoinRequired={handleJoinRequired}
         />
       ) : (
         <PeriodLeaderboard
@@ -395,6 +379,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
           scope={scope}
           me={me}
           refreshToken={refreshToken}
+          onJoinRequired={handleJoinRequired}
         />
       )}
 
@@ -402,7 +387,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
         <JoinHandleModal
           mode={handleModal}
           me={me}
-          onDismiss={handleModal === 'join' ? handleJustLooking : undefined}
           onClose={() => setHandleModal(null)}
           onDone={handleHandleSaved}
         />
@@ -411,7 +395,7 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
   );
 }
 
-function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, refreshToken }) {
+function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, refreshToken, onJoinRequired }) {
   const isOpen = scope === 'open';
   const [dates, setDates] = useState([]);
   const [datesLoaded, setDatesLoaded] = useState(false);
@@ -441,12 +425,19 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, re
           setSelectedDate(data.date);
         }
       })
-      .catch((err) => !cancelled && setError(err.message));
+      .catch((err) => {
+        if (cancelled) return;
+        if (isJoinRequired(err)) {
+          onJoinRequired();
+          return;
+        }
+        setError(err.message);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [scope]);
+  }, [scope, onJoinRequired]);
 
   useEffect(() => {
     let cancelled = false;
@@ -468,6 +459,8 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, re
   useEffect(() => {
     setActivePlayer(null);
   }, [scope]);
+
+  const closePopup = useCallback(() => setActivePlayer(null), []);
 
   useEffect(() => {
     const refresh = () => {
@@ -546,7 +539,8 @@ function DailyLeaderboard({ totalWords, viewerIsPrivate, viewerId, scope, me, re
           login={activePlayer.login}
           handle={activePlayer.handle}
           date={effectiveDate}
-          onClose={() => setActivePlayer(null)}
+          onClose={closePopup}
+          onJoinRequired={onJoinRequired}
         />
       )}
 

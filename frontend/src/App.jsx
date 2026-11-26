@@ -51,7 +51,7 @@ const INFO_PAGES = {
     'Every word has its own clock. It starts at your first guess and stops when you solve the word or spend your sixth attempt. The times are added together, so quickness weighs as much as accuracy.',
     'On certain special days (May 1st, Diwali, and a few others) the pool itself changes to themed words, chosen to match the occasion.',
     SCORING_PLACEHOLDER,
-    'There are two boards. 42 ranks 42 players under their intra login, as before. Open is public: anyone signed in can read it, and players join it with a handle of their choice, shown instead of their login. Joining is permanent and the handle is chosen once. Guests are on the Open board automatically, under a random guest handle.',
+    'There are two boards. 42 ranks 42 players under their intra login, as before. Open is members-only: a 42 player has to join to read it, with a handle of their choice shown instead of their login. Joining is permanent and the handle is chosen once. Guests are on the Open board automatically, under a random guest handle.',
     'The game is meant to be played honestly: suspicious answers are kept off the leaderboard, and the player is contacted for clarification.',
     'The server is hosted on free tiers (Render), so it may take a little while to wake up on your first visit. Thanks for your patience!',
   ],

@@ -601,23 +601,11 @@ body.theme-light .status-dot.not_started {
   color: var(--text-muted);
 }
 
-.ledger-join-banner {
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 6px 10px;
-  color: var(--amber);
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.ledger-join-banner:hover {
-  border-color: var(--amber-dim);
-  color: var(--paper);
+.ledger-error {
+  margin: 0 0 12px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--crimson);
 }
 
 .ledger-link-btn {
