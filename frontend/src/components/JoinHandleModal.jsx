@@ -31,7 +31,7 @@ const STATUS_TEXT = {
 
 const initialCheck = { status: 'idle', handle: '', message: '' };
 
-export default function JoinHandleModal({ mode, onClose, onDone }) {
+export default function JoinHandleModal({ mode, onClose, onDone, dismissible = true }) {
   const copy = COPY[mode];
   const close = onClose;
 
@@ -59,11 +59,11 @@ export default function JoinHandleModal({ mode, onClose, onDone }) {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') close?.();
+      if (dismissible && event.key === 'Escape') close?.();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [close]);
+  }, [close, dismissible]);
 
   // 300 ms debounce so the field does not hammer the rate limiter.
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function JoinHandleModal({ mode, onClose, onDone }) {
       : STATUS_TEXT[check.status] ?? '';
 
   return (
-    <div className="info-overlay" role="presentation" onClick={close}>
+    <div className="info-overlay" role="presentation" onClick={dismissible ? close : undefined}>
       <section
         className="info-card join-card"
         role="dialog"
@@ -142,9 +142,11 @@ export default function JoinHandleModal({ mode, onClose, onDone }) {
       >
         <div className="info-card-head">
           <p className="info-eyebrow">{copy.eyebrow}</p>
-          <button type="button" className="info-close" onClick={close} aria-label="Close dialog">
-            ×
-          </button>
+          {dismissible && (
+            <button type="button" className="info-close" onClick={close} aria-label="Close dialog">
+              ×
+            </button>
+          )}
         </div>
 
         <h2 id="join-title">{copy.title}</h2>

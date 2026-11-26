@@ -641,39 +641,11 @@ body.theme-light .status-dot.not_started {
 }
 
 /* ---- Open-tab note ---------------------------------------------------------- */
-.ledger-scope-note {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 12px;
-  margin: 0 0 12px;
-}
-
 .ledger-error {
   margin: 0 0 12px;
   font-size: 12px;
   text-align: center;
   color: var(--crimson);
-}
-
-.ledger-link-btn {
-  background: transparent;
-  border: 0;
-  padding: 0 2px;
-  color: var(--amber);
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-  cursor: pointer;
-}
-
-.ledger-link-btn:hover {
-  color: var(--paper);
 }
 
 /* ---- Handle dialog (join / guest one-time choose) ---------------------------- */

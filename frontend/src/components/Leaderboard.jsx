@@ -295,9 +295,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
     setHandleModal('join');
   }, [isGuest]);
 
-  // Guests get exactly one choice, until handle_changed_at is set.
-  const canGuestChoose = isGuest && me?.handle_changed_at == null;
-
   return (
     <div>
       <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
@@ -329,18 +326,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
             <span className="ledger-switch-track" aria-hidden="true">
               <span className="ledger-switch-thumb" />
             </span>
-          </button>
-        </div>
-      )}
-
-      {scope === 'open' && isGuest && canGuestChoose && (
-        <div className="ledger-scope-note">
-          <button
-            type="button"
-            className="ledger-link-btn"
-            onClick={() => setHandleModal('guest-choose')}
-          >
-            Change handle
           </button>
         </div>
       )}
