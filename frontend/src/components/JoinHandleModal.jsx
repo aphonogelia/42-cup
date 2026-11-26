@@ -12,9 +12,9 @@ const COPY = {
     primary: 'Join',
   },
   'guest-choose': {
-    eyebrow: 'Open leaderboard',
+    eyebrow: 'Leaderboard',
     title: 'Choose your handle',
-    body: 'Your handle is shown on the Open leaderboard. You can only choose it once.',
+    body: 'Your handle is shown on the leaderboard. You can only choose it once.',
     primary: 'Continue',
   },
 };

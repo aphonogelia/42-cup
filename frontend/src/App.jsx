@@ -378,7 +378,7 @@ export default function App() {
   const [accountError, setAccountError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
-  const [announcementChecked, setAnnouncementChecked] = useState(false);
+  const [guestHandlePrompt, setGuestHandlePrompt] = useState(false);
   const shareCopiedTimeoutRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'dark';
@@ -451,7 +451,6 @@ export default function App() {
       // Ignore storage quota and privacy-mode failures.
     }
     if (!seen) setShowAnnouncement(true);
-    setAnnouncementChecked(true);
   }, [authChecked, user]);
 
   const dismissAnnouncement = () => {
@@ -465,8 +464,20 @@ export default function App() {
     setShowAnnouncement(false);
   };
 
+  const needsGuestHandle = Boolean(user?.is_guest && user.handle_changed_at == null);
+
+  const openLedger = useCallback(() => {
+    if (needsGuestHandle) {
+      setGuestHandlePrompt(true);
+      return;
+    }
+    setView('leaderboard');
+  }, [needsGuestHandle]);
+
   const handleGuestHandleSaved = (updated) => {
     setUser((u) => ({ ...u, ...updated }));
+    setGuestHandlePrompt(false);
+    setView('leaderboard');
   };
 
   useEffect(() => {
@@ -493,9 +504,9 @@ export default function App() {
       words.length > 0 &&
       words.every((word) => word.status === 'solved' || word.status === 'failed')
     ) {
-      setView('leaderboard');
+      openLedger();
     }
-  }, [words, showCompletionToast, completionPending, user]);
+  }, [words, showCompletionToast, completionPending, openLedger]);
 
 
   useEffect(() => {
@@ -713,7 +724,7 @@ export default function App() {
 
             <button
               className={`nav-btn ${view === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => setView('leaderboard')}
+              onClick={openLedger}
             >
               Ledger
             </button>
@@ -800,7 +811,7 @@ export default function App() {
         duration={2200}
         onClose={() => {
           setShowCompletionToast(false);
-          setView('leaderboard');
+          openLedger();
         }}
       />
       <InfoModal
@@ -826,10 +837,10 @@ export default function App() {
           onClose={dismissAnnouncement}
         />
       )}
-      {announcementChecked && !showAnnouncement && user.is_guest && user.handle_changed_at == null && (
+      {guestHandlePrompt && (
         <JoinHandleModal
           mode="guest-choose"
-          dismissible={false}
+          onClose={() => setGuestHandlePrompt(false)}
           onDone={handleGuestHandleSaved}
         />
       )}
