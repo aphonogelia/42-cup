@@ -580,10 +580,64 @@ body.theme-light .status-dot.not_started {
   color: var(--crimson);
 }
 
-/* ---- Scope toggle (42 | Open) ------------------------------------------------ */
-.ledger-scope {
-  padding-bottom: 0;
-  margin-bottom: 0;
+/* ---- Scope switch (Open) ---------------------------------------------------- */
+.ledger-switch-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 10px;
+}
+
+.ledger-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ledger-switch-track {
+  position: relative;
+  width: 24px;
+  height: 13px;
+  border-radius: 7px;
+  background: var(--line);
+}
+
+.ledger-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: left 120ms;
+}
+
+.ledger-switch.on {
+  color: var(--amber);
+}
+
+.ledger-switch.on .ledger-switch-track {
+  background: var(--amber);
+}
+
+.ledger-switch.on .ledger-switch-thumb {
+  left: 13px;
+  background: var(--amber-dim);
+}
+
+.ledger-switch:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 2px;
 }
 
 /* ---- Open-tab note ---------------------------------------------------------- */
@@ -594,11 +648,6 @@ body.theme-light .status-dot.not_started {
   justify-content: center;
   gap: 8px 12px;
   margin: 0 0 12px;
-}
-
-.ledger-scope-hint {
-  font-size: 11px;
-  color: var(--text-muted);
 }
 
 .ledger-error {

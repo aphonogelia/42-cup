@@ -246,13 +246,6 @@ const TABS = [
   { id: 'global', label: 'All-time' },
 ];
 
-// The new axis. "global" already means all-time in this codebase, so the code
-// name for the public board is `open`.
-const SCOPES = [
-  { id: '42', label: '42' },
-  { id: 'open', label: 'Open' },
-];
-
 // viewerId is optional: when given, the viewer's own row is highlighted on the
 // monthly and all-time boards.
 export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me, onMeChange }) {
@@ -307,24 +300,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
 
   return (
     <div>
-      {!isGuest && (
-        <div className="ledger-tabs ledger-scope" role="group" aria-label="Leaderboard scope">
-          {SCOPES.map(({ id, label }, i) => (
-            <Fragment key={id}>
-              {i > 0 && <span className="ledger-tab-sep" aria-hidden="true">{'//'}</span>}
-              <button
-                type="button"
-                className={`ledger-tab${scope === id ? ' active' : ''}`}
-                aria-pressed={scope === id}
-                onClick={() => handleScopeChange(id)}
-              >
-                {label}
-              </button>
-            </Fragment>
-          ))}
-        </div>
-      )}
-
       <div className="ledger-tabs" role="group" aria-label="Leaderboard period">
         {TABS.map(({ id, label }, i) => (
           <Fragment key={id}>
@@ -341,19 +316,32 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
         ))}
       </div>
 
-      {scope === 'open' && isGuest && (
-        <div className="ledger-scope-note">
-          <span className="ledger-scope-hint">Your ranking is tied to this browser.</span>
+      {!isGuest && (
+        <div className="ledger-switch-row">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={scope === 'open'}
+            className={`ledger-switch${scope === 'open' ? ' on' : ''}`}
+            onClick={() => handleScopeChange(scope === 'open' ? '42' : 'open')}
+          >
+            <span>Open</span>
+            <span className="ledger-switch-track" aria-hidden="true">
+              <span className="ledger-switch-thumb" />
+            </span>
+          </button>
+        </div>
+      )}
 
-          {canGuestChoose && (
-            <button
-              type="button"
-              className="ledger-link-btn"
-              onClick={() => setHandleModal('guest-choose')}
-            >
-              Change handle
-            </button>
-          )}
+      {scope === 'open' && isGuest && canGuestChoose && (
+        <div className="ledger-scope-note">
+          <button
+            type="button"
+            className="ledger-link-btn"
+            onClick={() => setHandleModal('guest-choose')}
+          >
+            Change handle
+          </button>
         </div>
       )}
 
