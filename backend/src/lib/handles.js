@@ -1,8 +1,8 @@
 import { supabase } from '../supabase.js';
 
-// Handle rules for the open leaderboard. One source of truth for the backend:
-// the SQL CHECK (users_handle_format) only enforces the shape, everything else
-// (reserved words, blocklist, guest prefix, login clashes, cooldown) lives here.
+// Handle rules for the open leaderboard. The SQL CHECK (users_handle_format)
+// only enforces the shape; everything else (reserved words, blocklist, guest
+// prefix, login clashes, the one-time lock) lives here.
 
 export const HANDLE_RE = /^[A-Za-z0-9_-]{3,16}$/;
 
@@ -10,7 +10,6 @@ const HANDLE_FORMAT_ERROR = 'Handle must be 3-16 characters: letters, digits, "-
 
 const LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', 8: 'b' };
 
-// lowercase, drop - and _, undo the obvious digit substitutions.
 export function normalizeForMatch(value) {
   return String(value ?? '')
     .toLowerCase()
@@ -18,9 +17,8 @@ export function normalizeForMatch(value) {
     .replace(/[0134578]/g, (char) => LEET[char]);
 }
 
-// Both lists are written naturally and normalized at build time, so they are
-// compared against the same normalization as the input: 'wordel42' also blocks
-// 'W0rdel42', and '42cup' blocks '4-2-Cup'. Edit the *arrays*, lowercase.
+// Written naturally and normalized at build time, so 'wordel42' also blocks
+// 'W0rdel42' and '42cup' blocks '4-2-Cup'. Edit the *arrays*, lowercase.
 const RESERVED_WORDS = [
   'admin', 'administrator', 'root', 'system', 'support', 'moderator', 'mod',
   'staff', 'official', 'wordel', 'wordel42', '42', '42cup', '42berlin',
@@ -37,8 +35,7 @@ const BLOCKED_WORDS = [
 export const RESERVED_HANDLES = new Set(RESERVED_WORDS.map(normalizeForMatch));
 export const BLOCKED_HANDLES = new Set(BLOCKED_WORDS.map(normalizeForMatch));
 
-// Returns { handle } on success, { error } on failure. `handle` is trimmed but
-// otherwise keeps its case: the unique index is on lower(handle).
+// `handle` keeps its case: the unique index is on lower(handle).
 export function validateHandle(raw) {
   if (typeof raw !== 'string') return { error: 'handle is required' };
 
@@ -75,8 +72,7 @@ export function canRename(handleChangedAt) {
   return !handleChangedAt;
 }
 
-// Everything the PUT /api/me/global handler needs to decide, without touching
-// the database: validate, detect a no-op, apply the lock, build the patch.
+// Decision logic for PUT /api/me/global, kept pure so the lock is testable.
 export function planHandleUpdate(user, rawHandle) {
   const raw = typeof rawHandle === 'string' ? rawHandle.trim() : '';
 
@@ -85,9 +81,8 @@ export function planHandleUpdate(user, rawHandle) {
     if (raw === user.handle) return { unchanged: true };
 
     // A case-only change is cosmetic: allowed even on a locked handle, and it
-    // never touches handle_changed_at. The lowercase form already exists on
-    // this row and passed validation when it was set, so only the shape is
-    // re-checked here.
+    // never touches handle_changed_at. The lowercase form already passed
+    // validation, so only the shape is re-checked here.
     if (raw.toLowerCase() === user.handle.toLowerCase()) {
       if (!HANDLE_RE.test(raw)) return { status: 400, error: HANDLE_FORMAT_ERROR };
       return { handle: raw, joining: false, guard: 'case', patch: { handle: raw } };
