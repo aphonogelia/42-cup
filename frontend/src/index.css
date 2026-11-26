@@ -500,10 +500,6 @@ body.theme-light .alert-toast-card {
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
-.announcement-card {
-  width: min(100%, 420px);
-}
-
 .info-card-head {
   display: flex;
   align-items: start;
@@ -660,6 +656,73 @@ body.theme-light .info-copy a:hover {
 .info-close:hover {
   color: var(--paper);
   background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---- One-time announcement ------------------------------------------------ */
+.announcement-card {
+  width: 100%;
+  max-width: 330px;
+  padding: 20px 22px 22px;
+}
+
+.announcement-card:focus {
+  outline: none;
+}
+
+.announcement-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.announcement-tag {
+  margin-right: 8px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: var(--amber);
+  color: var(--amber-dim);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.announcement-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--paper);
+}
+
+.announcement-copy {
+  gap: 0;
+}
+
+.announcement-copy p {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.announcement-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.announcement-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 18px;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.announcement-btn:focus-visible {
+  outline: 1px solid var(--text-muted);
+  outline-offset: 2px;
 }
 
 .icon-btn svg {
