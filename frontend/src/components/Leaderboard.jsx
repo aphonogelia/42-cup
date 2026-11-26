@@ -280,7 +280,6 @@ export default function Leaderboard({ totalWords, viewerIsPrivate, viewerId, me,
   const [tab, setTab] = useState('daily');
   // Real users always start on 42. Guests are fixed on open. Never persisted.
   const [scope, setScope] = useState(() => (isGuest ? 'open' : '42'));
-  // null | 'join' (42 player, first time) | 'guest-choose' (one-time change)
   const [handleModal, setHandleModal] = useState(null);
   const [refreshToken, setRefreshToken] = useState(0);
 

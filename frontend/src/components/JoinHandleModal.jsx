@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 
-// Two-step handle dialog:
-//   join          -> a 42 player joins the open board (irreversible)
-//   guest-choose  -> a guest spends their one free change away from guest_xxxxxxxx
-//
 // Escape and a backdrop click mean "Just looking" in join mode, so the parent
 // gets onDismiss there and a plain onClose in guest mode.
 

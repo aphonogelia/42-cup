@@ -581,13 +581,12 @@ body.theme-light .status-dot.not_started {
 }
 
 /* ---- Scope toggle (42 | Open) ------------------------------------------------ */
-/* Sits above the period tabs and reuses their spacing. */
 .ledger-scope {
   padding-bottom: 0;
   margin-bottom: 0;
 }
 
-/* Banner / guest note / one-time handle link, on the Open tab only. */
+/* ---- Open-tab note ---------------------------------------------------------- */
 .ledger-scope-note {
   display: flex;
   flex-wrap: wrap;

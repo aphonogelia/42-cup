@@ -87,8 +87,6 @@ export const api = {
   },
   leaderboardGlobal: (scope = '42') =>
     request(`/api/leaderboard/global?scope=${encodeURIComponent(scope)}`),
-  // scope=42: userId, returns word_result_id (guess history available).
-  // scope=open: handle, returns no ids at all.
   wordTimes: ({ scope = '42', userId, handle, date }) => {
     const params = new URLSearchParams({ scope });
     if (date) params.set('date', date);
@@ -99,6 +97,12 @@ export const api = {
   handleAvailable: (h) => request(`/api/me/handle-available?h=${encodeURIComponent(h)}`),
   joinGlobal: (handle) =>
     request('/api/me/global', { method: 'PUT', body: JSON.stringify({ handle }) }),
+  // Open guess history, addressed by handle + date + order_index: no id ever
+  // comes back, so a handle cannot be matched to a login.
+  wordGuesses: ({ handle, date, orderIndex }) => {
+    const params = new URLSearchParams({ scope: 'open', handle, date, order: String(orderIndex) });
+    return request(`/api/leaderboard/word-guesses?${params}`);
+  },
   guesses: (wordResultId) => request(`/api/word-results/${wordResultId}/guesses`),
   loginUrl: () => `${API_URL}/api/auth/42`,
   stats: () => request('/api/stats/me'),
