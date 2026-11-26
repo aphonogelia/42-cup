@@ -132,12 +132,7 @@ export default function Game({ userLogin, orderIndex, onWordUpdate, onProgressCh
 
       setWordState(data);
       writeCachedWordState(userLogin, orderIndex, data);
-      // A finished word must restore its result panel (and next word button),
-      // even when it was finished somewhere else.
-      if (isFinishedStatus(data.status)) {
-        setFinished(data);
-        setCurrentGuess('');
-      }
+      if (isFinishedStatus(data.status)) setCurrentGuess('');
 
       // Refresh the tab timers with the same data the board just showed.
       if (notifyParent) onProgressChangedRef.current?.();
