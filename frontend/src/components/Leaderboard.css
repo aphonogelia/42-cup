@@ -56,20 +56,28 @@
   margin-bottom: 10px;
 }
 
-/* Daily controls row: scope switch left, date picker right. */
+/* Controls row: picker full width, switch on its own right-aligned line below. */
 .ledger-date-picker-controls {
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   margin-bottom: 16px;
 }
 
-/* Groups [<] date [>] so the picker stays right-aligned, even without a switch. */
+/* Groups [<] date [>] and anchors the calendar popover to the picker. */
 .ledger-date-picker-nav {
+  order: 1;
   display: flex;
   align-items: stretch;
   gap: 4px;
-  margin-left: auto;
+  width: 100%;
+  position: relative;
+}
+
+.ledger-date-picker-controls .ledger-switch {
+  order: 2;
+  align-self: flex-end;
+  margin-top: 16px;
 }
 
 .ledger-date-trigger,
@@ -77,7 +85,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 128px;
+  flex: 1;
+  min-width: 0;
   min-height: 32px;
   padding: 6px 10px;
   background: var(--surface);
@@ -91,6 +100,7 @@
 /* Wrapper around the daily trigger so it sits in the picker row like the month label */
 .ledger-date-popover-wrap {
   display: flex;
+  flex: 1;
 }
 
 .ledger-date-trigger {
@@ -610,8 +620,8 @@ body.theme-light .status-dot.not_started {
 /* ---- Scope switch (Open) ---------------------------------------------------- */
 .ledger-switch-row {
   display: flex;
-  justify-content: flex-start;
-  margin: 14px 0 16px;
+  justify-content: flex-end;
+  margin: 16px 0;
 }
 
 .ledger-switch {
@@ -747,35 +757,6 @@ body.theme-light .status-dot.not_started {
 }
 
 /* ---- Responsive --------------------------------------------------------------- */
-@media (max-width: 599px) {
-  /* Picker full width; switch on its own right-aligned line below it. */
-  .ledger-date-picker-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-  }
-
-  .ledger-date-picker-controls .ledger-date-picker-nav {
-    order: 1;
-    width: 100%;
-    margin-left: 0;
-    /* Anchor the calendar popover to the picker, not the row: the switch now
-       follows the picker inside the same row. */
-    position: relative;
-  }
-
-  .ledger-date-picker-controls .ledger-switch {
-    order: 2;
-    align-self: flex-end;
-    margin-top: 16px;
-  }
-
-  .ledger-switch-row {
-    justify-content: flex-end;
-    margin: 16px 0;
-  }
-}
-
 @media (max-width: 640px) {
   .ledger-row {
     grid-template-columns: 20px minmax(0, 1fr) auto auto;
@@ -804,16 +785,6 @@ body.theme-light .status-dot.not_started {
 
   .period-num {
     font-size: 11px;
-  }
-
-  .ledger-date-popover-wrap {
-    flex: 1;
-  }
-
-  .ledger-date-trigger,
-  .ledger-month-label {
-    min-width: 0;
-    flex: 1;
   }
 
   .word-times-list {
