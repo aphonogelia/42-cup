@@ -27,8 +27,6 @@ function setCacheEntry(cache, key, value, ttlMs) {
     });
 }
 
-// Daily keys carry the scope: the 42 board and the open board are different
-// payloads for the same date.
 function dailyKey(scope, date) {
     return `daily:${scope}:${date}`;
 }
@@ -121,6 +119,21 @@ const periodInflight = new Map();
 const PERIOD_LIVE_TTL_MS = 2 * 60_000;
 const PERIOD_CLOSED_TTL_MS = 60 * 60_000;
 
+// One counter per scope: a load that started on an older counter is served but
+// never cached, so a handle change cannot be undone by a board load that was
+// already running (a closed month would otherwise keep it for an hour).
+const scopeEpoch = new Map();
+
+export function getScopeEpoch(scope) {
+    return scopeEpoch.get(scope) ?? 0;
+}
+
+// Period keys are `monthly:<scope>:<month>:<minDays>` or `global:<scope>:<minDays>`.
+function scopeFromPeriodKey(key) {
+    const [, scope] = key.split(':');
+    return scope;
+}
+
 export function getCachedPeriod(key) {
     return getCacheEntry(periodCache, key);
 }
@@ -138,14 +151,20 @@ export function loadPeriod(key, isLive, loader) {
     const pending = periodInflight.get(key);
     if (pending) return pending;
 
+    const scope = scopeFromPeriodKey(key);
+    const epoch = getScopeEpoch(scope);
+
     const promise = Promise.resolve()
         .then(loader)
         .then((value) => {
-            setCachedPeriod(key, value, isLive);
+            // Obsolete if the scope was invalidated while this was running.
+            if (getScopeEpoch(scope) === epoch) setCachedPeriod(key, value, isLive);
             return value;
         })
         .finally(() => {
-            periodInflight.delete(key);
+            // Only drop our own entry: invalidateScope() may already have
+            // removed it and a newer load may have registered under this key.
+            if (periodInflight.get(key) === promise) periodInflight.delete(key);
         });
 
     periodInflight.set(key, promise);
@@ -160,12 +179,21 @@ export function invalidatePeriods() {
 // Period keys are not flushed by invalidateAllLeaderboards(), so a scope change
 // has to remove its own keys explicitly.
 export function invalidateScope(scope) {
+    // New generation: loads that are already running become uncacheable.
+    scopeEpoch.set(scope, getScopeEpoch(scope) + 1);
+
     const prefixes = [`daily:${scope}:`, `monthly:${scope}:`, `global:${scope}:`];
 
     for (const cache of [leaderboardCache, periodCache]) {
         for (const key of [...cache.keys()]) {
             if (prefixes.some((prefix) => key.startsWith(prefix))) cache.delete(key);
         }
+    }
+
+    // A request arriving now must not join a pre-change load: drop the in-flight
+    // entries so it starts a fresh one (the old promise resolves uncached).
+    for (const key of [...periodInflight.keys()]) {
+        if (prefixes.some((prefix) => key.startsWith(prefix))) periodInflight.delete(key);
     }
 }
 
